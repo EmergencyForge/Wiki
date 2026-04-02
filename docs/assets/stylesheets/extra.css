@@ -9,6 +9,7 @@
   --ef-red-dark: #8E0000;
   --ef-red-glow: rgba(198, 40, 40, 0.3);
   --ef-red-subtle: rgba(198, 40, 40, 0.08);
+  --ef-border: rgba(198, 40, 40, 0.2);
 
   /* MkDocs Material overrides */
   --md-primary-fg-color: var(--ef-red);
@@ -22,6 +23,7 @@
   --md-primary-fg-color--light: var(--ef-red-light);
   --md-primary-fg-color--dark: var(--ef-red-dark);
   --md-accent-fg-color: var(--ef-red-light);
+  --ef-border: rgba(198, 40, 40, 0.25);
 }
 
 /* ============================================
@@ -95,9 +97,11 @@
   animation: cardSlideUp 0.5s ease forwards;
   opacity: 0;
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-  border: 1px solid transparent;
+  border: 1px solid var(--ef-border);
+  border-top: 3px solid var(--ef-red);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .grid.cards > ul > li:nth-child(1) { animation-delay: 0.05s; }
@@ -113,108 +117,7 @@
   transform: translateY(-4px);
   box-shadow: 0 8px 24px var(--ef-red-glow);
   border-color: var(--ef-red-light);
-}
-
-/* Subtle top-border accent on cards */
-.grid.cards > ul > li::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, var(--ef-red), var(--ef-red-light));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
-}
-
-.grid.cards > ul > li:hover::before {
-  transform: scaleX(1);
-}
-
-/* Card link arrows animate on hover */
-.grid.cards > ul > li:hover a {
-  letter-spacing: 0.01em;
-}
-
-/* ============================================
-   Status Tags (use in frontmatter: tags: [Neu])
-   ============================================ */
-
-/* Base tag styling */
-.md-tag {
-  border-radius: 12px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 0.2em 0.7em;
-  transition: transform 0.2s ease;
-}
-
-.md-tag:hover {
-  transform: scale(1.05);
-}
-
-/* "Neu" tag — green pulse */
-a[href*="Neu"] > .md-tag,
-.md-tag[data-tag="Neu"] {
-  background-color: #2E7D32;
-  color: white;
-  animation: tagPulse 2s ease infinite;
-}
-
-/* "In Arbeit" tag — amber */
-a[href*="In+Arbeit"] > .md-tag,
-.md-tag[data-tag="In Arbeit"] {
-  background-color: #F57F17;
-  color: white;
-}
-
-/* "Fertig" tag — blue */
-a[href*="Fertig"] > .md-tag,
-.md-tag[data-tag="Fertig"] {
-  background-color: #1565C0;
-  color: white;
-}
-
-@keyframes tagPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4); }
-  50% { box-shadow: 0 0 0 4px rgba(46, 125, 50, 0); }
-}
-
-/* Inline status badges for use in content */
-.status {
-  display: inline-block;
-  padding: 0.15em 0.6em;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  vertical-align: middle;
-  margin-left: 0.3em;
-}
-
-.status-neu {
-  background: #2E7D32;
-  color: white;
-}
-
-.status-wip {
-  background: #F57F17;
-  color: white;
-}
-
-.status-fertig {
-  background: #1565C0;
-  color: white;
-}
-
-.status-veraltet {
-  background: #616161;
-  color: white;
+  border-top-color: var(--ef-red-light);
 }
 
 /* ============================================
@@ -250,12 +153,6 @@ a[href*="Fertig"] > .md-tag,
   padding-bottom: 0.3em;
 }
 
-/* Admonition accent tweaks */
-.md-typeset .admonition.tip,
-.md-typeset details.tip {
-  border-color: var(--ef-red);
-}
-
 /* Table styling */
 .md-typeset table:not([class]) {
   border-radius: 8px;
@@ -273,22 +170,6 @@ a[href*="Fertig"] > .md-tag,
 
 .md-footer {
   border-top: 2px solid var(--ef-red);
-}
-
-/* ============================================
-   Announcement Bar
-   ============================================ */
-
-.md-banner {
-  background: linear-gradient(90deg, var(--ef-red-dark), var(--ef-red));
-  color: white;
-  font-size: 0.8rem;
-  text-align: center;
-}
-
-.md-banner a {
-  color: white;
-  text-decoration: underline;
 }
 
 /* ============================================

@@ -1,7 +1,5 @@
 ---
 title: Startseite
-tags:
-  - Fertig
 ---
 
 # Willkommen beim EmergencyForge Wiki
@@ -52,12 +50,3 @@ EmergencyForge ist ein Projekt im Bereich Notfall- und Einsatzmanagement. Dieses
 
 !!! tip "Du kannst mithelfen!"
     Jede Seite hat oben rechts einen :material-pencil: **Bearbeiten-Button**. Damit kannst du direkt Verbesserungen vorschlagen.
-
-## Status-Uebersicht
-
-| Bereich | Status |
-|---------|--------|
-| Erste Schritte | <span class="status status-wip">In Arbeit</span> |
-| Dokumentation | <span class="status status-wip">In Arbeit</span> |
-| Anleitungen | <span class="status status-neu">Neu</span> |
-| Mitmachen | <span class="status status-fertig">Fertig</span> |

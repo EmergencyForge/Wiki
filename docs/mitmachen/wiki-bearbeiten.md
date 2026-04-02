@@ -1,7 +1,5 @@
 ---
 title: Wiki bearbeiten
-tags:
-  - Fertig
 ---
 
 # Wiki bearbeiten
@@ -52,17 +50,6 @@ Das Wiki ist dann unter `http://localhost:8000` erreichbar und aktualisiert sich
     ```
 
 3. Trage die Seite in der `mkdocs.yml` unter `nav:` ein
-
-## Status-Tags
-
-Jede Seite kann mit Status-Tags versehen werden:
-
-| Tag | Bedeutung |
-|-----|-----------|
-| <span class="status status-neu">Neu</span> | Seite wurde neu angelegt |
-| <span class="status status-wip">In Arbeit</span> | Inhalte werden gerade erstellt |
-| <span class="status status-fertig">Fertig</span> | Seite ist vollstaendig |
-| <span class="status status-veraltet">Veraltet</span> | Inhalte muessen aktualisiert werden |
 
 ## Nuetzliche Formatierung
 

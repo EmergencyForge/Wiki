@@ -1,7 +1,5 @@
 ---
 title: Styleguide
-tags:
-  - Fertig
 ---
 
 # Styleguide & Formatierung
@@ -264,29 +262,6 @@ mkdocs serve
 
 ---
 
-## Status-Tags
-
-Jede Seite kann im Frontmatter mit Tags versehen werden:
-
-```markdown
----
-title: Seitentitel
-tags:
-  - Neu
----
-```
-
-### Verfuegbare Tags
-
-| Tag | Bedeutung | Verwendung |
-|-----|-----------|------------|
-| <span class="status status-neu">Neu</span> | Seite wurde neu angelegt | Neue, noch nicht vollstaendige Seiten |
-| <span class="status status-wip">In Arbeit</span> | Inhalte werden erstellt | Seiten die aktiv bearbeitet werden |
-| <span class="status status-fertig">Fertig</span> | Seite ist vollstaendig | Abgeschlossene, reviewte Seiten |
-| <span class="status status-veraltet">Veraltet</span> | Muss aktualisiert werden | Seiten mit nicht mehr aktuellen Inhalten |
-
----
-
 ## Tastenkuerzel
 
 Mit der `pymdownx.keys`-Erweiterung:
@@ -356,8 +331,6 @@ Verwende diese Vorlage als Ausgangspunkt fuer neue Seiten:
 ```markdown
 ---
 title: Seitentitel
-tags:
-  - Neu
 ---
 
 # Seitentitel

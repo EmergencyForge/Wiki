@@ -1,7 +1,5 @@
 ---
 title: Wie kann ich beitragen?
-tags:
-  - Fertig
 ---
 
 # Wie kann ich beitragen?

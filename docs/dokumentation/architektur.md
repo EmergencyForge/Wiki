@@ -1,7 +1,5 @@
 ---
 title: Architektur
-tags:
-  - Neu
 ---
 
 # Architektur

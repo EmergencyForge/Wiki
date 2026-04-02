@@ -1,7 +1,5 @@
 ---
 title: API-Referenz
-tags:
-  - Neu
 ---
 
 # API-Referenz

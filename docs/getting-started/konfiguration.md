@@ -1,7 +1,5 @@
 ---
 title: Konfiguration
-tags:
-  - In Arbeit
 ---
 
 # Konfiguration
