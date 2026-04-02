@@ -94,6 +94,9 @@ extra:
 extra_css:
   - assets/stylesheets/extra.css
 
+extra_javascript:
+  - assets/javascripts/overdrive.js
+
 copyright: Copyright &copy; 2024-2026 EmergencyForge
 
 nav:

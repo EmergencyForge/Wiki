@@ -1,5 +1,5 @@
 /* ============================================
-   EmergencyForge Custom Theme
+   EmergencyForge Custom Theme — OVERDRIVE
    ============================================ */
 
 :root {
@@ -24,6 +24,77 @@
   --md-primary-fg-color--dark: var(--ef-red-dark);
   --md-accent-fg-color: var(--ef-red-light);
   --ef-border: rgba(198, 40, 40, 0.25);
+}
+
+/* ============================================
+   Ambient Breathing Header
+   Animated gradient that slowly shifts,
+   giving the header a living feel.
+   ============================================ */
+
+@property --ef-gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --ef-gradient-pos {
+  syntax: "<percentage>";
+  initial-value: 0%;
+  inherits: false;
+}
+
+@keyframes ambientShift {
+  0% {
+    --ef-gradient-angle: 135deg;
+    --ef-gradient-pos: 0%;
+  }
+  25% {
+    --ef-gradient-angle: 180deg;
+    --ef-gradient-pos: 30%;
+  }
+  50% {
+    --ef-gradient-angle: 225deg;
+    --ef-gradient-pos: 60%;
+  }
+  75% {
+    --ef-gradient-angle: 180deg;
+    --ef-gradient-pos: 30%;
+  }
+  100% {
+    --ef-gradient-angle: 135deg;
+    --ef-gradient-pos: 0%;
+  }
+}
+
+.md-header {
+  background: linear-gradient(
+    var(--ef-gradient-angle),
+    var(--ef-red-dark) var(--ef-gradient-pos),
+    var(--ef-red) calc(var(--ef-gradient-pos) + 40%),
+    var(--ef-red-dark) calc(var(--ef-gradient-pos) + 80%)
+  ) !important;
+  animation: ambientShift 20s ease infinite;
+}
+
+/* Tabs bar picks up the gradient edge */
+.md-tabs {
+  background: linear-gradient(
+    90deg,
+    var(--ef-red-dark),
+    var(--ef-red),
+    var(--ef-red-dark)
+  ) !important;
+  animation: tabShimmer 15s ease infinite;
+}
+
+@keyframes tabShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.md-tabs {
+  background-size: 200% 100% !important;
 }
 
 /* ============================================
@@ -77,47 +148,177 @@
 }
 
 /* ============================================
-   Animated Cards
+   3D Tilt Cards
+   Cards respond to mouse position with
+   subtle perspective shift. JS adds the
+   inline styles, CSS handles the rest.
    ============================================ */
 
-/* Card entrance animation */
 @keyframes cardSlideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px) scale(0.97);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
+}
+
+.grid.cards > ul {
+  perspective: 1000px;
 }
 
 .grid.cards > ul > li,
 .md-typeset .grid.cards > ul > li {
-  animation: cardSlideUp 0.5s ease forwards;
+  animation: cardSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   opacity: 0;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.3s ease;
   border: 1px solid var(--ef-border);
   border-top: 3px solid var(--ef-red);
   position: relative;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .grid.cards > ul > li:nth-child(1) { animation-delay: 0.05s; }
-.grid.cards > ul > li:nth-child(2) { animation-delay: 0.1s; }
-.grid.cards > ul > li:nth-child(3) { animation-delay: 0.15s; }
-.grid.cards > ul > li:nth-child(4) { animation-delay: 0.2s; }
-.grid.cards > ul > li:nth-child(5) { animation-delay: 0.25s; }
-.grid.cards > ul > li:nth-child(6) { animation-delay: 0.3s; }
+.grid.cards > ul > li:nth-child(2) { animation-delay: 0.12s; }
+.grid.cards > ul > li:nth-child(3) { animation-delay: 0.19s; }
+.grid.cards > ul > li:nth-child(4) { animation-delay: 0.26s; }
+.grid.cards > ul > li:nth-child(5) { animation-delay: 0.33s; }
+.grid.cards > ul > li:nth-child(6) { animation-delay: 0.4s; }
 
-/* Card hover: lift + glow */
+/* Card hover: lift + glow + subtle inner shine */
 .grid.cards > ul > li:hover,
 .md-typeset .grid.cards > ul > li:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px var(--ef-red-glow);
+  box-shadow:
+    0 12px 32px var(--ef-red-glow),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   border-color: var(--ef-red-light);
   border-top-color: var(--ef-red-light);
+}
+
+/* Gloss reflection layer on card hover */
+.grid.cards > ul > li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.04),
+    transparent
+  );
+  transition: left 0.6s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.grid.cards > ul > li:hover::before {
+  left: 150%;
+}
+
+/* ============================================
+   Scroll-Driven Reveal
+   Sections fade and slide up as they
+   enter the viewport.
+   ============================================ */
+
+@supports (animation-timeline: view()) {
+  .md-typeset h2,
+  .md-typeset .admonition,
+  .md-typeset details,
+  .md-typeset table:not([class]),
+  .md-typeset .grid.cards {
+    animation: scrollReveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 30%;
+  }
+
+  @keyframes scrollReveal {
+    from {
+      opacity: 0.3;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Fallback for browsers without scroll-driven animations */
+@supports not (animation-timeline: view()) {
+  .md-typeset h2,
+  .md-typeset .admonition,
+  .md-typeset details,
+  .md-typeset table:not([class]) {
+    animation: fadeIn 0.5s ease both;
+  }
+}
+
+/* ============================================
+   Page Transition (View Transitions API)
+   Smooth cross-fade + slide on navigation.
+   Triggered by JS when available.
+   ============================================ */
+
+::view-transition-old(root) {
+  animation: pageOut 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+::view-transition-new(root) {
+  animation: pageIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes pageOut {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Content area gets its own view-transition-name */
+.md-content {
+  view-transition-name: content;
+}
+
+::view-transition-old(content) {
+  animation: contentOut 0.2s ease forwards;
+}
+
+::view-transition-new(content) {
+  animation: contentIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 0.05s;
+}
+
+@keyframes contentOut {
+  to {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+@keyframes contentIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
 }
 
 /* ============================================
@@ -141,7 +342,6 @@
    Content Enhancements
    ============================================ */
 
-/* Smooth heading anchors */
 .md-typeset h1,
 .md-typeset h2,
 .md-typeset h3 {
@@ -173,7 +373,7 @@
 }
 
 /* ============================================
-   Page load animation
+   Page load animation (fallback)
    ============================================ */
 
 @keyframes fadeIn {
@@ -181,7 +381,8 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.md-content {
+/* Only animate on first load, not on SPA nav */
+.md-content:not([data-navigated]) {
   animation: fadeIn 0.4s ease;
 }
 
@@ -207,9 +408,40 @@
 }
 
 /* ============================================
-   Progress bar color
+   Progress bar
    ============================================ */
 
 .md-progress {
   background: var(--ef-red);
+}
+
+/* ============================================
+   Reduced Motion — respect the user
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .md-header {
+    animation: none !important;
+    background: var(--ef-red) !important;
+  }
+
+  .md-tabs {
+    animation: none !important;
+    background: var(--ef-red-dark) !important;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-old(content),
+  ::view-transition-new(content) {
+    animation: none !important;
+  }
 }
