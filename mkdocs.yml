@@ -99,9 +99,9 @@ copyright: Copyright &copy; 2024-2026 EmergencyForge
 nav:
   - Startseite: index.md
   - Erste Schritte:
-      - getting-started/index.md
-      - Installation: getting-started/installation.md
-      - Konfiguration: getting-started/konfiguration.md
+      - erste-schritte/index.md
+      - Installation: erste-schritte/installation.md
+      - Konfiguration: erste-schritte/konfiguration.md
   - Dokumentation:
       - dokumentation/index.md
       - Architektur: dokumentation/architektur.md
