@@ -4,7 +4,7 @@ title: Erste Schritte
 
 # Erste Schritte
 
-Hier findest du alles, um mit EmergencyForge loszulegen.
+Hier findest du alles, um mit intraRP loszulegen.
 
 ## Systemanforderungen
 
