@@ -10,9 +10,9 @@ EmergencyForge lebt von seiner Community. Es gibt viele Wege, wie du helfen kann
 
 Der einfachste Weg mitzumachen: **Dieses Wiki erweitern und verbessern.**
 
-Jede Seite hat oben rechts einen :material-pencil: Bearbeiten-Button, der dich direkt zum entsprechenden Markdown-File auf GitHub bringt. Dort kannst du Aenderungen vorschlagen, die dann als Pull Request eingereicht werden.
+Jede Seite hat oben rechts einen :material-pencil: Bearbeiten-Button, der dich direkt zum entsprechenden Markdown-File auf GitHub bringt. Dort kannst du Änderungen vorschlagen, die dann als Pull Request eingereicht werden.
 
-Mehr dazu unter [Wiki bearbeiten](wiki-bearbeiten.md). Eine Uebersicht aller Formatierungsmoeglichkeiten findest du im [Styleguide](styleguide.md).
+Mehr dazu unter [Wiki bearbeiten](wiki-bearbeiten.md). Eine Übersicht aller Formatierungsmöglichkeiten findest du im [Styleguide](styleguide.md).
 
 ## Code beitragen
 
@@ -26,6 +26,6 @@ Nutze die [GitHub Issues](https://github.com/EmergencyForge/Wiki/issues), um Feh
 
 ## Richtlinien
 
-- Schreibe klar und verstaendlich
+- Schreibe klar und verständlich
 - Halte dich an die bestehende Struktur
-- Eine Aenderung pro Pull Request
+- Eine Änderung pro Pull Request

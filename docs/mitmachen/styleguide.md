@@ -4,7 +4,7 @@ title: Styleguide
 
 # Styleguide & Formatierung
 
-Diese Seite zeigt alle Formatierungsmoeglichkeiten, die im EmergencyForge Wiki zur Verfuegung stehen. Nutze sie als Referenz beim Schreiben neuer Inhalte.
+Diese Seite zeigt alle Formatierungsmöglichkeiten, die im EmergencyForge Wiki zur Verfügung stehen. Nutze sie als Referenz beim Schreiben neuer Inhalte.
 
 ---
 
@@ -22,23 +22,23 @@ Diese Seite zeigt alle Formatierungsmoeglichkeiten, die im EmergencyForge Wiki z
 
 ---
 
-## Ueberschriften
+## Überschriften
 
 ```markdown
-# Ueberschrift 1
-## Ueberschrift 2
-### Ueberschrift 3
-#### Ueberschrift 4
+# Überschrift 1
+## Überschrift 2
+### Überschrift 3
+#### Überschrift 4
 ```
 
 !!! tip "Tipp"
-    Verwende pro Seite nur eine `#`-Ueberschrift (H1). Unterabschnitte beginnen mit `##`.
+    Verwende pro Seite nur eine `#`-Überschrift (H1). Unterabschnitte beginnen mit `##`.
 
 ---
 
 ## Listen
 
-### Aufzaehlungen
+### Aufzählungen
 
 ```markdown
 - Erster Punkt
@@ -85,10 +85,10 @@ Diese Seite zeigt alle Formatierungsmoeglichkeiten, die im EmergencyForge Wiki z
 ### Alle Typen
 
 !!! note "Hinweis"
-    Ein allgemeiner Hinweis fuer zusaetzliche Informationen.
+    Ein allgemeiner Hinweis für zusätzliche Informationen.
 
 !!! tip "Tipp"
-    Ein nuetzlicher Tipp oder Best Practice.
+    Ein nützlicher Tipp oder Best Practice.
 
 !!! info "Information"
     Hintergrundinformationen zum Thema.
@@ -100,7 +100,7 @@ Diese Seite zeigt alle Formatierungsmoeglichkeiten, die im EmergencyForge Wiki z
     Hier ist Vorsicht geboten.
 
 !!! danger "Gefahr"
-    Kritische Warnung — kann zu Datenverlust oder Fehlern fuehren.
+    Kritische Warnung — kann zu Datenverlust oder Fehlern führen.
 
 !!! bug "Bug"
     Ein bekannter Fehler oder bekanntes Problem.
@@ -112,10 +112,10 @@ Diese Seite zeigt alle Formatierungsmoeglichkeiten, die im EmergencyForge Wiki z
     Ein Zitat oder eine externe Referenz.
 
 !!! abstract "Zusammenfassung"
-    Kurzfassung eines laengeren Abschnitts.
+    Kurzfassung eines längeren Abschnitts.
 
 !!! question "Frage"
-    Eine haeufig gestellte Frage.
+    Eine häufig gestellte Frage.
 
 !!! failure "Fehlgeschlagen"
     Etwas ist schiefgelaufen.
@@ -124,15 +124,15 @@ Diese Seite zeigt alle Formatierungsmoeglichkeiten, die im EmergencyForge Wiki z
 
 ```markdown
 !!! tip "Titel der Box"
-    Inhalt der Box. Einrueckung mit 4 Leerzeichen.
+    Inhalt der Box. Einrückung mit 4 Leerzeichen.
 ```
 
 ### Aufklappbare Boxen
 
 ??? example "Klick mich auf (zugeklappt)"
-    Dieser Inhalt ist zunaechst versteckt und wird erst beim Klick sichtbar.
+    Dieser Inhalt ist zunächst versteckt und wird erst beim Klick sichtbar.
 
-???+ info "Standardmaessig offen (zuklappbar)"
+???+ info "Standardmäßig offen (zuklappbar)"
     Dieser Inhalt ist initial sichtbar, kann aber zugeklappt werden.
 
 ```markdown
@@ -149,9 +149,9 @@ Diese Seite zeigt alle Formatierungsmoeglichkeiten, die im EmergencyForge Wiki z
 
 ### Inline-Code
 
-Verwende Backticks fuer `inline code` oder Dateinamen wie `mkdocs.yml`.
+Verwende Backticks für `inline code` oder Dateinamen wie `mkdocs.yml`.
 
-### Code-Bloecke
+### Code-Blöcke
 
 ````markdown
 ```python
@@ -178,7 +178,7 @@ mkdocs serve
 ```
 
 !!! tip "Tipp"
-    Gib immer die Sprache nach den drei Backticks an (`python`, `javascript`, `bash`, `yaml`, etc.) fuer korrekte Syntax-Hervorhebung.
+    Gib immer die Sprache nach den drei Backticks an (`python`, `javascript`, `bash`, `yaml`, etc.) für korrekte Syntax-Hervorhebung.
 
 ---
 
@@ -238,7 +238,7 @@ mkdocs serve
 
     ---
 
-    Cards eignen sich gut fuer Uebersichtsseiten mit mehreren Bereichen.
+    Cards eignen sich gut für Übersichtsseiten mit mehreren Bereichen.
 
 - :material-cog: **Noch eine Card**
 
@@ -262,15 +262,15 @@ mkdocs serve
 
 ---
 
-## Tastenkuerzel
+## Tastenkürzel
 
 Mit der `pymdownx.keys`-Erweiterung:
 
 ```markdown
-++ctrl+c++ zum Kopieren, ++ctrl+v++ zum Einfuegen.
+++ctrl+c++ zum Kopieren, ++ctrl+v++ zum Einfügen.
 ```
 
-++ctrl+c++ zum Kopieren, ++ctrl+v++ zum Einfuegen.
+++ctrl+c++ zum Kopieren, ++ctrl+v++ zum Einfügen.
 
 ---
 
@@ -292,17 +292,17 @@ Wiki
 
 ---
 
-## Fussnoten
+## Fußnoten
 
 ```markdown
-Das ist ein Satz mit einer Fussnote.[^1]
+Das ist ein Satz mit einer Fußnote.[^1]
 
-[^1]: Hier steht die Erlaeuterung zur Fussnote.
+[^1]: Hier steht die Erläuterung zur Fußnote.
 ```
 
-Das ist ein Satz mit einer Fussnote.[^1]
+Das ist ein Satz mit einer Fußnote.[^1]
 
-[^1]: Hier steht die Erlaeuterung zur Fussnote.
+[^1]: Hier steht die Erläuterung zur Fußnote.
 
 ---
 
@@ -326,7 +326,7 @@ Bilder werden im Ordner `docs/assets/` abgelegt.
 
 ## Seitenstruktur — Vorlage
 
-Verwende diese Vorlage als Ausgangspunkt fuer neue Seiten:
+Verwende diese Vorlage als Ausgangspunkt für neue Seiten:
 
 ```markdown
 ---
@@ -342,7 +342,7 @@ Kurze Einleitung — worum geht es auf dieser Seite?
 Inhalt...
 
 !!! info "Wichtig"
-    Zusaetzliche Hinweise.
+    Zusätzliche Hinweise.
 
 ## Zweiter Abschnitt
 

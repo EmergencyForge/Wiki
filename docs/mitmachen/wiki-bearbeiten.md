@@ -4,38 +4,38 @@ title: Wiki bearbeiten
 
 # Wiki bearbeiten
 
-Dieses Wiki basiert auf [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) und wird ueber GitHub Pages bereitgestellt. Alle Inhalte sind einfache Markdown-Dateien im `docs/`-Ordner.
+Dieses Wiki basiert auf [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) und wird über GitHub Pages bereitgestellt. Alle Inhalte sind einfache Markdown-Dateien im `docs/`-Ordner.
 
 ## Direkt auf GitHub bearbeiten
 
 1. Klicke auf den :material-pencil: **Bearbeiten-Button** oben rechts auf einer Wiki-Seite
 2. Du wirst zur entsprechenden Datei auf GitHub weitergeleitet
-3. Nimm deine Aenderungen vor
+3. Nimm deine Änderungen vor
 4. Klicke auf **"Propose changes"** — das erstellt automatisch einen Pull Request
-5. Nach dem Review wird die Aenderung uebernommen und das Wiki aktualisiert sich automatisch
+5. Nach dem Review wird die Änderung übernommen und das Wiki aktualisiert sich automatisch
 
 ## Lokal bearbeiten
 
-Falls du groessere Aenderungen machen moechtest:
+Falls du größere Änderungen machen möchtest:
 
 ```bash
 # Repository klonen
 git clone https://github.com/EmergencyForge/Wiki.git
 cd Wiki
 
-# Python-Abhaengigkeiten installieren
+# Python-Abhängigkeiten installieren
 pip install -r requirements.txt
 
 # Lokalen Dev-Server starten
 mkdocs serve
 ```
 
-Das Wiki ist dann unter `http://localhost:8000` erreichbar und aktualisiert sich bei Aenderungen automatisch.
+Das Wiki ist dann unter `http://localhost:8000` erreichbar und aktualisiert sich bei Änderungen automatisch.
 
 ## Neue Seite anlegen
 
 1. Erstelle eine neue `.md`-Datei im passenden Unterordner von `docs/`
-2. Fuege am Anfang der Datei einen Titel und Tags hinzu:
+2. Füge am Anfang der Datei einen Titel und Tags hinzu:
 
     ```markdown
     ---
@@ -51,9 +51,9 @@ Das Wiki ist dann unter `http://localhost:8000` erreichbar und aktualisiert sich
 
 3. Trage die Seite in der `mkdocs.yml` unter `nav:` ein
 
-## Nuetzliche Formatierung
+## Nützliche Formatierung
 
-MkDocs Material unterstuetzt viele nuetzliche Extras:
+MkDocs Material unterstützt viele nützliche Extras:
 
 ### Hinweisboxen
 
@@ -65,10 +65,10 @@ MkDocs Material unterstuetzt viele nuetzliche Extras:
     Hier steht eine Warnung.
 
 !!! tip "Tipp"
-    Hier steht ein nuetzlicher Tipp.
+    Hier steht ein nützlicher Tipp.
 ```
 
-### Code-Bloecke
+### Code-Blöcke
 
 ````markdown
 ```python

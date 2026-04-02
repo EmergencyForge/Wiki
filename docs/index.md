@@ -2,16 +2,9 @@
 title: Startseite
 ---
 
-<div class="ef-hero" markdown>
+# Willkommen beim EmergencyForge Wiki
 
-# Emergency&shy;Forge
-
-**Die zentrale Wissensbasis fuer Notfall- und Einsatzmanagement.**{ .ef-hero__subtitle }
-
-[Erste Schritte :material-arrow-right:](erste-schritte/index.md){ .md-button .md-button--primary }
-[Dokumentation](dokumentation/index.md){ .md-button }
-
-</div>
+Dieses Wiki ist die zentrale Wissenssammlung rund um **EmergencyForge**. Hier findest du Dokumentation, Anleitungen und alles, was du für den Einstieg und die Arbeit mit dem Projekt brauchst.
 
 ---
 
@@ -37,7 +30,7 @@ title: Startseite
 
     ---
 
-    Schritt-fuer-Schritt-Anleitungen fuer haeufige Aufgaben.
+    Schritt-für-Schritt-Anleitungen für häufige Aufgaben.
 
     [:octicons-arrow-right-24: Zu den Anleitungen](anleitungen/index.md)
 
