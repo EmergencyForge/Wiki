@@ -56,8 +56,7 @@ theme:
 plugins:
   - search:
       lang: de
-  - tags:
-      tags_file: tags.md
+  - tags
   - social
   - git-revision-date-localized:
       enable_creation_date: true
@@ -102,8 +101,6 @@ extra:
       link: https://discord.gg/emergencyforge
       name: Discord
   generator: false
-  analytics:
-    provider: custom
 
 extra_css:
   - assets/stylesheets/extra.css
@@ -125,4 +122,5 @@ nav:
   - Mitmachen:
       - mitmachen/beitragen.md
       - Wiki bearbeiten: mitmachen/wiki-bearbeiten.md
+      - Styleguide: mitmachen/styleguide.md
   - Tags: tags.md

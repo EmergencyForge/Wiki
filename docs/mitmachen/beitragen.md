@@ -14,7 +14,7 @@ Der einfachste Weg mitzumachen: **Dieses Wiki erweitern und verbessern.**
 
 Jede Seite hat oben rechts einen :material-pencil: Bearbeiten-Button, der dich direkt zum entsprechenden Markdown-File auf GitHub bringt. Dort kannst du Aenderungen vorschlagen, die dann als Pull Request eingereicht werden.
 
-Mehr dazu unter [Wiki bearbeiten](wiki-bearbeiten.md).
+Mehr dazu unter [Wiki bearbeiten](wiki-bearbeiten.md). Eine Uebersicht aller Formatierungsmoeglichkeiten findest du im [Styleguide](styleguide.md).
 
 ## Code beitragen
 
