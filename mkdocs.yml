@@ -103,8 +103,8 @@ nav:
   - Startseite: index.md
   - Erste Schritte:
       - erste-schritte/index.md
-      - Installation: erste-schritte/installation.md
-      - Konfiguration: erste-schritte/konfiguration.md
+      - Discord-Applikation erstellen: erste-schritte/discord-app-erstellen.md
+      - Installation von intraRP: erste-schritte/installation.md
   - Dokumentation:
       - dokumentation/index.md
       - Architektur: dokumentation/architektur.md
