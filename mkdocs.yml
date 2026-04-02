@@ -1,6 +1,6 @@
 site_name: EmergencyForge Wiki
 site_description: Das Wiki fuer EmergencyForge — Dokumentation, Anleitungen und Wissenssammlung
-site_url: https://hypax.github.io/Wiki/
+site_url: https://wiki.emergencyforge.de/
 repo_url: https://github.com/hypax/Wiki
 repo_name: hypax/Wiki
 edit_uri: edit/main/docs/
@@ -35,6 +35,8 @@ theme:
     - content.action.edit
     - content.code.copy
     - toc.follow
+  logo: assets/logo.png
+  favicon: assets/logo.png
   icon:
     repo: fontawesome/brands/github
     edit: material/pencil
