@@ -2,11 +2,18 @@
 title: Startseite
 ---
 
-# Willkommen beim EmergencyForge Wiki
+<div class="ef-hero" markdown>
 
-Dieses Wiki ist die zentrale Wissenssammlung rund um **EmergencyForge**. Hier findest du Dokumentation, Anleitungen und alles, was du fuer den Einstieg und die Arbeit mit dem Projekt brauchst.
+# Emergency&shy;Forge
 
-## Schnelleinstieg
+**Die zentrale Wissensbasis fuer Notfall- und Einsatzmanagement.**{ .ef-hero__subtitle }
+
+[Erste Schritte :material-arrow-right:](erste-schritte/index.md){ .md-button .md-button--primary }
+[Dokumentation](dokumentation/index.md){ .md-button }
+
+</div>
+
+---
 
 <div class="grid cards" markdown>
 
@@ -16,7 +23,7 @@ Dieses Wiki ist die zentrale Wissenssammlung rund um **EmergencyForge**. Hier fi
 
     Einstieg in EmergencyForge — Installation, Konfiguration und erste Nutzung.
 
-    [:octicons-arrow-right-24: Loslegen](getting-started/index.md)
+    [:octicons-arrow-right-24: Loslegen](erste-schritte/index.md)
 
 - :material-book-open-variant:{ .lg .middle } **Dokumentation**
 
@@ -44,9 +51,7 @@ Dieses Wiki ist die zentrale Wissenssammlung rund um **EmergencyForge**. Hier fi
 
 </div>
 
-## Was ist EmergencyForge?
-
-EmergencyForge ist ein Projekt im Bereich Notfall- und Einsatzmanagement. Dieses Wiki dient als lebendige Dokumentation, die von der Community gepflegt und erweitert wird.
+---
 
 !!! tip "Du kannst mithelfen!"
     Jede Seite hat oben rechts einen :material-pencil: **Bearbeiten-Button**. Damit kannst du direkt Verbesserungen vorschlagen.

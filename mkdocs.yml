@@ -8,6 +8,9 @@ edit_uri: edit/main/docs/
 theme:
   name: material
   language: de
+  font:
+    text: Inter
+    code: JetBrains Mono
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
