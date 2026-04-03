@@ -4,4 +4,5 @@ title: Architektur
 
 # Architektur
 
-*Diese Seite wird noch mit Architekturdetails ergänzt.*
+!!! info "In Arbeit"
+    Diese Seite wird aktuell erstellt. Du kannst gerne [mithelfen](../mitmachen/beitragen.md).

@@ -4,4 +4,5 @@ title: API-Referenz
 
 # API-Referenz
 
-*Diese Seite wird noch mit der API-Dokumentation ergänzt.*
+!!! info "In Arbeit"
+    Diese Seite wird aktuell erstellt. Du kannst gerne [mithelfen](../mitmachen/beitragen.md).

@@ -558,47 +558,17 @@
 }
 
 /* ============================================
-   QUICK-LINK CHIPS
+   CARD HIERARCHY — Primary card stands out
    ============================================ */
 
-.ef-quicklinks {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  padding: 1.2rem 0;
-  margin: 0 -0.6rem;
-  border-bottom: 1px solid var(--ef-border-subtle);
-  background: var(--ef-surface-0);
+.ef-cards-hero > ul > li:first-child {
+  grid-column: 1 / -1;
+  background: rgba(198, 40, 40, 0.04);
+  border-left-width: 4px;
 }
 
-.ef-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-  padding: 0.4em 1em;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(220, 228, 236, 0.8);
-  background: var(--ef-surface-2);
-  border: 1px solid var(--ef-border-medium);
-  border-radius: 20px;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
-  text-decoration: none;
-}
-
-.ef-chip:hover {
-  border-color: var(--ef-red);
-  color: var(--ef-red-light);
-  background: rgba(198, 40, 40, 0.08);
-}
-
-/* ============================================
-   REQUIREMENTS SECTION
-   ============================================ */
-
-.ef-requirements {
-  margin-top: 1rem;
+.ef-cards-hero > ul > li:first-child p:first-child {
+  font-size: 1.1rem;
 }
 
 /* ============================================
