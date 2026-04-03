@@ -488,88 +488,6 @@
   background: var(--ef-red);
 }
 
-/* ============================================
-   HERO SECTION — Landing page
-   ============================================ */
-
-.ef-hero {
-  text-align: center;
-  padding: 3rem 1rem 2rem;
-  margin: -0.6rem -0.6rem 0;
-  border-bottom: 1px solid var(--ef-border-red);
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(198, 40, 40, 0.06) 0%, transparent 60%),
-    var(--ef-surface-1);
-}
-
-.ef-hero h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  margin-bottom: 0.5em;
-}
-
-.ef-hero__subtitle {
-  font-size: 1rem;
-  font-weight: 400;
-  opacity: 0.6;
-  display: block;
-  max-width: 520px;
-  margin: 0 auto 1.5rem;
-  line-height: 1.6;
-}
-
-.ef-hero__actions {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.ef-hero .md-button {
-  font-weight: 600;
-  font-size: 0.82rem;
-  letter-spacing: 0.01em;
-  border-radius: 6px;
-  padding: 0.5em 1.2em;
-}
-
-.ef-hero .md-button--primary {
-  background: var(--ef-red);
-  border-color: var(--ef-red);
-  color: white;
-  box-shadow: 0 4px 16px rgba(198, 40, 40, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.ef-hero .md-button--primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(198, 40, 40, 0.35);
-}
-
-@keyframes heroFadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.ef-hero {
-  animation: heroFadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* ============================================
-   CARD HIERARCHY — Primary card stands out
-   ============================================ */
-
-.ef-cards-hero > ul > li:first-child {
-  grid-column: 1 / -1;
-  background: rgba(198, 40, 40, 0.04);
-  border-left-width: 4px;
-}
-
-.ef-cards-hero > ul > li:first-child p:first-child {
-  font-size: 1.1rem;
-}
 
 /* ============================================
    INLINE BADGES
@@ -724,14 +642,6 @@
 }
 
 /* ============================================
-   HIDE NAV/TOC on landing page
-   ============================================ */
-
-.md-content[data-md-component="content"] > article > .ef-hero ~ .md-typeset {
-  max-width: 100%;
-}
-
-/* ============================================
    REDUCED MOTION
    ============================================ */
 
@@ -747,10 +657,6 @@
   .md-header {
     animation: none !important;
     background: var(--ef-surface-0) !important;
-  }
-
-  .ef-hero {
-    animation: none !important;
   }
 
   ::view-transition-old(root),

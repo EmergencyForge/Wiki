@@ -1,51 +1,20 @@
 ---
 title: Startseite
-hide:
-  - navigation
-  - toc
 ---
 
-<div class="ef-hero" markdown>
+# EmergencyForge Wiki
 
-<div class="ef-hero__content" markdown>
+Willkommen bei der Dokumentation für **intraRP** — das Einsatzmanagement-Tool von EmergencyForge.
 
-# intraRP Dokumentation
-
-Die zentrale Wissensbasis für **intraRP** von EmergencyForge.
-Setup-Anleitungen, Konfiguration und technische Referenz.
-{ .ef-hero__subtitle }
-
-<div class="ef-hero__actions" markdown>
-
-[Quickstart :material-arrow-right:](erste-schritte/index.md){ .md-button .md-button--primary }
-[GitHub :fontawesome-brands-github:](https://github.com/EmergencyForge/intraRP){ .md-button }
-[Discord :fontawesome-brands-discord:](https://discord.gg/emergencyforge){ .md-button }
-
-</div>
-
-</div>
-
-</div>
-
----
-
-<div class="grid cards ef-cards-hero" markdown>
+<div class="grid cards" markdown>
 
 - :material-rocket-launch:{ .lg .middle } **Erste Schritte**
 
     ---
 
-    Systemanforderungen, Discord-Setup und Installation — alles für den Start mit intraRP.
+    Systemanforderungen, Discord-Setup und Installation — alles für den Start.
 
     [:octicons-arrow-right-24: Loslegen](erste-schritte/index.md)
-
-- :material-book-open-variant:{ .lg .middle } **Dokumentation**
-
-    ---
-
-    Technische Dokumentation und API-Referenz.
-
-    [:octicons-arrow-right-24: Zur Dokumentation](dokumentation/index.md)
 
 - :material-account-group:{ .lg .middle } **Mitmachen**
 
@@ -56,3 +25,6 @@ Setup-Anleitungen, Konfiguration und technische Referenz.
     [:octicons-arrow-right-24: Mitmachen](mitmachen/beitragen.md)
 
 </div>
+
+!!! tip "Du kannst mithelfen!"
+    Jede Seite hat oben rechts einen :material-pencil: **Bearbeiten-Button**. Damit kannst du direkt Verbesserungen vorschlagen.

@@ -4,35 +4,24 @@ title: Erste Schritte
 
 # Erste Schritte
 
-Hier findest du alles, um mit intraRP loszulegen.
+Hier findest du alles, um intraRP zum Laufen zu bringen.
 
 ## Systemanforderungen
 
 !!! warning "Achtung"
-    Windows wird von uns aktuell nicht offiziell für die Installation bzw. Nutzung von intraRP unterstützt. Wann und ob eine Unterstützung stattfindet ist unklar.
-
-Um intraRP erfolgreich betrieben zu können, müssen folgende Anforderungen erfüllt sein:
-
-### 1. Webserver
+    Windows wird aktuell nicht offiziell unterstützt.
 
 | Komponente | Anforderung |
 |------------|-------------|
 | Webserver | Apache oder NGINX |
-| PHP | Version 8.1 oder höher |
+| PHP | 8.1 oder höher |
 | Datenbank | MySQL 8.0+ oder MariaDB 10.6+ |
+| Speicher | min. 700 MB (empfohlen: 2 GB) |
+| SSL | Erforderlich |
+| Discord | Applikation für Authentifizierung |
 
 !!! note "Hinweis"
     Composer wird ab Version 0.8.0.0 nicht mehr zwingend vorausgesetzt — die neuste Setup-Installation liefert alle nötigen Dependencies mit. **Für Installationen OHNE das Setup wird weiterhin Composer benötigt!**
-
-### 2. Speicherplatz
-
-- **Minimum:** 700 MB freier Speicherplatz
-- **Empfohlen:** 2 GB oder mehr
-
-### 3. Weitere Anforderungen
-
-- SSL-Zertifikat und Domain (zwingend erforderlich)
-- Discord-Applikation für Authentifizierung
 
 ## Installationsmethode wählen
 
@@ -40,7 +29,7 @@ Um intraRP erfolgreich betrieben zu können, müssen folgende Anforderungen erf�
 
     Das Setup-Tool führt dich automatisch durch die gesamte Installation.
 
-    1. [Discord-Applikation erstellen](discord-app-erstellen.md)
+    1. [Discord einrichten](discord-app-erstellen.md)
     2. Setup-Datei herunterladen: [EmergencyForge/intraRP-Setup](https://github.com/EmergencyForge/intraRP-Setup)
     3. Setup im Browser aufrufen und den Anweisungen folgen
 
@@ -48,5 +37,5 @@ Um intraRP erfolgreich betrieben zu können, müssen folgende Anforderungen erf�
 
     Für erfahrene Nutzer oder spezielle Server-Setups.
 
-    1. [Discord-Applikation erstellen](discord-app-erstellen.md)
+    1. [Discord einrichten](discord-app-erstellen.md)
     2. [Manuelle Installation](installation.md) durchführen

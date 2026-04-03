@@ -27,6 +27,7 @@ theme:
     - navigation.top
     - navigation.path
     - navigation.indexes
+    - navigation.footer
     - search.suggest
     - search.highlight
     - search.share
@@ -96,11 +97,8 @@ nav:
   - Startseite: index.md
   - Erste Schritte:
       - erste-schritte/index.md
-      - Discord-Applikation erstellen: erste-schritte/discord-app-erstellen.md
-      - Installation von intraRP: erste-schritte/installation.md
-  - Dokumentation:
-      - dokumentation/index.md
-      - API: dokumentation/api.md
+      - Discord einrichten: erste-schritte/discord-app-erstellen.md
+      - Installation: erste-schritte/installation.md
   - Mitmachen:
       - mitmachen/beitragen.md
       - Wiki bearbeiten: mitmachen/wiki-bearbeiten.md

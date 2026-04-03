@@ -1,10 +1,10 @@
 ---
-title: Installation von intraRP
+title: Installation
 ---
 
-# Installation von intraRP
+# Installation
 
-Du willst intraRP auch für dein Projekt verwenden? Mit dieser Anleitung findest du heraus, welche Schritte dich zu einer anwendbaren Version von intraRP bringen.
+Anleitung für die manuelle Installation von intraRP auf deinem Server.
 
 !!! tip "Setup-Tool verwenden"
     Die gesamte Installation kann auch mittels einer fertigen Setup-Datei einfach und intuitiv durchgeführt werden: [EmergencyForge/intraRP-Setup](https://github.com/EmergencyForge/intraRP-Setup)
