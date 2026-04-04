@@ -6,9 +6,9 @@
 /* ── Design Tokens ── */
 [data-md-color-scheme="slate"] {
   /* Brand */
-  --ef-red: #C62828;
-  --ef-red-light: #E53935;
-  --ef-red-dark: #8E0000;
+  --ef-red: #FF4D00;
+  --ef-red-light: #FF6A33;
+  --ef-red-dark: #CC3D00;
 
   /* Surfaces */
   --ef-surface-0: #111418;
@@ -129,8 +129,19 @@
 
 .md-typeset h1,
 .md-typeset h2,
-.md-typeset h3 {
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  font-family: "Poppins", sans-serif;
   scroll-margin-top: 4rem;
+}
+
+.md-header__title,
+.md-tabs__link,
+.ef-404__code,
+.ef-404__title {
+  font-family: "Poppins", sans-serif;
 }
 
 /* ============================================
@@ -321,7 +332,7 @@
 }
 
 .ef-badge--required {
-  background: rgba(198, 40, 40, 0.12);
+  background: rgba(255, 77, 0, 0.12);
   color: var(--ef-red-light);
 }
 
@@ -341,7 +352,7 @@
 }
 
 .ef-badge--version {
-  background: rgba(198, 40, 40, 0.08);
+  background: rgba(255, 77, 0, 0.08);
   color: var(--ef-red-light);
   font-family: "JetBrains Mono", monospace;
   font-size: 0.65rem;
