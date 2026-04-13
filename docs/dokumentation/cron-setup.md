@@ -20,14 +20,14 @@ Je nach Hosting-Situation gibt es drei typische Setups:
     Wenn du SSH-Zugriff auf den Server hast, ist das die einfachste und zuverlässigste Variante. Öffne den Crontab mit `crontab -e` und füge eine Zeile hinzu:
 
     ```cron
-    * * * * * /usr/bin/php /pfad/zu/intraRP/cli/queue-worker.php --max-time=55 >> /pfad/zu/intraRP/storage/logs/queue-cron.log 2>&1
+    * * * * * /usr/bin/php /pfad/zu/intraRP/cli/queue-worker.php --max-time=25 >> /pfad/zu/intraRP/storage/logs/queue-cron.log 2>&1
     ```
 
     **Was das macht:**
 
     - `* * * * *` — jede Minute ausführen
     - `php cli/queue-worker.php` — der Worker-Script
-    - `--max-time=55` — nach 55 Sekunden beenden (bevor der nächste Cron-Lauf startet)
+    - `--max-time=25` — nach 55 Sekunden beenden (bevor der nächste Cron-Lauf startet)
     - `>> queue-cron.log 2>&1` — Output + Fehler ins Log-File schreiben
 
     **Vorteile:** schnell, keine HTTP-Overhead, direkte STDOUT-Logs.
@@ -43,7 +43,7 @@ Je nach Hosting-Situation gibt es drei typische Setups:
     | Feld | Wert |
     |---|---|
     | Intervall | Alle 1 Minute (oder 5 Minuten) |
-    | Befehl | `/usr/bin/php /htdocs/intraRP/cli/queue-worker.php --max-time=55` |
+    | Befehl | `/usr/bin/php /htdocs/intraRP/cli/queue-worker.php --max-time=25` |
     | Output | `/htdocs/intraRP/storage/logs/queue-cron.log` (oder „verwerfen") |
 
     **Wichtig:** Frag deinen Hoster, wo das PHP-Binary liegt. Häufig:
@@ -70,7 +70,7 @@ Je nach Hosting-Situation gibt es drei typische Setups:
     | Feld | Wert |
     |---|---|
     | **Title** | `intraRP Queue Worker` |
-    | **Address / URL** | `https://deine-intrarp.de/cron/queue-worker-cron.php?queue=default&max_time=55` |
+    | **Address / URL** | `https://deine-intrarp.de/cron/queue-worker-cron.php?queue=default&max_time=25` |
     | **Schedule** | Every 1 minute (oder 5 minutes bei Free-Tier-Limits) |
     | **Request method** | `GET` |
     | **Enable job** | ✓ |
@@ -146,7 +146,7 @@ Du kannst fehlgeschlagene Jobs über den DB-Viewer inspizieren und entweder manu
 Der Worker akzeptiert mehrere Tuning-Parameter:
 
 ```bash
-php cli/queue-worker.php --queue=default --max-time=55 --max-jobs=50 --sleep=3
+php cli/queue-worker.php --queue=default --max-time=25 --max-jobs=50 --sleep=3
 ```
 
 | Parameter | Default | Bedeutung |
