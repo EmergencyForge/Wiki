@@ -6,7 +6,7 @@ title: Cron & Hintergrund-Jobs einrichten
 
 intraRP nutzt eine **asynchrone Job-Queue**, damit langsame Operationen (Discord-Webhooks, PDF-Rendering, Federation-Sync, Bulk-Notifications) den User-Request nicht blockieren. Dafür muss regelmäßig ein **Worker** laufen, der die Queue abarbeitet.
 
-Der Worker ist bewusst so gebaut, dass er **nicht als Daemon laufen muss** — er terminiert sich nach einer konfigurierbaren Laufzeit (Default 55 Sekunden) selbst und wird vom Cron immer wieder neu gestartet. Das funktioniert auch auf einfachen Shared-Hosts ohne SSH-Zugriff.
+Der Worker ist bewusst so gebaut, dass er **nicht als Daemon laufen muss** — er terminiert sich nach einer konfigurierbaren Laufzeit (Default 25 Sekunden) selbst und wird vom Cron immer wieder neu gestartet. Das funktioniert auch auf einfachen Shared-Hosts ohne SSH-Zugriff.
 
 !!! info "Ohne Cron läuft's trotzdem"
     Wenn du keinen Cron einrichtest, läuft intraRP weiter wie bisher — der Job-Dispatcher erkennt automatisch, dass die Queue nicht abgearbeitet wird und führt die Jobs direkt synchron im User-Request aus. Du verlierst nur den Performance-Vorteil, aber nichts bricht. Das macht den Cron-Setup-Schritt komplett optional und jederzeit nachholbar.
@@ -27,7 +27,7 @@ Je nach Hosting-Situation gibt es drei typische Setups:
 
     - `* * * * *` — jede Minute ausführen
     - `php cli/queue-worker.php` — der Worker-Script
-    - `--max-time=25` — nach 55 Sekunden beenden (bevor der nächste Cron-Lauf startet)
+    - `--max-time=25` — nach 25 Sekunden beenden (bevor der nächste Cron-Lauf startet)
     - `>> queue-cron.log 2>&1` — Output + Fehler ins Log-File schreiben
 
     **Vorteile:** schnell, keine HTTP-Overhead, direkte STDOUT-Logs.
@@ -152,12 +152,12 @@ php cli/queue-worker.php --queue=default --max-time=25 --max-jobs=50 --sleep=3
 | Parameter | Default | Bedeutung |
 |---|---|---|
 | `--queue` | `default` | Name der Queue, die abgearbeitet wird |
-| `--max-time` | `55` | Maximale Laufzeit in Sekunden, bevor der Worker sich selbst beendet |
+| `--max-time` | `25` | Maximale Laufzeit in Sekunden, bevor der Worker sich selbst beendet |
 | `--max-jobs` | `50` | Maximale Anzahl Jobs pro Worker-Lauf |
 | `--sleep` | `3` | Wartezeit zwischen leeren Poll-Aufrufen (Sekunden) |
 
 **Tipps:**
 
-- **`--max-time` muss kleiner als dein Cron-Intervall sein.** Bei 1-Minuten-Cron → 55s. Bei 5-Minuten-Cron kannst du 280s nehmen, dann läuft der Worker fast die ganze Zeit durch.
+- **`--max-time` muss kleiner als dein Cron-Intervall sein.** Bei 1-Minuten-Cron → 25s. Bei 5-Minuten-Cron kannst du 280s nehmen, dann läuft der Worker fast die ganze Zeit durch.
 - **Separate Queues** für kritische vs. unkritische Jobs: z.B. `--queue=notifications` für Discord-Webhooks (schnell, häufig) und `--queue=reports` für PDF-Generierung (langsam, selten). Zwei Cron-Einträge mit unterschiedlichem `--queue`-Wert.
 - **Monitoring:** Log-Rotation von `storage/logs/queue-cron.log` einrichten, sonst wird die Datei mit der Zeit groß. Monolog rotiert `app-*.log` und `error-*.log` automatisch, aber der CLI-Ausgabe-Redirect nicht.
