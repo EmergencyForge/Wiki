@@ -1,0 +1,84 @@
+---
+title: Tablet-Login
+description: Spieler im Tablet automatisch über ihre Discord-ID bei ignis anmelden.
+sidebar:
+  order: 4
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+## Wozu
+
+Die Discord-Anmeldung von ignis funktioniert im Spielbrowser von FiveM nicht. Der Tablet-Login meldet Spieler deshalb über die Discord-ID an, die der FiveM-Server von ihnen kennt.
+
+Ab Werk ist er aus. Ob die Tablets überhaupt eine Anmeldung brauchen, legst du in ignis fest, siehe [Muss man sich anmelden?](#muss-man-sich-anmelden).
+
+## Ablauf
+
+1. Öffnet ein Spieler zum ersten Mal in seiner Sitzung ein Tablet, fragt der FiveM-Server bei ignis einen Login-Token für seine Discord-ID an.
+2. ignis sucht das aktive Konto mit dieser Discord-ID. Hat kein Konto die ID, nimmt ignis ab 2026.0.22-beta das Konto, das mit dem Mitarbeiter mit dieser Discord-ID verknüpft ist. Der Token gilt 60 Sekunden und nur für eine Anmeldung.
+3. Den Login-Link bekommt nur dieser Spieler. Das Tablet öffnet ihn und springt danach auf die Seite zurück, die es vorher geladen hatte.
+
+Der API-Schlüssel bleibt dabei auf dem Server. Neue Konten legt der Tablet-Login nicht an. Ein Login gilt für beide Tablets, sie teilen sich die ignis-Sitzung.
+
+## Einrichten
+
+<Steps>
+
+1. In ignis unter Einstellungen › System-Konfiguration › Funktionen die Option Anmeldung über ignisTab einschalten.
+
+2. Prüfen, ob der API-Schlüssel in der `config_server.lua` bei `ServerConfig.APIKey` steht. Ohne ihn gibt ignis keinen Token heraus.
+
+3. In der `config.lua` den Tablet-Login einschalten:
+
+   ```lua title="config.lua"
+   Config.TabletLogin = {
+       Enabled = true
+   }
+   ```
+
+4. In ignis unter Einstellungen › System-Konfiguration › Adresse und Anmeldung prüfen, ob die System-URL zu `Config.BaseURL` passt. ignis baut den Login-Link aus der System-URL. Zeigt sie auf eine andere Adresse als `Config.BaseURL`, landet die Anmeldung woanders als die Tablet-Seiten.
+
+5. Dafür sorgen, dass FiveM für jeden Spieler eine Discord-ID kennt, siehe nächster Abschnitt.
+
+</Steps>
+
+## Discord-ID im Spiel
+
+FiveM kennt die Discord-ID nur, wenn der Spieler Discord auf seinem PC geöffnet hat, während er sich verbindet. Willst du das zur Pflicht machen, weise Spieler ohne Discord beim Verbinden ab, zum Beispiel mit einer kleinen eigenen Server-Ressource:
+
+```lua title="server.lua"
+AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
+    if not GetPlayerIdentifierByType(source, 'discord') then
+        setKickReason('Bitte starte Discord, bevor du dich verbindest.')
+        CancelEvent()
+    end
+end)
+```
+
+Die Zuordnung ist nur so verlässlich wie diese Discord-Pflicht. ignis vertraut der Discord-ID, die der FiveM-Server schickt.
+
+## Wenn es nicht klappt
+
+Klappt die Anmeldung nicht, bekommt der Spieler einen Hinweis und sieht im Tablet die normale Login-Seite von ignis.
+
+| Hinweis im Spiel | Ursache | Neuer Versuch |
+|---|---|---|
+| „Tablet-Login nicht möglich: Dein FiveM ist nicht mit Discord verbunden.“ | FiveM kennt keine Discord-ID | nach neuem Verbinden |
+| „Tablet-Login nicht möglich: Zu deiner Discord-ID gibt es kein aktives ignis-Konto.“ | kein aktives Konto mit dieser Discord-ID | nach neuem Verbinden |
+| „Tablet-Login nicht möglich: Deine Discord-ID gehört zu mehreren ignis-Konten.“ | mehrere aktive Konten mit derselben Discord-ID | nach neuem Verbinden |
+| „Tablet-Login nicht möglich: ignis hat deine Discord-ID nicht angenommen.“ | ignis hält die Discord-ID für ungültig | nach neuem Verbinden |
+| „Tablet-Login ist in ignis nicht aktiviert.“ | Anmeldung über ignisTab ist in ignis aus | nach neuem Verbinden |
+| „Zu viele Anmeldeversuche.“ | zu viele Anfragen | beim nächsten Öffnen |
+| „Tablet-Login ist gerade nicht verfügbar.“ | ignis nicht erreichbar oder mit Serverfehler | beim nächsten Öffnen |
+| „Tablet-Login ist gerade nicht verfügbar.“ | API-Schlüssel abgelehnt oder alter `Config.APIKey` in der `config.lua` | nach neuem Verbinden |
+
+Bei einem abgelehnten Schlüssel steht zusätzlich „API key rejected“ in der Serverkonsole.
+
+Der FiveM-Server nimmt pro Spieler höchstens eine Anfrage alle 15 Sekunden an. ignis gibt pro Discord-ID höchstens zehn Token pro Minute heraus.
+
+Steht noch ein alter `Config.APIKey` in der `config.lua`, sperrt ignisTab den Tablet-Login ganz. Mit einem öffentlich lesbaren Schlüssel könnte sonst jeder Login-Links für beliebige Discord-IDs holen. Wie du aufräumst, steht unter [Umstieg von intraTab](/ignistab/installation/#umstieg-von-intratab).
+
+## Muss man sich anmelden?
+
+Ob man im Tablet bei ignis angemeldet sein muss, legt in ignis jeweils die Option Nur mit ignis-Konto fest. Sie steht in der System-Konfiguration einmal im Abschnitt eNOTF und einmal im Abschnitt fireTab. Ab Werk sind beide aus, die Tablets funktionieren dann auch ohne Anmeldung.

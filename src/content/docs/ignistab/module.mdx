@@ -1,0 +1,117 @@
+---
+title: EMD-Sync und Abrechnung
+description: Den Abgleich mit emergencydispatch und die eNOTF-Abrechnung einrichten und an eigene Skripte anbinden.
+sidebar:
+  order: 6
+---
+
+Beide Module sind ab Werk aus. EMD-Sync braucht `emergencydispatch` und `oxmysql`, die Abrechnung braucht `oxmysql` für die Tabelle `enotf_billing`. Die Einstellungen stehen unter [Konfiguration](/ignistab/konfiguration/).
+
+## EMD-Sync
+
+EMD-Sync gleicht das Einsatzleitsystem `emergencydispatch` mit ignis ab. ignisTab schickt dafür in einem festen Takt eine Anfrage an ignis, ab Werk alle 5 Sekunden. Jede Anfrage nimmt mit, was in diesem Takt fällig ist, und verarbeitet die Antwort von ignis.
+
+An ignis gehen:
+
+- besetzte Fahrzeuge mit ihren Einsätzen, dazu Einsatzort, Stichwort, Meldung, Anrufer, Koordinaten, Sondersignal und Patienten aus der Tabelle `emd_dispatchlist`
+- neue Statusmeldungen aus der Tabelle `emd_dispatchlog`, aber nur die Status aus `SyncStatuses`
+- Status von Fahrzeugen ohne Einsatz. ignisTab sammelt sie und schickt sie mit dem nächsten Takt.
+- Lagemeldungen zu den laufenden Einsätzen
+- die Fahrzeugliste aus der Tabelle `emd_vehicles`, wenn ignis danach fragt
+
+Von ignis zurück kommen, ignisTab trägt sie in `emergencydispatch` ein:
+
+- Statuswechsel, die zum Beispiel im FireTab gesetzt wurden. ignisTab gibt sie an den Spieler weiter, der das Fahrzeug besetzt.
+- Lagemeldungen, die in ignis geschrieben wurden
+- Patientendaten zu Einsätzen
+
+Schlägt eine Anfrage fehl, behält ignisTab die gesammelten Status und schickt sie beim nächsten Mal.
+
+### Einschalten
+
+1. Sorg dafür, dass `oxmysql` und `emergencydispatch` vor ignisTab starten.
+2. Setz in der `config.lua` `Config.EMDSync.Enabled = true`.
+3. Starte ignisTab neu.
+
+Mit `Config.Debug = true` siehst du in der Serverkonsole für jeden Takt eine Zeile mit `[Heartbeat]` und den Teilen, die er mitgeschickt hat. Lehnt ignis den API-Schlüssel ab, steht das auch ohne Debug einmal in der Konsole.
+
+### Abgleich sofort anstoßen
+
+Normalerweise läuft der Abgleich von selbst. Sofort anstoßen kannst du ihn so:
+
+| Weg | Aufruf | Bedingung |
+|---|---|---|
+| Befehl | `/emdsync` | Serverkonsole oder Recht `command.emdsync` |
+| Export, serverseitig | `exports['ignisTab']:syncHeartbeat()` | keine |
+| Event, serverseitig | `TriggerEvent('emd:vehicleAlerted')` oder `TriggerEvent('emd:statusChanged')` | keine |
+| Event vom Client | `TriggerServerEvent('emd:syncNow')` | Recht `command.emdsync` |
+
+Die älteren Exports `syncDispatchData`, `syncStatusMessages` und `syncLagemeldungen` gibt es noch. Sie machen dasselbe wie `syncHeartbeat`.
+
+## eNOTF-Abrechnung
+
+Die Abrechnung holt freigegebene eNOTF-Protokolle aus ignis, damit ein Skript auf deinem Server Rechnungen stellen oder Geld abbuchen kann. ignisTab liefert die Daten, die Rechnung stellt dein eigenes Skript. Du brauchst ignis ab 2026.0.26-beta.
+
+### Ablauf
+
+1. ignisTab fragt bei ignis alle freigegebenen Protokolle ab, die noch nicht abgerufen wurden.
+2. ignis schickt sie und markiert sie im selben Schritt als abgerechnet. Ein zweiter Abruf liefert sie nicht noch einmal.
+3. ignisTab wirft doppelte Einträge raus. Gleicher Name mit `123`, `123_1` und `123_2` zählt als ein Protokoll, entscheidend ist die Einsatznummer vor dem `_`.
+4. Mit `FilterProcessed = true` fallen außerdem Protokolle weg, deren Name und Einsatznummer schon in der Tabelle `enotf_billing` stehen.
+5. Das Ergebnis geht an dein Skript.
+
+:::caution[Jeder Abruf zählt]
+Was ignis einmal geliefert hat, liefert es nicht noch einmal. Ruf Protokolle nur ab, wenn dein Skript sie auch verarbeitet. Das gilt auch für `/enotf-billing-sync`: Hört kein Skript auf den Abruf, stehen die Protokolle danach nur in der Serverkonsole.
+:::
+
+### Die Tabelle enotf_billing
+
+Mit `FilterProcessed = true` legt ignisTab beim ersten Start die Tabelle `enotf_billing` an. ignisTab liest aus ihr nur `name` und `mission_number`, Einträge schreibt es keine. Soll der Filter greifen, muss dein Skript pro abgerechnetem Protokoll eine Zeile anlegen, mit der Einsatznummer vor dem `_` in `mission_number`.
+
+### Was ein Protokoll enthält
+
+| Feld | Inhalt |
+|---|---|
+| `name` | Name des Patienten |
+| `birthdate` | Geburtsdatum, `YYYY-MM-DD` |
+| `transport` | `true`, wenn der Patient transportiert wurde |
+| `missionNumber` | Einsatznummer, zum Beispiel `123` oder `123_1` |
+| `protocolType` | Protokoll durch: `0` Transportmittel, `1` Notarzt |
+| `vehicleCallsign` | Funkrufname des Fahrzeugs, zum Beispiel `RTW 1-82-1` |
+
+### Skript anbinden
+
+ignisTab löst zwei serverseitige Events aus, auf die dein Skript hören kann:
+
+| Event | Wann | Parameter |
+|---|---|---|
+| `enotf-billing:autoSync` | bei jedem Abruf im Hintergrund mit mindestens einem Protokoll, wenn `AutoSync = true` | `protocols` |
+| `enotf-billing:manualSync` | nach `/enotf-billing-sync` mit mindestens einem Protokoll | `protocols`, `source` |
+
+In `server/billing-custom.lua` stehen beide Handler schon leer bereit:
+
+```lua title="server/billing-custom.lua"
+AddEventHandler('enotf-billing:autoSync', function(protocols)
+end)
+
+AddEventHandler('enotf-billing:manualSync', function(protocols, source)
+end)
+```
+
+Du kannst die Handler auch in eine eigene Server-Ressource schreiben. Dann überschreibt ein Update von ignisTab deine Logik nicht.
+
+:::danger[Kein RegisterNetEvent]
+Registriere diese Events nicht mit `RegisterNetEvent`. Sonst könnte jeder Spieler deine Abrechnung mit erfundenen Daten auslösen.
+:::
+
+In `billing-custom.lua` steht außerdem ein Export `processBilling`. ignisTab selbst ruft ihn nicht auf.
+
+### Protokolle direkt abrufen
+
+| Weg | Aufruf | Ergebnis |
+|---|---|---|
+| Export, serverseitig | `exports['ignisTab']:getReleasedENOTFProtocols()` | gibt die Liste zurück, wartet auf ignis |
+| Event, serverseitig | `TriggerEvent('enotf-billing:requestProtocols', playerId)` | Liste geht an den Client von `playerId` |
+| Event vom Client | `TriggerServerEvent('enotf-billing:requestProtocols')` | Liste geht an den eigenen Client, nur mit Recht `ignistab.billing` |
+
+Beim Client kommt die Liste im Event `enotf-billing:receiveProtocols` an. Auch diese Wege markieren die Protokolle in ignis als abgerechnet.

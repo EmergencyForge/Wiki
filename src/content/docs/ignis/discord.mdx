@@ -1,0 +1,57 @@
+---
+title: Discord-Anwendung anlegen
+description: Die Anmeldung bei ignis läuft über Discord, dafür brauchst du eine eigene Anwendung im Discord Developer Portal.
+sidebar:
+  order: 2
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+Jeder meldet sich bei ignis mit seinem Discord-Konto an. Dafür legst du im Discord Developer Portal eine Anwendung an. Client ID und Client Secret daraus brauchst du bei der [Installation](/ignis/installation/), deshalb kommt dieser Schritt zuerst.
+
+## Anwendung anlegen
+
+<Steps>
+
+1. Öffne das [Discord Developer Portal](https://discord.com/developers/applications) und leg mit **New Application** eine Anwendung an. Als Namen nimmst du zum Beispiel den deiner Organisation.
+
+2. Öffne links **OAuth2**.
+
+3. Kopier die **Client ID**. Mit **Reset Secret** erzeugst du das **Client Secret**. Discord zeigt es nur einmal an, kopier es also gleich mit.
+
+4. Trag unter **Redirects** die Adresse deiner Instanz mit `/auth/callback.php` am Ende ein und speichere:
+
+   ```text
+   https://ignis.example.de/auth/callback.php
+   ```
+
+   Liegt ignis in einem Unterordner, gehört der Ordner dazu, zum Beispiel `https://example.de/ignis/auth/callback.php`.
+
+</Steps>
+
+Die Adresse muss genau so im Portal stehen, wie ignis sie schickt: mit `https`, mit dem Unterordner, falls es einen gibt, und mit `.php` am Ende.
+
+ignis fragt bei Discord nur das Recht `identify` an. Einen Bot brauchst du nicht.
+
+## Wo die Werte hinkommen
+
+Mit dem Installationsassistenten auf dem Webspace trägst du Client ID und Client Secret im Schritt „Discord“ ein. Der Assistent zeigt dir dort auch die Redirect-Adresse, die im Portal stehen muss.
+
+Bei Docker und auf dem eigenen Server stehen sie in der `.env`:
+
+```ini title=".env"
+DISCORD_CLIENT_ID=deine-client-id
+DISCORD_CLIENT_SECRET=dein-client-secret
+```
+
+## Wenn die Anmeldung nicht klappt
+
+Meldet Discord „Invalid OAuth2 redirect_uri“, weicht die Adresse im Portal von der ab, die ignis schickt. Vergleich sie Zeichen für Zeichen: `http` oder `https`, Unterordner, ein Schrägstrich zu viel, `.php` am Ende.
+
+Leitet Discord nach der Anmeldung auf eine falsche Adresse zurück, etwa auf `http://` oder auf den internen Port, reicht dein Reverse Proxy die ursprüngliche Adresse nicht weiter. Wie du das behebst, steht unter [Reverse Proxy und HTTPS](/ignis/installation/#reverse-proxy-und-https). Als Notlösung gibst du die Adresse in der `.env` fest vor. Sie muss genauso im Portal stehen:
+
+```ini title=".env"
+DISCORD_REDIRECT_URI=https://ignis.example.de/auth/callback.php
+```
+
+Funktioniert das Client Secret nicht mehr, erzeugst du im Portal mit **Reset Secret** ein neues und trägst es in der `.env` ein. Auf dem Webspace liegt die `.env` im Installationsordner, du bearbeitest sie per FTP. Bei Docker übernimmt der Container die neuen Werte, wenn du ihn mit `docker compose -f docker-compose.prod.yml up -d` neu startest.

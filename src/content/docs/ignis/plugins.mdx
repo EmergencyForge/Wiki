@@ -1,0 +1,52 @@
+---
+title: Plugins
+description: Welche Plugins mit ignis kommen, wie du sie ein- und ausschaltest und weitere aus dem Katalog installierst.
+sidebar:
+  order: 6
+---
+
+Ein Teil von ignis kommt als Plugin: die Einsatzprotokolle, das Lexikon und das Postfach. So schaltest du ab, was deine Fraktion nicht braucht. Alles andere, etwa Personal, Fahrzeuge und Anträge, gehört fest zu ignis.
+
+## Mitgelieferte Plugins
+
+| Plugin | Was es macht | Ab Werk |
+| --- | --- | --- |
+| eNOTF | Notfallprotokolle für den Rettungsdienst, mit Voranmeldung im Krankenhaus, POIs und Krankenhaus-Zugangscodes | an |
+| eNOTF v2 | Neubau des eNOTF. Arbeitet auf denselben Daten und mit denselben Rechten wie das eNOTF und braucht es deshalb. | aus |
+| fireTab | Einsatzprotokolle der Feuerwehr mit Einsatz-QM | an |
+| MANV-Board | Lagen bei einem Massenanfall von Verletzten | an |
+| Wissensdatenbank | Artikel für deine Fraktion, in der Seitenleiste als „Lexikon“ | an |
+| Mail | interne Postfächer für Mitarbeiter mit Ordnern und Verteilern. Keine Nachricht verlässt ignis. | an |
+
+Die Protokoll-Plugins erscheinen in der Seitenleiste unter „Protokolle“. Ist keins davon aktiv, verschwindet die Gruppe.
+
+## Ein- und ausschalten
+
+Unter **Einstellungen › Wartung und Diagnose › Plugins** stehen alle Plugins mit Version und Status. Mit **Aktivieren** und **Deaktivieren** schaltest du sie ein und aus.
+
+Beim Deaktivieren verschwinden die Einträge in der Seitenleiste, die Seiten und die Rechte des Plugins. Tabellen und Daten bleiben erhalten. Schaltest du es wieder ein, ist alles wieder da.
+
+Braucht ein anderes Plugin das, was du abschalten willst, steht das unter dem Namen („benötigt von“). Solange das andere Plugin aktiv ist, lässt sich das eine nicht deaktivieren. Das betrifft vor allem eNOTF und eNOTF v2.
+
+Mit Docker kopiert ignis die mitgelieferten Plugins bei jedem Start aus dem Image. Sie kommen also mit jedem Update mit, ihr Status bleibt dabei erhalten.
+
+## Plugins aus dem Katalog
+
+Unter der Liste steht der Abschnitt „Aus dem Katalog“ mit weiteren Plugins. Jedes trägt eine Markierung: Offiziell, Geprüft oder Ungetestet.
+
+Die Installation läuft in zwei Schritten:
+
+1. **Installieren** im Katalog lädt das ZIP von GitHub und prüft es gegen die Prüfsumme aus dem Katalog. Danach liegt das Plugin bereit, ist aber noch völlig inaktiv. Es läuft kein Code und keine Datenbankänderung.
+2. Oben in der Liste steht das Plugin jetzt als „Nicht installiert“. Erst wenn du dort auf **Installieren** klickst und bestätigst, legt ignis die Tabellen an und schaltet das Plugin ein.
+
+:::caution[Community-Plugins]
+Für Plugins, die nicht mit ignis kommen, übernimmt EmergencyForge keine Gewähr, weder für Funktion und Sicherheit noch für Datenverluste. Support leistet der jeweilige Herausgeber. Mach vor der Installation ein [Backup](/ignis/update/#backups) und installier nur, wenn du der Quelle vertraust.
+:::
+
+Ein deaktiviertes Community-Plugin kannst du mit **Entfernen** löschen. Dabei verschwinden nur seine Dateien, Tabellen und Daten bleiben in der Datenbank.
+
+Auf dem eigenen Server muss der Webserver-Benutzer in `plugins/` schreiben dürfen, sonst klappt die Installation aus dem Katalog nicht. Mit Docker liegen die Plugins in einem eigenen Volume.
+
+## Eigene Plugins
+
+Wie ein Plugin aufgebaut ist und welche Schnittstellen stabil sind, steht in der [PLUGINS.md](https://github.com/EmergencyForge/ignis/blob/main/PLUGINS.md) im Repository. Für den Katalog schlägst du ein Plugin über das Issue-Template „Plugin einreichen“ auf GitHub vor.

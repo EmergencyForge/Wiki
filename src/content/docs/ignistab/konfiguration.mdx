@@ -1,0 +1,130 @@
+---
+title: Konfiguration
+description: Alle Einstellungen aus config.lua und config_server.lua mit ihren Standardwerten.
+sidebar:
+  order: 3
+---
+
+## Zwei Dateien
+
+ignisTab hat zwei Konfigurationsdateien:
+
+- `config.lua` gilt für Server und Spieler. Jeder Spieler lädt sie mit der Ressource herunter.
+- `config_server.lua` bleibt auf dem Server. Dort steht der API-Schlüssel, und nur dort.
+
+Nach einer Änderung gibst du `restart ignisTab` in der Serverkonsole ein oder startest den Server neu.
+
+## config_server.lua
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| `ServerConfig.APIKey` | `'CHANGE_ME'` | API-Schlüssel aus ignis. Muss genau mit dem Schlüssel unter Einstellungen › System-Konfiguration › Technik übereinstimmen. |
+
+Alle Module nutzen denselben Schlüssel.
+
+## Allgemein
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| `Config.Framework` | `'auto'` | `'auto'`, `'qbcore'` oder `'esx'`. Mit `'auto'` nimmt ignisTab das Framework, das gerade läuft. |
+| `Config.BaseURL` | `'https://deine-url.de/'` | Adresse deiner ignis-Installation, mit `/` am Ende. Aus `http://` macht ignisTab `https://`. |
+| `Config.Debug` | `false` | Schreibt ausführliche Meldungen in die Server- und die F8-Konsole. |
+
+## Tablets
+
+`Config.eNOTF` und `Config.FireTab` sind gleich aufgebaut:
+
+| Einstellung | eNOTF | FireTab | Bedeutung |
+|---|---|---|---|
+| `Enabled` | `true` | `true` | Tablet ein- oder ausschalten |
+| `Command` | `'enotf'` | `'firetab'` | Chatbefehl zum Öffnen, ohne `/` |
+| `OpenKey` | `'F9'` | `nil` | Standardtaste. `nil` heißt: keine Taste vorbelegt, der Spieler legt sie selbst fest. |
+| `AllowedJobs` | `ambulance`, `admin` | `fire`, `admin` | Jobs, die das Tablet öffnen dürfen |
+| `RequireItem` | `false` | `false` | Tablet nur mit Gegenstand im Inventar |
+| `RequiredItem` | `'tablet'` | `'tablet'` | Name des Gegenstands |
+| `UseProp` | `true` | `true` | Tablet als Gegenstand in der Hand zeigen, mit Animation |
+| `Prop.model` | `'notfpad'` | `'firetab'` | Modell des Tablets, liegt im Ordner `stream` |
+| `Prop.bone` | `18905` | `18905` | Knochen, an dem das Tablet hängt (linke Hand) |
+| `Prop.offset` | siehe `config.lua` | siehe `config.lua` | Lage in der Hand: `x`, `y`, `z`, `xRot`, `yRot`, `zRot` |
+
+So sieht der Block für das eNOTF ab Werk aus:
+
+```lua title="config.lua"
+Config.eNOTF = {
+    Enabled = true,
+    Command = 'enotf',
+    OpenKey = 'F9',
+    AllowedJobs = {
+        'ambulance',
+        'admin'
+    },
+    RequireItem = false,
+    RequiredItem = 'tablet',
+    UseProp = true,
+    Prop = {
+        model = 'notfpad',
+        bone = 18905,
+        offset = {
+            x = 0.1240,
+            y = 0.0550,
+            z = 0.1550,
+            xRot = -76.0,
+            yRot = -186.0,
+            zRot = 58.3
+        }
+    }
+}
+```
+
+Ein paar Dinge, die man leicht übersieht:
+
+- Die Jobnamen in `AllowedJobs` müssen genau so geschrieben sein wie in deinem Framework. Fehlt `AllowedJobs` ganz, darf jeder Job das Tablet öffnen.
+- Mit `Enabled = false` gibt es für das Tablet keine Tastenbelegung mehr. Der Befehl bleibt, meldet aber nur „Dieses Tablet ist nicht aktiviert!“.
+- Für `RequireItem` musst du den Gegenstand selbst in deinem Inventar anlegen, ignisTab bringt keinen mit. Läuft `ox_inventory`, prüft ignisTab dort, sonst im Inventar von QBCore oder ESX.
+- `OpenKey` ist nur die Vorbelegung. Wie Spieler die Taste ändern, steht unter [Bedienung](/ignistab/bedienung/).
+
+## Animation
+
+Die Animation läuft nur bei Tablets mit `UseProp = true`.
+
+| Einstellung | Standard |
+|---|---|
+| `Config.Animation.dict` | `'amb@world_human_seat_wall_tablet@female@base'` |
+| `Config.Animation.anim` | `'base'` |
+| `Config.Animation.flag` | `50` |
+
+## Tablet-Login
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| `Config.TabletLogin.Enabled` | `false` | Spieler über ihre Discord-ID automatisch bei ignis anmelden |
+
+Was dafür in ignis und auf dem FiveM-Server eingestellt sein muss, steht unter [Tablet-Login](/ignistab/tablet-login/).
+
+## EMD-Sync
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| `Config.EMDSync.Enabled` | `false` | Abgleich mit `emergencydispatch` einschalten |
+| `HeartbeatInterval` | `5000` | Grundtakt in Millisekunden |
+| `DispatchSync.Enabled` | `true` | Fahrzeuge, Einsatzdaten und Patienten senden |
+| `DispatchSync.TickMultiplier` | `6` | nur bei jedem 6. Takt, also alle 30 Sekunden |
+| `StatusSync.Enabled` | `true` | Status in beide Richtungen abgleichen |
+| `StatusSync.SyncStatuses` | `C`, `1`, `2`, `3`, `4`, `7`, `8` | Status, die übertragen werden |
+| `StatusSync.SourceTable` | `'emd_dispatchlog'` | Tabelle, aus der die Statusmeldungen kommen |
+| `StatusSync.TickMultiplier` | `1` | bei jedem Takt, also alle 5 Sekunden |
+| `LagemeldungSync.Enabled` | `true` | Lagemeldungen pro Einsatz abgleichen |
+| `LagemeldungSync.TickMultiplier` | `6` | alle 30 Sekunden |
+
+Der `TickMultiplier` sagt, bei jedem wievielten Takt ein Teil mitläuft. Die Zeiten in der Tabelle gelten für den Grundtakt von 5 Sekunden. Die Standardwerte passen für die meisten Server. Was genau abgeglichen wird, steht unter [EMD-Sync und Abrechnung](/ignistab/module/).
+
+## eNOTF-Abrechnung
+
+| Einstellung | Standard | Bedeutung |
+|---|---|---|
+| `Config.ENOTFBilling.Enabled` | `false` | Abrechnung einschalten |
+| `AutoSync` | `false` | Protokolle im Hintergrund abrufen |
+| `SyncInterval` | `900000` | Abstand der Abrufe in Millisekunden, also 15 Minuten |
+| `FilterProcessed` | `true` | Protokolle überspringen, die schon in der Tabelle `enotf_billing` stehen |
+
+Mit `FilterProcessed = true` legt ignisTab beim ersten Start die Tabelle `enotf_billing` in deiner Datenbank an. Wie die Abrechnung abläuft und wie du dein Skript anbindest, steht unter [EMD-Sync und Abrechnung](/ignistab/module/).

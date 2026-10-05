@@ -1,0 +1,113 @@
+---
+title: Doku bearbeiten
+description: Wie die Doku aufgebaut ist, wie du sie lokal startest und welche Formatierungen es gibt.
+sidebar:
+  order: 2
+---
+
+import { FileTree, Steps } from '@astrojs/starlight/components';
+
+Die Doku ist mit [Starlight](https://starlight.astro.build/) gebaut. Jede Seite ist eine Markdown-Datei im Repository [EmergencyForge/Wiki](https://github.com/EmergencyForge/Wiki).
+
+## Direkt auf GitHub
+
+<Steps>
+
+1. Klick unter der Seite auf **Seite bearbeiten**.
+2. Ändere den Text im Editor von GitHub.
+3. Klick auf **Propose changes**. GitHub legt dafür einen Pull Request an.
+4. Nach dem Merge ist die Änderung auf docs.emergencyforge.de online.
+
+</Steps>
+
+## Lokal
+
+Für größere Änderungen startest du die Doku auf deinem Rechner. Du brauchst Node.js 22.12 oder neuer.
+
+```sh
+git clone https://github.com/EmergencyForge/Wiki.git
+cd Wiki
+npm install
+npm run dev
+```
+
+Die Doku läuft dann unter `http://localhost:4321` und lädt bei jeder gespeicherten Änderung neu.
+
+## Aufbau
+
+<FileTree>
+
+- src/content/docs/
+  - index.mdx Startseite
+  - ignis/ ein Ordner pro Bereich
+    - index.mdx
+    - installation.mdx
+  - ignistab/
+  - mitmachen/
+
+</FileTree>
+
+Jeder Ordner ist ein Bereich in der Seitenleiste. Eine neue Datei im Ordner erscheint dort von selbst, die Reihenfolge legst du im Kopf der Datei fest:
+
+```md title="src/content/docs/ignis/beispiel.md"
+---
+title: Beispielseite
+description: Ein Satz, worum es auf der Seite geht.
+sidebar:
+  order: 5
+---
+
+## Erster Abschnitt
+
+Text...
+```
+
+Der `title` ist die Überschrift der Seite. Im Text selbst fängst du deshalb mit `##` an.
+
+## Formatierung
+
+### Hinweisboxen
+
+```md
+:::note
+Eine Information am Rand.
+:::
+
+:::caution[Achtung]
+Etwas, das schiefgehen kann.
+:::
+```
+
+Außer `note` und `caution` gibt es `tip` und `danger`.
+
+### Code mit Dateinamen
+
+````md
+```yaml title="docker-compose.yml"
+services:
+  app:
+    image: ghcr.io/emergencyforge/ignis
+```
+````
+
+### Schritte und Reiter
+
+Für Anleitungen in Schritten und für Reiter brauchst du eine `.mdx`-Datei. Die Komponenten importierst du oben in der Datei:
+
+```mdx
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Steps>
+
+1. Erster Schritt
+2. Zweiter Schritt
+
+</Steps>
+
+<Tabs>
+  <TabItem label="Docker">...</TabItem>
+  <TabItem label="Webspace">...</TabItem>
+</Tabs>
+```
+
+Alle Komponenten erklärt die [Starlight-Doku](https://starlight.astro.build/components/using-components/).

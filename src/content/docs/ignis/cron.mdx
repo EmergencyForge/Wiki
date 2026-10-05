@@ -1,0 +1,97 @@
+---
+title: Cron und Hintergrundaufgaben
+description: Welche Aufgaben ignis im Hintergrund erledigt und wie du sie per Cronjob, Docker oder externem Cron-Dienst regelmäßig anstößt.
+sidebar:
+  order: 5
+  label: Cron
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+ignis erledigt einiges im Hintergrund: Discord-Webhooks und Benachrichtigungen aus der Warteschlange verschicken, Ankündigungen abrufen, nach Updates suchen und alte Dateien aufräumen. Welche Aufgabe wann dran ist, entscheidet ein eingebauter Zeitplaner. Er muss nur regelmäßig angestoßen werden.
+
+## Ohne Cronjob
+
+Richtest du nichts ein, stößt ignis den Zeitplaner nach normalen Seitenaufrufen selbst an, höchstens einmal pro Minute. Auf einer gut besuchten Instanz reicht das. Ist nachts oder unter der Woche wenig los, passiert so lange nichts, bis wieder jemand eine Seite öffnet. Ein Webhook für ein freigegebenes Protokoll kommt dann eben erst später in Discord an.
+
+Zuverlässiger ist es, den Zeitplaner jede Minute von außen anzustoßen. Dafür gibt es drei Wege.
+
+## Cron einrichten
+
+<Tabs>
+<TabItem label="Eigener Server">
+
+Öffne die Crontab des Webserver-Benutzers:
+
+```bash
+crontab -u www-data -e
+```
+
+Trag diese Zeile ein und pass den Pfad an deine Installation an:
+
+```txt
+* * * * * php /var/www/ignis/cli/intra.php cron:tick > /dev/null 2>&1
+```
+
+Lass den Cronjob als Webserver-Benutzer laufen. Läuft er als `root`, gehören neue Dateien in `storage/` danach `root`, und ignis kann sie nicht mehr ändern.
+
+Bietet dein Webspace Cronjobs im Hosting-Panel an, trägst du dort denselben Befehl mit dem absoluten Pfad zu deiner Installation ein. Wo die PHP-Kommandozeile liegt, weiß dein Hoster.
+
+</TabItem>
+<TabItem label="Docker">
+
+Im Container läuft kein Cron. Trag auf dem Server, auf dem der Container läuft, diese Zeile in die Crontab ein und pass den Pfad zum Ordner mit der Compose-Datei an:
+
+```txt
+* * * * * cd /pfad/zu/ignis && docker compose -f docker-compose.prod.yml exec -T -u www-data app php cli/intra.php cron:tick > /dev/null 2>&1
+```
+
+</TabItem>
+<TabItem label="Externer Cron-Dienst">
+
+Hast du keinen Zugriff auf Cronjobs, lässt du einen Dienst wie cron-job.org jede Minute diese Adresse aufrufen:
+
+```text
+https://ignis.example.de/cron.php?token=DEIN-TOKEN
+```
+
+Die fertige Adresse mit deinem Token findest du unter **Einstellungen › Wartung und Diagnose › Cron** im aufklappbaren Kasten **Externer Trigger-Endpoint**. Den Token allein siehst du unter **Einstellungen › System-Konfiguration › Technik** beim Feld **Cron-Token**.
+
+Statt in der Adresse kann der Token auch im Header `X-Cron-Token` stehen, wenn dein Dienst eigene Header erlaubt.
+
+:::caution
+Der Token ist ein Passwort. Gib die Adresse nur an Dienste weiter, denen du vertraust, und poste sie nicht in Screenshots oder Bug-Reports.
+:::
+
+</TabItem>
+</Tabs>
+
+## Was im Hintergrund läuft
+
+Diese Aufgaben richtet ignis selbst ein. Den Zeitplan siehst du auf der Cron-Seite in der Spalte „Zeitplan“ im Cron-Format.
+
+| Aufgabe | Zeitplan | Was sie tut |
+| --- | --- | --- |
+| Queue-Worker | alle 5 Minuten | arbeitet die Warteschlange ab, zum Beispiel Discord-Webhooks und Benachrichtigungen |
+| Forum-Ankündigungen aktualisieren | alle 30 Minuten | holt die Ankündigungen aus dem Forum für die Startseite |
+| Announcements aktualisieren | stündlich | holt die globalen Ankündigungen, siehe [Telemetrie](/ignis/telemetrie/) |
+| Federation-Sync | alle 10 Minuten | gleicht Verbindungen zu anderen ignis-Instanzen ab |
+| Telemetrie-Heartbeat | täglich | schickt die [Telemetrie](/ignis/telemetrie/), wenn sie eingeschaltet ist |
+| Update-Check | täglich | sucht nach neuen Versionen |
+| Storage-Cleanup | wöchentlich | löscht alte Temp-Ordner des Updaters, fehlgeschlagene Jobs nach 30 Tagen und alten Cron-Verlauf |
+
+Plugins bringen eigene Aufgaben mit. Das Mail-Plugin räumt nachts alte Entwürfe und Anhänge auf und gleicht die Postfächer mit dem Personal ab. Die Wissensdatenbank löscht hochgeladene Bilder, die seit einem Tag in keinem Artikel mehr stehen.
+
+## Prüfen, ob es läuft
+
+Unter **Einstellungen › Wartung und Diagnose › Cron** siehst du jede Aufgabe mit letztem und nächstem Lauf und der Zahl der Fehler. Über die Aktionen einer Zeile siehst du den Verlauf, startest die Aufgabe sofort oder pausierst sie.
+
+Steht bei einer Aufgabe „Plugin inaktiv“, gehört sie zu einem abgeschalteten Plugin. Sie wird dann übersprungen.
+
+Auf der Kommandozeile zeigt `php cli/intra.php cron:list` dieselbe Liste.
+
+## Wenn Aufgaben fehlschlagen
+
+Die meisten Aufgaben starten einen eigenen PHP-Prozess. Hat dein Hoster `proc_open` oder `exec` abgeschaltet, schlagen sie fehl, ignis selbst läuft aber weiter. Du erkennst das auf der Cron-Seite an den Fehlern und unter `/api/health`, siehe [Systemzustand](/ignis/fehlerprotokoll/#systemzustand). Der Update-Check läuft als einzige Aufgabe auch ohne `proc_open`.
+
+Schlägt ein Job aus der Warteschlange dreimal fehl, etwa weil eine Webhook-URL nicht mehr stimmt, landet er bei den [fehlgeschlagenen Hintergrund-Jobs](/ignis/fehlerprotokoll/#fehlgeschlagene-hintergrund-jobs).

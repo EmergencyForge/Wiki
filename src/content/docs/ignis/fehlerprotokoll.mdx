@@ -1,0 +1,86 @@
+---
+title: Fehler finden und melden
+description: Den Zustand deiner Instanz prüfen, Fehlercodes im Fehlerprotokoll nachschlagen und einen Fehler so melden, dass er sich beheben lässt.
+sidebar:
+  order: 9
+---
+
+## Systemzustand
+
+Unter `https://ignis.example.de/api/health` meldet ignis, ob alles läuft. Die Adresse funktioniert ohne Anmeldung und eignet sich auch für Monitoring-Dienste.
+
+Die Antwort ist JSON. Ganz oben steht der Gesamtstatus `ok`, `degraded` oder `down`, darunter ein Eintrag pro Prüfung:
+
+| Prüfung | Was sie prüft |
+| --- | --- |
+| `db` | Verbindung zur Datenbank |
+| `queue` | offene und fehlgeschlagene Jobs in der Warteschlange |
+| `storage` | ob es `storage/` gibt und wie viel Platz dort frei ist |
+| `migrations` | ob die Tabellen auf dem aktuellen Stand sind |
+| `outbound_http` | ob ignis nach außen verbinden kann, etwa für Updates |
+| `process_control` | ob `proc_open` und `exec` für die [Hintergrundaufgaben](/ignis/cron/) verfügbar sind |
+| `php_extensions` | ob alle nötigen PHP-Erweiterungen geladen sind |
+| `rewrite` | ob die URL-Weiterleitung greift und das Hauptverzeichnis auf `public/` zeigt |
+
+Bei `down` fehlt die Datenbank oder ihre Tabellen, die Adresse antwortet dann mit HTTP 503.
+
+## Häufige Probleme
+
+| Was du siehst | Woran es liegt |
+| --- | --- |
+| Nur eine leere Seite oder 404 auf allen Unterseiten | Die URL-Weiterleitung greift nicht. Bei Apache fehlt `mod_rewrite`, oder der Server erlaubt keine `.htaccess`-Dateien (`AllowOverride`). Bei nginx fehlt die `try_files`-Zeile. |
+| Das Dashboard warnt „URL-Rewriting funktioniert nicht“ | Das Hauptverzeichnis zeigt nicht auf `public/` (oder ersatzweise auf den Projektordner), `mod_rewrite` ist aus, oder der Webserver wendet die mitgelieferte `.htaccess` nicht an. |
+| HTTP 503 mit Hinweis auf die Datenbank | In der `.env` fehlt ein Wert, oder die Zugangsdaten stimmen nicht. |
+| Discord meldet „Invalid OAuth2 redirect_uri“ | Die Adresse im Discord-Portal weicht von der ab, die ignis schickt, siehe [Discord-Anwendung](/ignis/discord/#wenn-die-anmeldung-nicht-klappt). |
+| Die Tablets in FiveM zeigen nur eine weiße Seite | Bei nginx fehlen die beiden `map`-Blöcke für FiveM im `http`-Block, siehe `nginx.conf.example`. |
+| Nach einem Update sieht alles noch aus wie vorher | Der Browser hält die alten Skripte. Mit Strg+F5 neu laden und bei Cloudflare die [Cache-Einstellung](/ignis/installation/#cloudflare) prüfen. |
+
+## Fehlercodes
+
+Geht in ignis etwas unerwartet schief, zeigt die Fehlerseite einen Fehlercode aus acht Zeichen, zum Beispiel `0B29305D`. Zu diesem Code steht im Log der vollständige Fehler mit Datei, Zeile und Stacktrace. Wer den Fehler sieht, muss dir also nur den Code schicken.
+
+## Fehlerprotokoll
+
+Unter **Einstellungen › Wartung und Diagnose › Logs** öffnest du das Fehlerprotokoll. Die Seite sehen nur Administratoren.
+
+Ganz oben gibst du bei **Error-ID Lookup** einen Fehlercode ein und klickst auf **Suchen**. ignis zeigt dir dann den ganzen Eintrag.
+
+Darunter zählt ignis die Fehler insgesamt, in den letzten 24 Stunden und in den letzten 7 Tagen, dazu getrennt nach Critical und Error. Die Liste „Letzte Fehler“ fasst gleiche Fehler zusammen, also solche mit derselben Exception in derselben Datei und Zeile. Daran siehst du, ob ein Fehler einmal auftrat oder schon fünfzigmal. Ein Klick klappt die Details auf. Mit der Volltextsuche findest du Einträge nach Begriffen wie `SQLSTATE`, nach Klassen oder Dateien.
+
+### Fehlgeschlagene Hintergrund-Jobs
+
+Jobs aus der Warteschlange, etwa Discord-Webhooks, versucht ignis dreimal. Klappt es dann immer noch nicht, landen sie in dieser Liste. Mit **Alle erneut versuchen** schickst du sie noch einmal los, nachdem du die Ursache behoben hast, zum Beispiel eine falsche Webhook-URL. Einzelne Jobs versuchst du über ihre Zeile erneut oder löschst sie. Nach 30 Tagen räumt ignis sie selbst weg.
+
+### Logdateien
+
+Ganz unten unter **Verfügbare Log-Dateien** siehst du alle Logdateien und kannst dir jeweils die letzten Zeilen anzeigen lassen. Die Dateien liegen in `storage/logs/`:
+
+| Datei | Inhalt | Aufbewahrung |
+| --- | --- | --- |
+| `app-DATUM.log` | alle Einträge ab der eingestellten Stufe | 30 Tage |
+| `error-DATUM.log` | Fehler (Error und schlimmer) | 90 Tage |
+
+Ab welcher Stufe ignis schreibt, legst du mit `LOG_LEVEL` in der `.env` fest: `debug`, `info`, `notice`, `warning` oder `error`. Ohne Angabe gilt `warning`.
+
+Mit Docker liegen die Logs im Volume `storage`. Was der Container selbst beim Start meldet, zeigt dir:
+
+```bash
+docker compose -f docker-compose.prod.yml logs app
+```
+
+## Fehler melden
+
+Fragen beantwortet die Community im [Forum](https://emfor.ge/forum) und im [Discord](https://emfor.ge/discord). Einen Fehler in ignis meldest du als [Issue auf GitHub](https://github.com/EmergencyForge/ignis/issues).
+
+In eine gute Meldung gehört:
+
+- deine ignis-Version. Sie steht im Fuß jeder Seite und unter **Einstellungen › Wartung und Diagnose**.
+- wie du installiert hast: Docker, Webspace oder eigener Server
+- was du gemacht hast, was passieren sollte und was stattdessen passiert ist
+- der Fehlercode und der Eintrag aus dem Fehlerprotokoll
+
+:::caution
+Schau dir den Eintrag an, bevor du ihn veröffentlichst. Pfade, Domains oder Formulardaten darin gehen niemanden etwas an. API-Schlüssel, Cron-Token, Passwörter und Werte aus der `.env` gehören nie in ein Issue.
+:::
+
+Wer im Discord Hilfe sucht, kann die Instanz zusätzlich mit dem Support verbinden, siehe [Support im Discord](/ignis/telemetrie/#support-im-discord).

@@ -1,0 +1,299 @@
+---
+title: Installation
+description: ignis per Docker, auf einem Webspace mit dem Installationsassistenten oder auf einem eigenen Server mit Apache oder nginx installieren.
+sidebar:
+  order: 3
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Es gibt drei Wege, ignis zu installieren. Nimm den, der zu deinem Hosting passt:
+
+- Docker, wenn auf deinem Server Docker und Docker Compose laufen.
+- Webspace mit Assistent, wenn du Webspace bei einem Hoster hast (Plesk, cPanel und ähnliche). Kommandozeile, Composer oder Node brauchst du dafür nicht.
+- Eigener Server, wenn du Apache oder nginx mit PHP selbst betreibst.
+
+Bevor du anfängst, prüf die [Systemanforderungen](/ignis/#systemanforderungen) und leg die [Discord-Anwendung](/ignis/discord/) an. Client ID und Client Secret brauchst du gleich.
+
+Die Releases liegen unter [github.com/EmergencyForge/ignis/releases](https://github.com/EmergencyForge/ignis/releases). Bisher sind alle 2026er-Versionen als Beta markiert. Bis es eine stabile Version gibt, nimmst du die neueste Beta.
+
+## Installieren
+
+<Tabs>
+<TabItem label="Docker">
+
+Für Docker gibt es das Image `ghcr.io/emergencyforge/ignis` und eine Compose-Datei, die MariaDB gleich mitbringt.
+
+<Steps>
+
+1. Leg einen Ordner an und lade die Compose-Datei und die Vorlage für die Einstellungen herunter:
+
+   ```bash
+   mkdir ignis && cd ignis
+   curl -fsSLO https://raw.githubusercontent.com/EmergencyForge/ignis/main/docker-compose.prod.yml
+   curl -fsSL -o .env https://raw.githubusercontent.com/EmergencyForge/ignis/main/docker/.env.example
+   ```
+
+2. Öffne die `.env` und trag mindestens diese Werte ein:
+
+   ```ini title=".env"
+   IMAGE_TAG=v2026.0.26-beta
+   DB_NAME=ignis
+   DB_USER=ignis
+   DB_PASS=ein-langes-passwort
+   DISCORD_CLIENT_ID=deine-client-id
+   DISCORD_CLIENT_SECRET=dein-client-secret
+   SYSTEM_URL=https://ignis.example.de
+   ```
+
+   `IMAGE_TAG` ist die ignis-Version. Trag die neueste Version von der [Release-Seite](https://github.com/EmergencyForge/ignis/releases) ein, die Zeile oben zeigt nur das Format.
+
+   :::caution[IMAGE_TAG nicht leer lassen]
+   Leer bedeutet `latest`, also die neueste stabile Version. Solange alle 2026er-Versionen Betas sind, bekommst du darüber nicht den aktuellen Stand.
+   :::
+
+   Datenbank und Benutzer legt MariaDB beim ersten Start mit diesen Werten an. Enthält ein Passwort ein `$`, setz es in einfache Anführungszeichen, sonst liest Compose es als Variable.
+
+   `SYSTEM_URL` ist die öffentliche Adresse deiner Instanz. Steht sie in der `.env`, lässt sie sich in den Einstellungen nicht mehr ändern.
+
+3. Starte ignis:
+
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d
+   ```
+
+   Beim Start wartet ignis auf die Datenbank und legt die Tabellen an. Nach etwa einer halben Minute meldet `docker compose -f docker-compose.prod.yml ps` den Container als `healthy`.
+
+4. ignis lauscht jetzt auf `127.0.0.1:8080`, also nur auf dem Server selbst. Für den Zugriff von außen stellst du einen [Reverse Proxy mit HTTPS](#reverse-proxy-und-https) davor. Einen anderen Port stellst du mit `IGNIS_PORT` in der `.env` ein.
+
+5. Melde dich sofort mit Discord an. Wer sich als Erstes anmeldet, wird [Administrator](#erste-anmeldung).
+
+</Steps>
+
+Die Daten liegen in drei Volumes. Alle drei gehören ins [Backup](/ignis/update/#backups).
+
+| Volume | Inhalt |
+| --- | --- |
+| `db` | die Datenbank |
+| `storage` | Dokumente, Uploads, Profilbilder, Logs, Cache |
+| `plugins` | Plugins aus dem Katalog. Die mitgelieferten Plugins kopiert ignis bei jedem Start aus dem Image dorthin, sie kommen also mit jedem Update mit. |
+
+</TabItem>
+<TabItem label="Webspace mit Assistent">
+
+Zu jedem Release gibt es ein Installationspaket mit einem Assistenten, der ignis entpackt, die Datenbank einrichtet und die Zugangsdaten speichert.
+
+<Steps>
+
+1. Lade auf der [Release-Seite](https://github.com/EmergencyForge/ignis/releases) bei der gewünschten Version unter **Assets** die Datei `ignis-vVERSION-install.zip` herunter. Achte auf das `-install` im Namen, `ignis-vVERSION.zip` allein ist das falsche Paket.
+
+   Entpack sie auf deinem Rechner. Darin liegen drei Dateien:
+
+   - `setup.php`, der Assistent
+   - `ignis-vVERSION.zip`, die eigentliche Anwendung
+   - `readme.txt`, eine Kurzanleitung
+
+2. Leg im Kundenmenü deines Hosters eine MySQL- oder MariaDB-Datenbank an. Notier dir Servername, Port, Datenbankname, Benutzer und Passwort.
+
+3. Lade `setup.php` und `ignis-vVERSION.zip` per FTP in den Ordner, in dem ignis laufen soll. Das kann das Hauptverzeichnis deiner Domain sein oder ein Unterordner wie `ignis/`.
+
+   Das ZIP entpackst du nicht selbst, das macht der Assistent.
+
+   Stell die Domain im Hosting-Panel vorerst auf genau diesen Ordner ein. Den Unterordner `public` gibt es erst, wenn der Assistent fertig ist.
+
+4. Ruf im Browser `https://ignis.example.de/setup.php` auf, bei einem Unterordner `https://example.de/ignis/setup.php`. Der Assistent führt dich durch diese Schritte:
+
+   | Schritt | Was du tust |
+   | --- | --- |
+   | Anforderungen | Der Assistent prüft PHP-Version, Erweiterungen und Schreibrechte. Ist etwas rot, behebst du es im Hosting-Panel, bevor es weitergeht. |
+   | Quelle | Normalerweise steht hier „Mitgeliefertes Paket“. Fehlt das ZIP, lädt der Assistent die neueste Version von GitHub, auch wenn sie eine Beta ist. |
+   | Datenbank | die Zugangsdaten aus Schritt 2 eintragen und mit **Verbindung testen** prüfen |
+   | System | Domain, Basis-Pfad und Servername. Domain und Pfad sind vorausgefüllt, prüf sie trotzdem. Der Basis-Pfad ist `/` im Hauptverzeichnis und zum Beispiel `/ignis/` in einem Unterordner. |
+   | Discord | Client ID und Client Secret aus der [Discord-Anwendung](/ignis/discord/). Der Assistent zeigt dir die Redirect-Adresse, die im Portal stehen muss. |
+   | Zusammenfassung | alles prüfen, dann **Setup durchführen** |
+
+   Der Assistent entpackt die Anwendung, schreibt die Zugangsdaten in eine `.env`, legt die Tabellen an und trägt Domain, Basis-Pfad und Servername in die Einstellungen ein. Zum Schluss löscht er `setup.php`, das ZIP und die `readme.txt`.
+
+5. Melde dich sofort mit Discord an. Wer sich als Erstes anmeldet, wird [Administrator](#erste-anmeldung).
+
+6. Stell die Domain im Hosting-Panel auf den Unterordner `public` um, also auf `<dein Ordner>/public`. Nur dort liegen die Dateien, die öffentlich erreichbar sein müssen.
+
+   Erlaubt dein Hoster das nicht, läuft ignis trotzdem: Eine `.htaccess` im Hauptordner sperrt die internen Ordner und leitet alle Anfragen nach `public/` weiter. Dafür muss der Hoster `.htaccess`-Dateien vollständig erlauben (bei Apache `AllowOverride All`). Der Schutz des Quellcodes hängt dann allein an dieser Datei, deshalb ist das nur die zweite Wahl. Das Dashboard weist dich darauf hin, solange ignis über diesen Umweg läuft.
+
+</Steps>
+
+Bricht der Assistent mittendrin ab, ruf `setup.php` einfach noch einmal auf. Das mitgelieferte ZIP bleibt liegen, bis die Installation geklappt hat.
+
+Meldet der Assistent „Setup bereits abgeschlossen“, gibt es schon eine `.env` oder eine Datei `.setup-locked`. Willst du wirklich neu installieren, lösch beide per FTP.
+
+Konnte der Assistent Domain, Basis-Pfad oder Servername nicht in die Datenbank schreiben, zeigt er dir, was du nachtragen musst. Bei einem Unterordner bekommst du dafür einen fertigen SQL-Befehl für phpMyAdmin.
+
+Konnte er `setup.php` nicht selbst löschen, lösch die Datei per FTP. Die Sperrdatei `.setup-locked` verhindert zwar weitere Läufe, die Datei gehört aber trotzdem nicht auf den Server.
+
+</TabItem>
+<TabItem label="Eigener Server">
+
+Auf dem eigenen Server installierst du das fertige Release-ZIP. Darin ist alles enthalten, auch die PHP-Bibliotheken und die gebauten Styles. Composer und Node brauchst du nicht.
+
+:::note
+Ein `git clone` des Repositorys reicht nicht. Für den Bau werden interne Pakete gebraucht, die nicht öffentlich sind.
+:::
+
+<Steps>
+
+1. Lade auf der [Release-Seite](https://github.com/EmergencyForge/ignis/releases) die Datei `ignis-vVERSION.zip` und die zugehörige `.sha256`-Datei herunter. Prüf den Download und entpack ihn zum Beispiel nach `/var/www/ignis`:
+
+   ```bash
+   sha256sum -c ignis-vVERSION.zip.sha256
+   ```
+
+2. Leg die Datenbank und einen eigenen Benutzer an:
+
+   ```sql
+   CREATE DATABASE ignis CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE USER 'ignis'@'localhost' IDENTIFIED BY 'ein-langes-passwort';
+   GRANT ALL PRIVILEGES ON ignis.* TO 'ignis'@'localhost';
+   ```
+
+3. Kopier `.env.example` nach `.env` und trag die Werte ein:
+
+   ```ini title=".env"
+   APP_ENV=production
+
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_NAME=ignis
+   DB_USER=ignis
+   DB_PASS=ein-langes-passwort
+
+   DISCORD_CLIENT_ID=deine-client-id
+   DISCORD_CLIENT_SECRET=dein-client-secret
+   ```
+
+   Die Zeile `AUTH_MODE=direct-discord` lässt du stehen, wie sie ist.
+
+   Statt einer `.env` kannst du die Werte auch als Umgebungsvariablen setzen. Dann muss `variables_order` in der `php.ini` ein `E` enthalten, zum Beispiel `EGPCS`, sonst sieht PHP die Discord-Daten nicht.
+
+4. Der Webserver-Benutzer (meist `www-data`) braucht Schreibrechte auf `storage/` mit allen Unterordnern und auf `plugins/`, damit sich Plugins aus dem Katalog installieren lassen. Willst du den eingebauten Updater nutzen, braucht er sie auch auf dem Hauptverzeichnis.
+
+   ```bash
+   chown -R www-data:www-data /var/www/ignis/storage /var/www/ignis/plugins
+   ```
+
+5. Richte den Webserver ein. Das Hauptverzeichnis zeigt bei Apache und nginx auf `public/`.
+
+   Apache braucht `mod_rewrite`, `mod_headers` ist empfohlen:
+
+   ```apache title="/etc/apache2/sites-available/ignis.conf"
+   <VirtualHost *:443>
+       ServerName ignis.example.de
+       DocumentRoot /var/www/ignis/public
+
+       <Directory /var/www/ignis>
+           AllowOverride None
+           Require all denied
+       </Directory>
+
+       <Directory /var/www/ignis/public>
+           Options -Indexes +FollowSymLinks
+           AllowOverride All
+           Require all granted
+       </Directory>
+
+       SSLEngine on
+       SSLCertificateFile    /etc/letsencrypt/live/ignis.example.de/fullchain.pem
+       SSLCertificateKeyFile /etc/letsencrypt/live/ignis.example.de/privkey.pem
+   </VirtualHost>
+   ```
+
+   ```bash
+   a2enmod rewrite headers ssl
+   systemctl reload apache2
+   ```
+
+   Die `.htaccess` in `public/` leitet alle Anfragen an `index.php` weiter und sorgt dafür, dass Browser nach einem Update gleich die neuen Skripte laden.
+
+   Für nginx liegt im ZIP die Datei `nginx.conf.example` mit einer vollständigen Konfiguration für PHP-FPM. Pass darin Servernamen, Zertifikatspfade und den Pfad zum PHP-FPM-Socket an. Das Wichtigste darin:
+
+   - `root` zeigt auf `/var/www/ignis/public`.
+   - Anfragen ohne passende Datei gehen an `index.php` (`try_files $uri /index.php$is_args$args;`).
+   - Die beiden `map`-Blöcke für FiveM gehören in den `http`-Block. Ohne sie zeigen die Tablets in FiveM nur eine weiße Seite.
+   - Skripte und Styles gehen mit `Cache-Control: no-cache` raus, sonst sehen Nutzer nach einem Update noch lange die alte Fassung.
+   - `client_max_body_size 55M` passt zu den PHP-Grenzen für Uploads.
+
+6. Ruf die Seite im Browser auf. Beim ersten Aufruf legt ignis die Tabellen an und zeigt kurz „Datenbank erfolgreich initialisiert“. Alternativ geht das auf der Kommandozeile:
+
+   ```bash
+   cd /var/www/ignis
+   sudo -u www-data php cli/intra.php migrate
+   ```
+
+7. Melde dich sofort mit Discord an. Wer sich als Erstes anmeldet, wird [Administrator](#erste-anmeldung).
+
+</Steps>
+
+</TabItem>
+</Tabs>
+
+## Erste Anmeldung
+
+ignis legt bei der Installation kein Administratorkonto an. Das erste Konto, das sich über Discord anmeldet, bekommt alle Rechte. Lass eine frische Installation deshalb nicht offen herumstehen.
+
+Hat sich jemand Falsches zuerst angemeldet, machst du dein Konto auf der Kommandozeile zum Administrator, wie unter [Neuen Administrator festlegen](/ignis/einrichtung/#neuen-administrator-festlegen) beschrieben.
+
+Weiter geht es mit der [Ersteinrichtung](/ignis/einrichtung/).
+
+## Reverse Proxy und HTTPS
+
+ignis braucht HTTPS. Auf einem Webspace kümmert sich dein Hoster darum, meist über Let's Encrypt im Kundenmenü. Auf dem eigenen Server richtest du das Zertifikat im Webserver ein. Läuft ignis in Docker oder hinter einem anderen Server, brauchst du einen Reverse Proxy.
+
+Der Proxy muss die ursprüngliche Adresse weiterreichen, denn ignis baut daraus Links und die Redirect-Adresse für Discord. Gesetzt sein müssen `Host` oder `X-Forwarded-Host` und `X-Forwarded-Proto` mit dem Wert `https`.
+
+Caddy setzt diese Header von selbst und holt das Zertifikat automatisch:
+
+```text title="Caddyfile"
+ignis.example.de {
+    reverse_proxy 127.0.0.1:8080
+}
+```
+
+nginx als Proxy vor dem Container:
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name ignis.example.de;
+
+    ssl_certificate     /etc/letsencrypt/live/ignis.example.de/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/ignis.example.de/privkey.pem;
+
+    client_max_body_size 55M;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+Dasselbe Beispiel steht am Ende von `nginx.conf.example`.
+
+Leitet Discord nach der Anmeldung auf eine falsche Adresse um, stimmen die Header nicht. Als Notlösung gibst du die Adresse mit `DISCORD_REDIRECT_URI` in der `.env` fest vor, siehe [Discord-Anwendung](/ignis/discord/#wenn-die-anmeldung-nicht-klappt).
+
+### Cloudflare
+
+Läuft deine Domain über Cloudflare, stell unter **Caching › Configuration** die **Browser Cache TTL** auf **Respect Existing Headers**. Sonst behalten Browser nach einem Update bis zu Stunden die alten Skripte, und neue Funktionen tauchen erst nach einem harten Neuladen auf. SSL/TLS sollte auf **Full (strict)** stehen.
+
+## ignis in einem Unterordner
+
+Soll ignis unter `https://example.de/ignis/` laufen statt auf einer eigenen Domain oder Subdomain, braucht es den Basis-Pfad `/ignis/`. Er beginnt und endet mit `/`. Denk auch an die passende [Redirect-Adresse](/ignis/discord/) im Discord-Portal.
+
+Der Assistent auf dem Webspace trägt den Basis-Pfad selbst ein. Auf dem eigenen Server setzt du ihn nach dem ersten Start einmal direkt in der Datenbank, denn ohne ihn kannst du dich noch nicht anmelden:
+
+```sql
+UPDATE intra_config SET config_value = '/ignis/' WHERE config_key = 'BASE_PATH';
+```

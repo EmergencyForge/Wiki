@@ -1,0 +1,53 @@
+---
+title: Telemetrie und Support
+description: Welche Daten ignis einmal am Tag an EmergencyForge schickt, wie du sie ansiehst und abschaltest und wie du deine Instanz im Discord für den Support freigibst.
+sidebar:
+  order: 8
+---
+
+ignis schickt ab Werk einmal am Tag ein Lebenszeichen an den Hub von EmergencyForge. Die Daten helfen bei der Weiterentwicklung, und im Support kennt das Team deine Umgebung schon, ohne nachfragen zu müssen.
+
+## Was übertragen wird
+
+Das Lebenszeichen enthält:
+
+- eine zufällige Installations-ID, die ignis einmal erzeugt
+- die Version von ignis und PHP und den Zeitpunkt
+- Servername, Name des Intranets und Art der Organisation aus den Einstellungen
+- Datenbankversion, Betriebssystem, Webserver, Zeitzone und Spracheinstellung des Servers
+- Zählerstände: Mitarbeiter, Benutzer, Anmeldungen der letzten 30 Tage, Fahrzeuge, eNOTF-Protokolle und Feuerwehreinsätze, MANV-Lagen, Dokumentvorlagen, Artikel der Wissensdatenbank, eingetragene Discord-Webhooks und die Tage seit der Installation
+- ob eNOTF, Feuerwehreinsätze, MANV, Dokumente und die Wissensdatenbank genutzt werden, also ob es dort schon Einträge gibt
+
+Namen, E-Mail-Adressen, Discord-IDs, Passwörter, API-Schlüssel und die Inhalte von Protokollen und Einsätzen sind nicht dabei.
+
+## Ansehen und abschalten
+
+Unter **Einstellungen › Wartung und Diagnose › Telemetrie** steht die Karte „Telemetrie“ mit diesen Knöpfen:
+
+- **Deaktivieren** schaltet die Übertragung ab, **Aktivieren** wieder ein.
+- **Datenschutz** zeigt, was gesammelt wird und was nicht.
+- **Jetzt senden** schickt sofort ein Lebenszeichen, zum Beispiel um nach einem Update die Verbindung zu prüfen.
+
+Darunter stehen die Installations-ID, der Zeitpunkt des letzten Lebenszeichens und der Hub-Server, an den es geht. Unter **Datenvorschau anzeigen** siehst du genau die Daten, die beim nächsten Mal übertragen werden. Die Vorschau gibt es nur, solange die Telemetrie eingeschaltet ist.
+
+Verschickt wird das Lebenszeichen über die Aufgabe Telemetrie-Heartbeat, siehe [Cron](/ignis/cron/).
+
+## Globale Ankündigungen
+
+Auf derselben Seite steht die Karte „Globale Ankündigungen“. Darüber bekommt deine Instanz Hinweise vom ignis-Team, etwa zu Updates oder zur Sicherheit. ignis holt sie stündlich ab. Mit **Deaktivieren** schaltest du das ab, **Cache aktualisieren** holt sie sofort.
+
+## Support im Discord
+
+Fragst du im [Discord von EmergencyForge](https://emfor.ge/discord) nach Hilfe, kannst du deine Instanz mit dem Support verbinden. Das Support-Team sieht dann die Daten, die deine Instanz per Telemetrie schickt, und muss nicht erst nach Version und Umgebung fragen.
+
+1. Öffne **Einstellungen › Wartung und Diagnose › Telemetrie**.
+2. Im Kasten ganz oben blendest du deine Installations-UUID mit **Einblenden** ein und kopierst sie mit dem Kopier-Symbol.
+3. Schreib im Discord diesen Befehl:
+
+   ```text
+   /telemetry connect <UUID> [label]
+   ```
+
+   Statt `<UUID>` setzt du deine Installations-ID ein. Das `label` ist optional, ein kurzer Name wie `Hauptserver`, mit dem du mehrere Instanzen auseinanderhältst.
+
+Die ID ist absichtlich ausgeblendet, damit sie nicht aus Versehen in einem Screenshot oder Stream landet. Du findest sie auch unter **Einstellungen › System-Konfiguration › Technik**. Ändern lässt sie sich nicht.

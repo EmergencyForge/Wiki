@@ -1,0 +1,83 @@
+---
+title: ignis
+description: Was ignis ist, was dein Server dafür braucht und in welcher Reihenfolge du es einrichtest.
+sidebar:
+  order: 1
+  label: Überblick
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+ignis ist eine Verwaltung für Feuerwehr und Rettungsdienst im Rollenspiel, vor allem für FiveM-Server. Du betreibst sie selbst, entweder per Docker oder auf einem Webspace mit PHP. Früher hieß das Projekt intraRP.
+
+## Was ignis kann
+
+In ignis pflegst du dein Personal mit Dienstgraden, Qualifikationen und Fachdiensten, dazu Anträge, Termine und Fahrzeuge mit Mängelmeldungen und Fahrtenbuch. Urkunden und Schreiben erstellst du aus eigenen Vorlagen. Rollen legen fest, wer was sehen und ändern darf, das Audit-Log zeigt, wer was geändert hat.
+
+Die Protokolle für den Einsatz kommen als [Plugins](/ignis/plugins/) mit: das eNOTF für den Rettungsdienst, fireTab für die Feuerwehr und das MANV-Board für Lagen mit vielen Verletzten. Dazu gibt es ein Lexikon und ein internes Postfach.
+
+Angemeldet wird über Discord. Mit [ignisTab](/ignistab/) öffnen deine Spieler ignis im Spiel auf einem Tablet.
+
+ignis ist auf deutsche Strukturen ausgelegt. Es ist Open Source unter der GPL-3.0, den Code findest du unter [EmergencyForge/ignis](https://github.com/EmergencyForge/ignis).
+
+:::caution
+ignis wird laufend weiterentwickelt und ändert sich mit jeder Version. Mach regelmäßig [Backups](/ignis/update/#backups).
+:::
+
+## Systemanforderungen
+
+| | Webspace oder eigener Server | Docker |
+| --- | --- | --- |
+| PHP | 8.3 oder 8.4 | steckt im Image |
+| Datenbank | MySQL ab 8.0 oder MariaDB ab 10.6, leer, mit Zeichensatz `utf8mb4` | MariaDB 11 kommt mit der Compose-Datei |
+| Webserver | Apache mit `mod_rewrite` (am besten auch `mod_headers`) oder nginx mit PHP-FPM | Reverse Proxy vor dem Container |
+| HTTPS | gültiges Zertifikat | gültiges Zertifikat am Reverse Proxy |
+| Discord | eigene [Discord-Anwendung](/ignis/discord/) | eigene [Discord-Anwendung](/ignis/discord/) |
+
+Ohne HTTPS funktionieren die Anmeldung und die Tablets in FiveM nicht zuverlässig.
+
+Auf einem Webspace oder eigenen Server braucht PHP diese Erweiterungen: curl, fileinfo, gd, intl, json, mbstring, openssl, pdo, pdo_mysql, xml und zip. Bei den meisten Hostern sind sie schon aktiv. Für die PHP-Einstellungen empfehlen wir:
+
+| Einstellung | Wert |
+| --- | --- |
+| `memory_limit` | 256M |
+| `upload_max_filesize` | 50M |
+| `post_max_size` | 55M |
+| `max_execution_time` | 120 |
+
+Außerdem hilft dir:
+
+- `exec` und `proc_open`. Die meisten [Hintergrundaufgaben](/ignis/cron/) starten damit einen eigenen PHP-Prozess. Manche Webspaces schalten das ab. ignis läuft dann trotzdem, nur diese Aufgaben schlagen fehl.
+- cURL oder `allow_url_fopen`, damit der Updater neue Versionen laden kann.
+- Ein Cronjob oder ein externer Cron-Dienst.
+
+## Versionen
+
+Die Versionen heißen nach dem Schema `vJAHR.GROSS.KLEIN`, zum Beispiel `v2026.0.26-beta`. Alle Versionen findest du auf der [Release-Seite](https://github.com/EmergencyForge/ignis/releases).
+
+Bisher sind alle 2026er-Versionen als Beta markiert. Bis es eine stabile Version gibt, nimmst du die neueste Beta.
+
+## Reihenfolge
+
+<CardGrid>
+	<LinkCard
+		title="1. Discord-Anwendung anlegen"
+		description="Client ID und Client Secret für die Anmeldung."
+		href="/ignis/discord/"
+	/>
+	<LinkCard
+		title="2. Installieren"
+		description="Per Docker, auf einem Webspace mit Assistent oder auf dem eigenen Server."
+		href="/ignis/installation/"
+	/>
+	<LinkCard
+		title="3. Einrichten"
+		description="Pflichtangaben, Registrierung und die Anbindung von ignisTab."
+		href="/ignis/einrichtung/"
+	/>
+	<LinkCard
+		title="4. Cron einrichten"
+		description="Damit Webhooks, Benachrichtigungen und Aufräumarbeiten pünktlich laufen."
+		href="/ignis/cron/"
+	/>
+</CardGrid>
