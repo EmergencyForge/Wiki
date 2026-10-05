@@ -1,0 +1,91 @@
+---
+title: Ersteinrichtung
+description: Was du nach der ersten Anmeldung einstellst, wo der API-Schlüssel für ignisTab liegt und wie du einen Administrator festlegst.
+sidebar:
+  order: 4
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+Nach der ersten Anmeldung zeigt das Dashboard eine Checkliste mit allem, was noch fehlt. Unter **Einstellungen** führt dich der Knopf **Jetzt einrichten** direkt zu diesen Feldern.
+
+## Pflichtangaben
+
+Zwei Werte braucht ignis auf jeden Fall:
+
+| Feld | Inhalt |
+| --- | --- |
+| System-URL | die Adresse deiner Instanz ohne `https://`, zum Beispiel `ignis.example.de` |
+| Servername | der Name deines RP-Servers. Er steht in Link-Vorschauen und Dokumenten. |
+
+Hast du bei Docker `SYSTEM_URL` in der `.env` gesetzt, trägt ignis die System-URL beim Start selbst ein. In den Einstellungen ist sie dann gesperrt.
+
+Die Checkliste empfiehlt außerdem:
+
+- den Namen des Intranets, solange er noch auf „intraRP“ steht. Er erscheint im Titel des Browser-Tabs.
+- Straße, PLZ und Stadt deiner Organisation, solange dort noch die Beispielwerte stehen.
+- eine eigene eNOTF-PIN statt `1234`, wenn das eNOTF nach der PIN fragt. Die Standard-PIN kennt jeder.
+
+Alles Weitere findest du unter **Einstellungen › System-Konfiguration**. Die Seite ist in Abschnitte geteilt: Organisation, Adresse und Anmeldung, eNOTF, fireTab, Funktionen, Vernetzung, Rechtliches, Webhooks und Technik.
+
+## Registrierung
+
+Unter **Einstellungen › System-Konfiguration › Adresse und Anmeldung** legst du bei **Registrierung** fest, wer sich selbst ein Konto anlegen darf:
+
+| Einstellung | Wer kommt rein |
+| --- | --- |
+| Offen für alle | jeder mit einem Discord-Konto. Das ist die Vorgabe nach der Installation. |
+| Nur mit Einladungscode | wer einen Code von euch hat |
+| Geschlossen | niemand Neues |
+
+Einladungen erstellst du unter **Einstellungen › Zugang › Einladungen** oder direkt im Profil eines Mitarbeiters. Eine Einladung aus dem Profil gilt automatisch für diesen Mitarbeiter, das neue Konto ist dann gleich mit ihm verknüpft.
+
+:::tip
+Soll nur deine Fraktion rein, stell auf „Nur mit Einladungscode“, bevor du die Adresse herumgibst.
+:::
+
+## ignisTab anbinden
+
+[ignisTab](/ignistab/) und andere Schnittstellen sprechen mit ignis über den API-Schlüssel. Den erzeugt ignis bei der Installation selbst, du musst ihn nur kopieren.
+
+<Steps>
+
+1. Öffne **Einstellungen › System-Konfiguration** und geh zum Abschnitt **Technik**.
+
+2. Beim Feld **API-Schlüssel** blendest du den Schlüssel mit dem Auge-Symbol ein und kopierst ihn mit dem Kopier-Symbol daneben.
+
+3. Trag ihn in ignisTab ein. Wo genau, steht in der [Anleitung zu ignisTab](/ignistab/).
+
+</Steps>
+
+Behandle den Schlüssel wie ein Passwort. Wer ihn kennt, kann über die Schnittstellen auf deine Instanz zugreifen.
+
+Mit dem Pfeil-Symbol neben dem Schlüssel erzeugst du einen neuen. Der alte ist dann sofort ungültig, und ignis weist jede Anbindung ab, die ihn noch nutzt. Trag den neuen Schlüssel also überall nach. Einen neuen Schlüssel erzeugst du zum Beispiel, wenn der alte irgendwo öffentlich geworden ist.
+
+### Anmeldung im Spiel
+
+Die Anmeldung über Discord funktioniert im Browser von FiveM nicht. Damit sich Spieler auf dem Tablet trotzdem anmelden können, schaltest du unter **Einstellungen › System-Konfiguration › Funktionen** die Option **Anmeldung über ignisTab** ein. Ab Werk ist sie aus.
+
+Der FiveM-Server holt dann mit dem API-Schlüssel einen Einmal-Link für die Discord-ID des Spielers. Das klappt nur für aktive Benutzer, deren Discord-ID in ignis hinterlegt ist. Neue Konten entstehen dabei nie. Die Discord-ID kommt vom FiveM-Server, sie ist also nur so verlässlich wie die Discord-Pflicht auf deinem Server.
+
+## Discord-Benachrichtigungen
+
+ignis kann bei bestimmten Ereignissen eine Nachricht in einen Discord-Kanal schicken. Die Webhook-URLs trägst du unter **Einstellungen › System-Konfiguration › Webhooks** ein:
+
+- eNOTF-Protokoll freigegeben
+- Neue Voranmeldung
+- fireTab-Protokoll freigegeben
+
+Ein leeres Feld schaltet die jeweilige Meldung ab. Die Nachrichten gehen über die Warteschlange raus. Ohne [Cron](/ignis/cron/) kommen sie erst an, wenn jemand ignis aufruft.
+
+## Neuen Administrator festlegen
+
+Hat sich nach der Installation jemand Falsches zuerst angemeldet oder hast du den Zugang verloren, machst du ein Konto auf der Kommandozeile zum Administrator. Dafür brauchst du die Discord-ID des Kontos:
+
+```bash
+php cli/intra.php bootstrap:admin --discord-id=123456789012345678 --username=deinname
+```
+
+Gibt es das Konto noch nicht, legt der Befehl es an. Ein bestehendes Konto bekommt alle Rechte und wird wieder aktiv geschaltet. Andere Administratoren behalten ihre Rechte.
+
+Mit Docker setzt du `docker compose -f docker-compose.prod.yml exec -u www-data app` davor. Auf einem Webspace brauchst du dafür Zugriff auf die Kommandozeile, zum Beispiel per SSH.

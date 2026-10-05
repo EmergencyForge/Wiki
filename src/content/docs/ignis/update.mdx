@@ -1,0 +1,90 @@
+---
+title: Updates und Backups
+description: ignis auf eine neue Version bringen, mit Docker, mit dem eingebauten Updater oder von Hand, und vorher die richtigen Daten sichern.
+sidebar:
+  order: 7
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Bevor du aktualisierst, lies im [Changelog](https://github.com/EmergencyForge/ignis/blob/main/CHANGELOG.md), was sich ändert, und mach ein [Backup](#backups). Die Datenbank passt ignis bei jedem Update selbst an.
+
+## Aktualisieren
+
+<Tabs>
+<TabItem label="Docker">
+
+Ein Update kommt als neues Image. Setz `IMAGE_TAG` in der `.env` auf die neue Version von der [Release-Seite](https://github.com/EmergencyForge/ignis/releases) und hol dann das Image:
+
+```bash
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Beim Start passt ignis die Datenbank an. Der Updater in den Einstellungen zeigt im Container nur an, dass es eine neue Version gibt, und nennt dir den passenden `IMAGE_TAG`. Installieren kann er dort nichts.
+
+</TabItem>
+<TabItem label="Webspace und eigener Server">
+
+Unter **Einstellungen › Wartung und Diagnose › Updater** zeigt ignis neue Versionen an und installiert sie auf Knopfdruck. Der Updater lädt das Release von GitHub, prüft die Prüfsumme und sichert jede Datei, die er ersetzt, vorher nach `storage/backups/updates/`. Danach passt er die Datenbank an.
+
+Dafür braucht er:
+
+- Schreibrechte im Hauptverzeichnis von ignis
+- cURL oder `allow_url_fopen`
+- etwa 200 MB freien Platz
+
+:::caution
+Die Datenbank sichert der Updater nicht. Das machst du vorher selbst.
+:::
+
+Ohne Updater geht es auch von Hand: Lade das neue `ignis-vVERSION.zip` von der Release-Seite und entpack es über die bestehenden Dateien. Lass dabei `.env`, `storage/` und selbst installierte Plugins in `plugins/` stehen. Beim nächsten Seitenaufruf passt ignis die Datenbank an. Auf der Kommandozeile geht das auch mit:
+
+```bash
+php cli/intra.php migrate
+```
+
+</TabItem>
+</Tabs>
+
+Sieht nach dem Update noch alles aus wie vorher, hält der Browser die alten Skripte. Lad die Seite mit Strg+F5 neu. Läuft deine Domain über Cloudflare, prüf die [Cache-Einstellung](/ignis/installation/#cloudflare).
+
+## Backups
+
+Sichere regelmäßig und auf jeden Fall vor einem Update:
+
+- die Datenbank
+- `storage/` mit Dokumenten, Uploads und Profilbildern
+- die `.env`
+- `plugins/`, wenn du Plugins aus dem Katalog installiert hast
+
+Bei Docker stecken Datenbank, `storage` und `plugins` in den Volumes `db`, `storage` und `plugins`. Die `.env` liegt neben der Compose-Datei.
+
+<Tabs>
+<TabItem label="Docker">
+
+Die Datenbank sicherst du aus dem laufenden Container:
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T db sh -c 'mariadb-dump --single-transaction -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE"' > ignis-$(date +%F).sql
+```
+
+Die Volumes `storage` und `plugins` packst du zum Beispiel so ein. Compose stellt den Projektnamen `ignis` davor:
+
+```bash
+docker run --rm -v ignis_storage:/data -v "$PWD":/backup alpine tar czf /backup/storage-$(date +%F).tar.gz -C /data .
+docker run --rm -v ignis_plugins:/data -v "$PWD":/backup alpine tar czf /backup/plugins-$(date +%F).tar.gz -C /data .
+```
+
+</TabItem>
+<TabItem label="Eigener Server">
+
+```bash
+mysqldump --single-transaction -u ignis -p ignis > ignis-$(date +%F).sql
+tar czf ignis-dateien-$(date +%F).tar.gz -C /var/www/ignis .env storage plugins
+```
+
+Auf einem Webspace exportierst du die Datenbank über phpMyAdmin oder das Backup deines Hosters und lädst `storage/`, `plugins/` und die `.env` per FTP herunter.
+
+</TabItem>
+</Tabs>
