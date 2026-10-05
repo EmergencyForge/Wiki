@@ -19,13 +19,12 @@ Alle Seiten liegen als Markdown unter `src/content/docs/`. Jeder Ordner ist ein 
 
 ## Veröffentlichen
 
-Cloudflare Pages baut jeden Push auf `main` und veröffentlicht ihn. Jeder Pull Request bekommt eine eigene Vorschau-Adresse.
+Die Doku läuft als Cloudflare Worker mit statischen Dateien, Einstellungen in `wrangler.toml`. Von Hand veröffentlichen:
 
-| Einstellung | Wert |
-| --- | --- |
-| Build command | `npm run build` |
-| Build output directory | `dist` |
-| Node.js | aus `.node-version` |
+```sh
+npm run build
+npx wrangler deploy
+```
 
 ## Lizenz
 
