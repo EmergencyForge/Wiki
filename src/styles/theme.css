@@ -1,0 +1,81 @@
+@font-face {
+	font-family: 'Geist';
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/geist-400.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Geist';
+	font-weight: 500;
+	font-display: swap;
+	src: url('/fonts/geist-500.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Geist';
+	font-weight: 600;
+	font-display: swap;
+	src: url('/fonts/geist-600.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Geist';
+	font-weight: 700;
+	font-display: swap;
+	src: url('/fonts/geist-700.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Geist';
+	font-weight: 800;
+	font-display: swap;
+	src: url('/fonts/geist-800.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Geist Mono';
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/geist-mono-400.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Geist Mono';
+	font-weight: 500;
+	font-display: swap;
+	src: url('/fonts/geist-mono-500.woff2') format('woff2');
+}
+
+/* Dark is Starlight's base theme; colours follow emergencyforge.de. */
+:root {
+	--sl-font: 'Geist', system-ui, sans-serif;
+	--sl-font-mono: 'Geist Mono', ui-monospace, monospace;
+	--sl-color-accent-low: #3d1500;
+	--sl-color-accent: #ff4d00;
+	/* Starlight uses accent-high for buttons, links and the current page in dark mode. */
+	--sl-color-accent-high: #ff4d00;
+	--sl-color-white: #ffffff;
+	--sl-color-gray-1: #ededed;
+	--sl-color-gray-2: #c9c9cc;
+	--sl-color-gray-3: #8b8b90;
+	--sl-color-gray-4: #5c5c61;
+	--sl-color-gray-5: #2e2e32;
+	--sl-color-gray-6: #18181b;
+	--sl-color-black: #09090a;
+}
+
+/* The orange darkens in light mode so links keep AA contrast on white. */
+:root[data-theme='light'] {
+	--sl-color-accent-low: #ffe1d1;
+	--sl-color-accent: #c23a00;
+	--sl-color-accent-high: #5c1c00;
+	--sl-color-white: #09090a;
+	--sl-color-gray-1: #18181b;
+	--sl-color-gray-2: #2e2e32;
+	--sl-color-gray-3: #4a4a50;
+	--sl-color-gray-4: #75757b;
+	--sl-color-gray-5: #c4c4c8;
+	--sl-color-gray-6: #ececee;
+	--sl-color-gray-7: #f6f6f7;
+	--sl-color-black: #ffffff;
+}
+
+/* The logo file is white only. */
+:root[data-theme='light'] .site-title img {
+	filter: invert(1);
+}

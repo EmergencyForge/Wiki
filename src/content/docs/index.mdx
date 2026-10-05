@@ -1,0 +1,35 @@
+---
+title: EmergencyForge Docs
+description: Anleitungen für ignis und ignisTab von EmergencyForge.
+template: splash
+hero:
+  tagline: Anleitungen zum Installieren, Einrichten und Betreiben von ignis und ignisTab.
+  actions:
+    - text: ignis installieren
+      link: /ignis/installation/
+      icon: right-arrow
+    - text: ignisTab einrichten
+      link: /ignistab/installation/
+      variant: minimal
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+<CardGrid>
+	<LinkCard
+		title="ignis"
+		description="Selbst gehostete Verwaltung für Feuerwehr und Rettungsdienst im Rollenspiel. Läuft per Docker oder auf einem Webspace mit PHP."
+		href="/ignis/"
+	/>
+	<LinkCard
+		title="ignisTab"
+		description="FiveM-Ressource, die ignis im Spiel als Tablet für Rettungsdienst und Feuerwehr öffnet."
+		href="/ignistab/"
+	/>
+</CardGrid>
+
+## Hilfe
+
+Fragen beantwortet die Community im [Forum](https://emfor.ge/forum) und im [Discord](https://emfor.ge/discord). Fehler in ignis meldest du als [Issue auf GitHub](https://github.com/EmergencyForge/ignis/issues).
+
+Steht in dieser Doku etwas Falsches, kannst du es selbst korrigieren: Unter jeder Seite gibt es den Link **Seite bearbeiten**. Wie das geht, steht unter [Mitmachen](/mitmachen/beitragen/).

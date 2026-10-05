@@ -1,37 +1,31 @@
-# EmergencyForge Wiki
+# EmergencyForge Docs
 
-Das offizielle Wiki für [EmergencyForge](https://github.com/EmergencyForge) — gehostet über GitHub Pages mit [MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
-
-**Live:** [https://wiki.emergencyforge.de/](https://wiki.emergencyforge.de/)
+Anleitungen für ignis und ignisTab, online unter [docs.emergencyforge.de](https://docs.emergencyforge.de). Gebaut mit [Starlight](https://starlight.astro.build/).
 
 ## Lokal starten
 
-```bash
-# Repository klonen
-git clone https://github.com/EmergencyForge/Wiki.git
-cd Wiki
+Du brauchst Node.js 22.12 oder neuer.
 
-# Abhängigkeiten installieren
-pip install -r requirements.txt
-
-# Dev-Server starten (erreichbar unter http://localhost:8000)
-mkdocs serve
+```sh
+npm install
+npm run dev
 ```
 
-## Beitragen
+Die Doku läuft dann unter `http://localhost:4321`.
 
-Es gibt zwei Wege, Inhalte beizutragen:
+## Seiten bearbeiten
 
-1. **Direkt auf GitHub** — Jede Wiki-Seite hat einen Bearbeiten-Button, der direkt zur Datei auf GitHub führt. Änderungen werden als Pull Request eingereicht.
-2. **Lokal** — Repository klonen, Änderungen vornehmen, Pull Request erstellen.
+Alle Seiten liegen als Markdown unter `src/content/docs/`. Jeder Ordner ist ein Bereich in der Seitenleiste. Mehr dazu steht in der Doku unter [Mitmachen](https://docs.emergencyforge.de/mitmachen/doku-bearbeiten/).
 
-Alle Inhalte liegen als Markdown-Dateien im `docs/`-Ordner. Die Navigation wird über `mkdocs.yml` unter `nav:` gesteuert.
+## Veröffentlichen
 
-Mehr dazu im Wiki unter [Mitmachen](https://wiki.emergencyforge.de/mitmachen/beitragen/).
+Cloudflare Pages baut jeden Push auf `main` und veröffentlicht ihn. Jeder Pull Request bekommt eine eigene Vorschau-Adresse.
 
-## Deployment
-
-Das Wiki wird automatisch über GitHub Actions deployed. Bei jedem Push auf `main` wird die Seite neu gebaut und auf GitHub Pages veröffentlicht.
+| Einstellung | Wert |
+| --- | --- |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Node.js | aus `.node-version` |
 
 ## Lizenz
 
