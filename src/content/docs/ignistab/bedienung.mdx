@@ -1,0 +1,55 @@
+---
+title: Bedienung und Rechte
+description: Befehle, Tasten und ACE-Rechte von ignisTab.
+sidebar:
+  order: 5
+---
+
+## Tablet öffnen und schließen
+
+Das eNOTF öffnest du mit `/enotf` oder F9, das FireTab mit `/firetab`. Für das FireTab ist ab Werk keine Taste vorbelegt.
+
+Jeder Spieler kann die Tasten selbst ändern, in FiveM unter Einstellungen › Tastenbelegung › FiveM. Die Einträge heißen „eNOTF Tablet öffnen/schließen“ und „FireTab Tablet öffnen/schließen“. Änderst du `OpenKey` in der `config.lua` später, behalten Spieler, die schon einmal auf dem Server waren, ihre gespeicherte Belegung.
+
+Geschlossen wird das Tablet mit ESC oder dem × in der Kopfleiste. Dort gibt es außerdem Home, das die Startseite des Tablets neu lädt, und beim eNOTF einen Zurück-Knopf.
+
+Ein Spieler kann ein Tablet nur öffnen, wenn sein Job in `AllowedJobs` steht und er bei `RequireItem = true` den Gegenstand dabeihat. Sonst bekommt er einen Hinweis:
+
+| Hinweis | Grund |
+|---|---|
+| „Dieses Tablet ist nicht aktiviert!“ | `Enabled = false` für dieses Tablet |
+| „Fehler beim Abrufen deiner Daten!“ | ignisTab findet kein QBCore oder ESX, oder der Charakter ist noch nicht geladen |
+| „Du darfst dieses Tablet nicht nutzen!“ | Job steht nicht in `AllowedJobs` |
+| „Du besitzt kein tablet!“ | Gegenstand fehlt, der Name kommt aus `RequiredItem` |
+
+## Befehle
+
+| Befehl | Wer darf | Was er tut |
+|---|---|---|
+| `/enotf` | Spieler mit passendem Job | öffnet das eNOTF. Der Name kommt aus `Config.eNOTF.Command`. |
+| `/firetab` | Spieler mit passendem Job | öffnet das FireTab. Der Name kommt aus `Config.FireTab.Command`. |
+| `/ignistabtest` | alle | zeigt Name und Job des Charakters als Benachrichtigung. So siehst du, ob ignisTab das Framework findet. |
+| `/emdsync` | Serverkonsole und Recht `command.emdsync` | stößt einen EMD-Sync-Abgleich sofort an |
+| `/enotf-billing-sync` | Serverkonsole und Recht `command.enotf-billing-sync` | ruft freigegebene eNOTF-Protokolle aus ignis ab |
+
+:::caution[Abruf mit /enotf-billing-sync]
+Jeder Abruf markiert die Protokolle in ignis als abgerechnet. Hört auf deinem Server kein Skript auf den Abruf, stehen die Protokolle danach nur in der Serverkonsole. Mehr dazu unter [eNOTF-Abrechnung](/ignistab/module/#enotf-abrechnung).
+:::
+
+## Rechte (ACE)
+
+Für die Befehle und den Zugriff auf Patientendaten brauchst du diese Rechte in der `server.cfg`:
+
+```sh title="server.cfg"
+add_ace group.admin command.emdsync allow
+add_ace group.admin command.enotf-billing-sync allow
+add_ace group.admin ignistab.billing allow
+```
+
+| Recht | Erlaubt |
+|---|---|
+| `command.emdsync` | `/emdsync` und das Anstoßen eines Abgleichs vom Client aus |
+| `command.enotf-billing-sync` | `/enotf-billing-sync` |
+| `ignistab.billing` | abrechnungsfertige Protokolle mit Patientendaten an den eigenen Client schicken lassen |
+
+Gib `ignistab.billing` nur Gruppen, die es wirklich brauchen. Die Protokolle enthalten Namen und Geburtsdaten von Patienten.

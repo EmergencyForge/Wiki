@@ -1,0 +1,60 @@
+---
+title: Hilfe bei Problemen
+description: Häufige Fehler mit ignisTab und wie du sie behebst.
+sidebar:
+  order: 7
+---
+
+## Mehr Ausgaben
+
+Setz in der `config.lua` `Config.Debug = true` und starte ignisTab neu. Dann schreibt ignisTab ausführliche Meldungen in die Serverkonsole und in die F8-Konsole des Spielers. Schalte es danach wieder aus.
+
+## Das Tablet bleibt weiß
+
+- Stimmt `Config.BaseURL`, mit `https://` und `/` am Ende?
+- Läuft ignis über HTTPS mit gültigem Zertifikat? Öffne die Adresse zum Test im normalen Browser.
+- Bei nginx: Sind die `map`-Blöcke für FiveM aus der `nginx.conf.example` von ignis eingebunden? Ohne sie verbietet nginx, die Seite im Tablet einzubetten.
+
+## Hinweise im Spiel
+
+„Fehler beim Abrufen deiner Daten!“: ignisTab hat kein QBCore oder ESX gefunden. Prüf, ob das Framework vor ignisTab startet, oder setz `Config.Framework` fest auf `'qbcore'` oder `'esx'`. Mit `/ignistabtest` siehst du, ob ignisTab den Charakter lesen kann.
+
+„Du darfst dieses Tablet nicht nutzen!“: Der Job des Charakters steht nicht in `AllowedJobs`. Achte auf die genaue Schreibweise aus deinem Framework. Mit `Config.Debug = true` steht in der F8-Konsole, welchen Job ignisTab gelesen hat.
+
+„Dieses Tablet ist nicht aktiviert!“: In der `config.lua` steht für dieses Tablet `Enabled = false`.
+
+„Du besitzt kein tablet!“: `RequireItem` ist an und der Spieler hat den Gegenstand aus `RequiredItem` nicht im Inventar. ignisTab bringt keinen Gegenstand mit, du musst ihn in deinem Inventar anlegen.
+
+## Meldungen in der Serverkonsole
+
+| Meldung | Ursache und Lösung |
+|---|---|
+| `ServerConfig.APIKey in config_server.lua is not set` | Der Schlüssel steht noch auf `CHANGE_ME`. Trag den API-Schlüssel aus ignis ein. |
+| `Config.APIKey in config.lua is readable by every player` | Ein alter Schlüssel steht noch in der `config.lua`. Siehe [Umstieg von intraTab](/ignistab/installation/#umstieg-von-intratab). |
+| `API key rejected` oder Fehler `403` | Der Schlüssel in der `config_server.lua` passt nicht zu dem in ignis. Kopier ihn neu. |
+| Fehler `503` | In ignis ist noch kein API-Schlüssel gesetzt. |
+| `could not check for the billing table` oder, mit Debug, `No MySQL resource found` | `oxmysql` läuft nicht oder startet nach ignisTab. |
+
+## Tablet-Login klappt nicht
+
+- Ist in ignis unter Einstellungen › System-Konfiguration › Funktionen die Option Anmeldung über ignisTab an?
+- Steht in der `config.lua` `Config.TabletLogin = { Enabled = true }`?
+- Hatte der Spieler beim Verbinden Discord geöffnet?
+- Hat sein ignis-Konto diese Discord-ID? Gehört die ID zu mehreren Konten, lehnt ignis die Anmeldung ab.
+- Passt die System-URL in ignis zu `Config.BaseURL`?
+
+Welcher Hinweis im Spiel was bedeutet, steht unter [Tablet-Login](/ignistab/tablet-login/#wenn-es-nicht-klappt).
+
+## Abrechnung liefert keine Protokolle
+
+`/enotf-billing-sync` meldet „Keine Protokolle gefunden“, wenn es keine neuen freigegebenen Protokolle gibt oder die Anfrage fehlgeschlagen ist. Prüf:
+
+- Steht `Config.ENOTFBilling.Enabled` auf `true`?
+- Läuft ignis ab 2026.0.26-beta? Ältere Versionen lehnen die Anfrage des Servers ab.
+- Wurden die Protokolle schon einmal abgerufen? ignis liefert jedes Protokoll nur einmal.
+
+Den Statuscode der Anfrage siehst du mit `Config.Debug = true` in der Serverkonsole.
+
+## Fehler melden
+
+Fragen und Fehlermeldungen kannst du als Issue unter [EmergencyForge/ignisTab](https://github.com/EmergencyForge/ignisTab/issues) einstellen.

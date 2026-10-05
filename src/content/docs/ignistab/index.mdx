@@ -1,0 +1,58 @@
+---
+title: ignisTab
+description: ignisTab ist die FiveM-Ressource, die ignis im Spiel als Tablet für Rettungsdienst und Feuerwehr öffnet.
+sidebar:
+  label: Überblick
+  order: 1
+---
+
+## Was ignisTab ist
+
+ignisTab ist eine FiveM-Ressource, die ignis im Spiel als Tablet öffnet. Früher hieß sie intraTab. Ein Spieler mit passendem Job öffnet das Tablet per Befehl oder Taste, im Tablet läuft dann die Weboberfläche deiner ignis-Installation.
+
+Es gibt zwei Tablets:
+
+| Tablet | Für | Startseite in ignis | Öffnen mit |
+|---|---|---|---|
+| eNOTF | Rettungsdienst, Jobs `ambulance` und `admin` | `enotf/overview.php` | `/enotf` oder F9 |
+| FireTab | Feuerwehr, Jobs `fire` und `admin` | `einsatz/list.php` | `/firetab` |
+
+Dazu kommen zwei Module, die ab Werk aus sind:
+
+- EMD-Sync gleicht Fahrzeuge, Status, Einsatzdaten und Lagemeldungen zwischen dem Einsatzleitsystem `emergencydispatch` und ignis ab.
+- Die eNOTF-Abrechnung holt freigegebene eNOTF-Protokolle aus ignis, damit ein Skript auf deinem Server Rechnungen stellen kann.
+
+Alle Daten liegen in ignis. ignisTab zeigt die Seiten im Spiel an und meldet ignis, welcher Charakter gerade am Tablet sitzt.
+
+## So hängt es zusammen
+
+Das Tablet lädt die ignis-Seiten direkt im Spielbrowser des Spielers. Der Spieler muss ignis also selbst erreichen können.
+
+Der FiveM-Server spricht zusätzlich mit ignis, und zwar mit dem API-Schlüssel aus ignis. Darüber laufen die Zuordnung von Charakter und ignis-Sitzung, der [Tablet-Login](/ignistab/tablet-login/), EMD-Sync und die Abrechnung. Der Schlüssel steht in der `config_server.lua` und bleibt auf dem Server.
+
+## Voraussetzungen
+
+Auf dem FiveM-Server:
+
+- ein aktuelles FiveM-Server-Build
+- QBCore (`qb-core`) oder ESX (`es_extended`). ignisTab holt Name, Job und Charakter aus dem Framework. Ohne eines der beiden öffnet sich kein Tablet.
+- `ox_inventory`, wenn das Tablet nur mit einem Gegenstand im Inventar aufgehen soll. Die Inventare von QBCore und ESX gehen auch.
+- `oxmysql`, wenn du EMD-Sync oder die eNOTF-Abrechnung nutzt
+- `emergencydispatch`, wenn du EMD-Sync nutzt
+
+Bei ignis:
+
+- eine laufende ignis-Installation ab Version 2026.0.14-beta, für die eNOTF-Abrechnung ab 2026.0.26-beta
+- HTTPS mit gültigem Zertifikat, erreichbar für die Spieler und vom FiveM-Server aus. ignisTab macht aus jeder Adresse eine `https://`-Adresse, auch wenn du `http://` einträgst.
+- die Plugins eNOTF und fireTab eingeschaltet. Beide sind in ignis ab Werk an.
+- der API-Schlüssel aus ignis
+
+Wie du ignis selbst aufsetzt, steht unter [ignis installieren](/ignis/installation/). Einen Überblick über ignis gibt es unter [ignis](/ignis/).
+
+## Version
+
+Diese Seiten beschreiben ignisTab v2026.1.1. Die Releases liegen auf [GitHub](https://github.com/EmergencyForge/ignisTab/releases).
+
+Welche Version bei dir läuft, steht in der `fxmanifest.lua` bei `version`. In der ZIP-Datei eines Releases steht dort die Versionsnummer, in einer Kopie direkt aus dem Git-Repository steht `dev`.
+
+Weiter geht es mit der [Installation](/ignistab/installation/).

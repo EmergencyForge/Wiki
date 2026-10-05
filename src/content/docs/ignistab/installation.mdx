@@ -1,0 +1,107 @@
+---
+title: Installation
+description: ignisTab herunterladen, in den resources-Ordner legen, mit ignis verbinden und in der server.cfg starten.
+sidebar:
+  order: 2
+---
+
+import { Steps, FileTree } from '@astrojs/starlight/components';
+
+## Bevor du anfängst
+
+Du brauchst eine laufende ignis-Installation mit HTTPS. Falls die noch fehlt, fang bei [ignis installieren](/ignis/installation/) an.
+
+Aus ignis brauchst du den API-Schlüssel. Er steht unter Einstellungen › System-Konfiguration › Technik › API-Schlüssel. ignis erzeugt ihn bei der Installation, mit dem Auge-Symbol blendest du ihn ein. Mehr dazu unter [ignisTab anbinden](/ignis/einrichtung/#ignistab-anbinden).
+
+## Installieren
+
+<Steps>
+
+1. Lade auf der [Release-Seite](https://github.com/EmergencyForge/ignisTab/releases) die neueste ZIP-Datei herunter, zum Beispiel `ignisTab-v2026.1.1.zip`. Entpack sie in den `resources`-Ordner deines Servers. Danach sieht es so aus:
+
+   <FileTree>
+   - resources/
+     - ignisTab/
+       - client/
+       - html/
+       - server/
+       - shared/
+       - stream/
+       - config.lua
+       - config_server.lua
+       - fxmanifest.lua
+       - …
+   </FileTree>
+
+   Lass den Ordnernamen bei `ignisTab`. Andere Skripte sprechen die Ressource über `exports['ignisTab']` an.
+
+2. Öffne die `config.lua` und trag die Adresse deiner ignis-Installation ein, mit `/` am Ende:
+
+   ```lua title="config.lua"
+   Config.BaseURL = 'https://ignis.example.de/'
+   ```
+
+   Liegt ignis in einem Unterordner, gehört er dazu, zum Beispiel `https://example.de/ignis/`.
+
+3. Öffne die `config_server.lua` und trag den API-Schlüssel aus ignis ein:
+
+   ```lua title="config_server.lua"
+   ServerConfig.APIKey = 'dein-schluessel-aus-ignis'
+   ```
+
+   :::caution[Schlüssel nur in die config_server.lua]
+   Die `config.lua` lädt jeder Spieler mit der Ressource herunter. Ein Schlüssel darin ist für alle lesbar. Die `config_server.lua` bleibt auf dem Server.
+   :::
+
+4. Trag ignisTab in die `server.cfg` ein. Es muss nach dem Framework und den anderen Ressourcen starten, die es braucht:
+
+   ```sh title="server.cfg"
+   ensure oxmysql
+   ensure qb-core              # oder: ensure es_extended
+   ensure ox_inventory         # nur wenn du es nutzt
+   ensure emergencydispatch    # nur für EMD-Sync
+   ensure ignisTab
+   ```
+
+5. Starte den Server neu. Steht der Schlüssel noch auf `CHANGE_ME`, meldet ignisTab das beim Start in der Konsole.
+
+6. Geh mit einem Charakter im Job `ambulance` ins Spiel und öffne das Tablet mit `/enotf` oder F9. Es sollte die eNOTF-Seite deiner ignis-Installation laden. Das FireTab öffnest du mit `/firetab` im Job `fire`.
+
+</Steps>
+
+Bleibt das Tablet weiß oder kommt eine Fehlermeldung, schau unter [Hilfe bei Problemen](/ignistab/fehlerbehebung/) nach. Welche Jobs das Tablet öffnen dürfen und alle anderen Einstellungen stehen unter [Konfiguration](/ignistab/konfiguration/).
+
+## Was in ignis eingestellt sein muss
+
+| In ignis | Wofür |
+|---|---|
+| HTTPS mit gültigem Zertifikat | alles |
+| Plugins eNOTF und fireTab eingeschaltet | die beiden Tablets |
+| API-Schlüssel (System-Konfiguration › Technik) | alles, was der FiveM-Server mit ignis bespricht |
+| Anmeldung über ignisTab (System-Konfiguration › Funktionen) | [Tablet-Login](/ignistab/tablet-login/) |
+| System-URL passt zu `Config.BaseURL` | Tablet-Login |
+| bei nginx die `map`-Blöcke für FiveM aus `nginx.conf.example` | ohne sie bleibt das Tablet weiß |
+
+Die `map`-Blöcke erkennen den Spielbrowser von FiveM und lassen für ihn das Einbetten der Seiten zu. Läuft ignis im Docker-Image, setzt ignis diese Header selbst, dann brauchst du die Blöcke im vorgeschalteten nginx nicht.
+
+Erzeugst du in ignis einen neuen API-Schlüssel, ist der alte sofort ungültig. Trag den neuen dann auch in die `config_server.lua` ein.
+
+## Umstieg von intraTab
+
+Hieß der Ordner bei dir bisher `intraTab`, benenn ihn in `ignisTab` um und pass die Zeile in der `server.cfg` auf `ensure ignisTab` an.
+
+Ältere Versionen hatten den Schlüssel als `Config.APIKey` in der `config.lua`. Damit war er für jeden Spieler lesbar. So räumst du auf:
+
+1. Den Schlüssel in der `config_server.lua` bei `ServerConfig.APIKey` eintragen.
+2. Die Zeile mit `Config.APIKey` aus der `config.lua` löschen.
+3. In ignis einen neuen Schlüssel erzeugen und ihn in die `config_server.lua` übernehmen.
+
+Solange `Config.APIKey` noch in der `config.lua` steht, warnt ignisTab beim Start, und der Tablet-Login bleibt gesperrt.
+
+## Updates
+
+Sichere zuerst deine `config.lua` und `config_server.lua`. Steht in `server/billing-custom.lua` eigene Abrechnungslogik, sichere die Datei ebenfalls.
+
+Lade dann die neue ZIP-Datei herunter und ersetz den Ordner `resources/ignisTab`. Übernimm deine Werte in die neuen Dateien. Manchmal kommen Einstellungen dazu, vergleich deshalb am besten alte und neue Fassung.
+
+Zum Schluss `restart ignisTab` in der Serverkonsole eingeben oder den Server neu starten.
