@@ -1,0 +1,79 @@
+---
+title: Hilfe bei Problemen
+description: Häufige Fehler mit ef_bridge und wie du sie behebst.
+sidebar:
+  order: 10
+---
+
+## Erst prüfen
+
+`efbridge test` in der Serverkonsole prüft Adresse und Schlüssel von ignis und Lex und sagt, woran es hängt. `efbridge status` zeigt, ob ein Framework und die Datenbank gefunden wurden und welche Schlüssel gesetzt sind. Im Spiel steht dasselbe im Panel unter Status.
+
+## Mehr Ausgaben
+
+`efbridge set Debug on` schreibt ausführliche Meldungen in die Serverkonsole und in die F8-Konsole der Spieler. Ein Neustart ist nicht nötig. Schalte es danach mit `efbridge set Debug off` wieder aus.
+
+## Das Tablet bleibt weiß
+
+- Stimmt die Adresse von ignis (`efbridge get Ignis.BaseURL`), mit `https://` und `/` am Ende?
+- Läuft ignis über HTTPS mit gültigem Zertifikat? Öffne die Adresse zum Test im normalen Browser.
+- Bei nginx: Sind die `map`-Blöcke für FiveM aus der `nginx.conf.example` von ignis eingebunden? Ohne sie verbietet nginx, die Seite im Tablet einzubetten.
+
+## Hinweise im Spiel
+
+„Fehler beim Abrufen deiner Daten!“: ef_bridge hat kein QBCore, Qbox oder ESX gefunden, oder der Charakter ist noch nicht geladen. Prüf, ob das Framework vor ef_bridge startet, oder setz es fest mit `efbridge set Framework qbcore` (oder `esx`) und `restart ef_bridge`. Läuft der Server ohne Framework, nimm `standalone`. Mit `/efbridgetest` siehst du, ob ef_bridge den Charakter lesen kann.
+
+„Du darfst dieses Tablet nicht nutzen!“: Der Job des Charakters steht nicht in `AllowedJobs`. Achte auf die genaue Schreibweise aus deinem Framework. Mit Debug steht in der F8-Konsole, welchen Job ef_bridge gelesen hat.
+
+„Dieses Tablet ist nicht aktiviert!“: Im Panel ist für dieses Tablet „Tablet aktiv“ aus.
+
+„Für das Tablet fehlt die Adresse von ignis (/efbridge).“: Unter ignis im Panel die Adresse eintragen.
+
+„Die Einstellungen werden noch geladen, versuch es gleich noch mal.“: Der Client hat vom Server noch keine Einstellungen bekommen, meist direkt nach dem Verbinden oder einem Neustart von ef_bridge. Ein paar Sekunden warten.
+
+„Du besitzt kein tablet!“: „Nur mit Gegenstand im Inventar“ ist an, und der Spieler hat den Gegenstand aus `RequiredItem` nicht dabei. ef_bridge bringt keinen Gegenstand mit, du legst ihn in deinem Inventar an.
+
+„Für das ef_bridge-Panel fehlt dir das Recht.“: Dem Konto fehlt `ef_bridge.admin`. Prüf die `add_ace`-Zeile und ob der Spieler in der Gruppe ist (`add_principal identifier.fivem:… group.admin`).
+
+Alle Hinweise der Tablets stehen unter [Tablets im Spiel](/ef-bridge/tablets/#wer-ein-tablet-öffnen-darf).
+
+## Meldungen in der Serverkonsole
+
+| Meldung | Ursache und Lösung |
+|---|---|
+| `no settings yet` | Auf dem Server ist noch nichts eingestellt. Panel mit `/efbridge` öffnen oder in der Konsole einrichten. |
+| `the ignis address is set but no API key` | Die Adresse von ignis steht, der Schlüssel fehlt. `efbridge key ignis <Schlüssel>` |
+| `Lex sync is on but has no API key` | `efbridge key lex <Schlüssel>` |
+| `API key rejected` oder Fehler `403` | Der Schlüssel in ef_bridge passt nicht zu dem in ignis. Kopier ihn neu und trag ihn ein. |
+| Fehler `503` | In ignis ist noch kein API-Schlüssel gesetzt. |
+| `still in the folder but no longer read` | Alte config-Dateien liegen noch im Ordner. Übernehmen mit `efbridge import`, sonst löschen. |
+| `admin panel denied for source …` | Jemand ohne `ef_bridge.admin` hat das Panel aufgerufen. |
+| `could not check for the billing table` | `oxmysql` läuft nicht oder startet nach ef_bridge. |
+
+## Tablet-Login klappt nicht
+
+- Ist in ignis unter Einstellungen › System-Konfiguration › Funktionen die Option Anmeldung über ef_bridge an?
+- Ist in ef_bridge „Tablet-Login über Discord-ID“ an (`efbridge get Ignis.TabletLogin`)?
+- Hatte der Spieler beim Verbinden Discord geöffnet?
+- Hat sein ignis-Konto diese Discord-ID? Gehört die ID zu mehreren Konten, lehnt ignis die Anmeldung ab.
+- Ist die System-URL in ignis dieselbe Adresse wie `Ignis.BaseURL`?
+
+Welcher Hinweis im Spiel was bedeutet, steht unter [Tablet-Login](/ef-bridge/tablet-login/#wenn-es-nicht-klappt).
+
+## Abrechnung liefert keine Protokolle
+
+`/enotf-billing-sync` meldet „Keine Protokolle gefunden“, wenn es keine neuen freigegebenen Protokolle gibt oder die Anfrage fehlgeschlagen ist. Prüf:
+
+- Ist „Abrechnung aktiv“ (`ENOTFBilling.Enabled`) an?
+- Läuft ignis ab 2026.0.26-beta? Ältere Versionen lehnen die Anfrage des Servers ab.
+- Wurden die Protokolle schon einmal abgerufen? ignis liefert jedes Protokoll nur einmal.
+
+Den Statuscode der Anfrage siehst du mit Debug in der Serverkonsole.
+
+## Lex-Abgleich klappt nicht
+
+Die Meldungen von `efbridge test` stehen unter [Lex-Abgleich](/ef-bridge/lex/#wenn-es-nicht-klappt).
+
+## Fehler melden
+
+Fragen und Fehlermeldungen kannst du als Issue unter [EmergencyForge/ef_bridge](https://github.com/EmergencyForge/ef_bridge/issues) einstellen.

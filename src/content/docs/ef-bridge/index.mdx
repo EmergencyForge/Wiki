@@ -1,0 +1,66 @@
+---
+title: ef_bridge
+description: ef_bridge ist die FiveM-Ressource von EmergencyForge, die deinen Server mit ignis und Lex verbindet. Vormals ignisTab.
+sidebar:
+  label: Überblick
+  order: 1
+---
+
+## Was ef_bridge ist
+
+ef_bridge ist eine FiveM-Ressource, die deinen Spielserver mit ignis und mit Lex verbindet. Bis Version 2026.1 hieß sie ignisTab, davor intraTab. Wer von ignisTab kommt, liest zuerst [Umstieg von ignisTab](/ef-bridge/umstieg/).
+
+Jeder Teil lässt sich einzeln einschalten, ab Werk ist alles aus:
+
+| Modul | Gegenstelle | Was es tut |
+|---|---|---|
+| eNOTF-Tablet | ignis | Tablet für den Rettungsdienst, öffnet das eNOTF deiner ignis-Installation |
+| FireTab | ignis | Tablet für die Feuerwehr, öffnet die Einsatzliste |
+| EMD-Sync | ignis | gleicht Fahrzeuge, Status, Einsatzdaten und Lagemeldungen zwischen `emergencydispatch` und ignis ab |
+| eNOTF-Abrechnung | ignis | holt freigegebene eNOTF-Protokolle, damit ein Skript auf deinem Server Rechnungen stellen kann |
+| Lex-Abgleich | Lex | meldet Charaktere als Personen und ihre Fahrzeuge samt Halter an Lex |
+
+Wer nur Lex nutzt, braucht kein ignis, und umgekehrt.
+
+Config-Dateien gibt es nicht. Eingestellt wird alles im Spiel im [Admin-Panel](/ef-bridge/einstellungen/) mit `/efbridge` oder in der Serverkonsole mit dem Befehl [`efbridge`](/ef-bridge/befehle/). Der Server speichert die Einstellungen selbst, sie überstehen Neustarts und Updates.
+
+## So hängt es zusammen
+
+Die Tablets laden die ignis-Seiten direkt im Spielbrowser des Spielers. Der Spieler muss ignis also selbst erreichen können, über HTTPS.
+
+Der FiveM-Server spricht zusätzlich mit ignis, und zwar mit dem API-Schlüssel aus ignis. Darüber laufen die Zuordnung von Charakter und ignis-Sitzung, der [Tablet-Login](/ef-bridge/tablet-login/), EMD-Sync und die Abrechnung. Für Lex gibt es einen eigenen Schlüssel. Beide Schlüssel bleiben auf dem Server, kein Spieler bekommt sie zu sehen, auch kein Admin im Panel.
+
+## Voraussetzungen
+
+Auf dem FiveM-Server:
+
+- ein aktuelles FiveM-Server-Build
+- QBCore (`qb-core`), Qbox oder ESX (`es_extended`). ef_bridge holt Name, Job und Charakter aus dem Framework. Ein Server ohne Framework stellt `Framework` auf `standalone`, dann nimmt das Tablet den FiveM-Namen, die erlaubten Jobs gelten nicht, und für Lex gibt es nichts abzugleichen.
+- `oxmysql` für EMD-Sync, den Lex-Abgleich und die Tabelle der eNOTF-Abrechnung
+- `emergencydispatch`, wenn du EMD-Sync nutzt
+- `ox_inventory`, wenn ein Tablet nur mit einem Gegenstand im Inventar aufgehen soll. Die Inventare von QBCore und ESX gehen auch.
+
+Bei ignis:
+
+- eine laufende ignis-Installation ab Version 2026.0.14-beta, für die eNOTF-Abrechnung ab 2026.0.26-beta. Tippen auf dem Tablet in der Hand braucht ignis 2026.1.2 oder neuer.
+- HTTPS mit gültigem Zertifikat, erreichbar für die Spieler und vom FiveM-Server aus. ef_bridge baut jede Adresse mit `https://` auf.
+- die Plugins eNOTF und fireTab eingeschaltet
+- der API-Schlüssel aus ignis
+
+Bei Lex: der FiveM-Abgleich unter Einstellungen › FiveM-Abgleich, erreichbar über HTTPS vom FiveM-Server aus.
+
+Wie du ignis selbst aufsetzt, steht unter [ignis installieren](/ignis/installation/).
+
+## Version
+
+Die Releases liegen auf [GitHub](https://github.com/EmergencyForge/ef_bridge/releases). Welche Version läuft, zeigt das Admin-Panel unter Status und die Serverkonsole mit `efbridge status`.
+
+Ab v2026.4.0 schreibt ef_bridge beim Start einen EmergencyForge-Banner mit `ef_bridge v<Version>` in die Serverkonsole. Gleichzeitig fragt es bei emergencyforge.de nach, ob es ein neueres Release gibt. Wenn ja, steht unter dem Banner:
+
+```txt title="Serverkonsole"
+Neue Version verfügbar: v<Version> (<Commit>)
+```
+
+Eine Kopie direkt aus dem Git-Repository hat die Version `dev` und fragt nicht nach.
+
+Weiter geht es mit der [Installation](/ef-bridge/installation/).

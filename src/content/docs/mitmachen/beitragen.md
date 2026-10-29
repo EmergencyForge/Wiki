@@ -1,6 +1,6 @@
 ---
 title: Wie du beitragen kannst
-description: Doku verbessern, Fehler melden oder Code zu ignis und ignisTab beisteuern.
+description: Doku verbessern, Fehler melden oder Code zu ignis und ef_bridge beisteuern.
 sidebar:
   order: 1
 ---
@@ -18,7 +18,7 @@ Melde Fehler dort, wo sie entstehen:
 | Was ist kaputt? | Wohin damit? |
 | --- | --- |
 | ignis | [EmergencyForge/ignis](https://github.com/EmergencyForge/ignis/issues) |
-| ignisTab | [EmergencyForge/ignisTab](https://github.com/EmergencyForge/ignisTab/issues) |
+| ef_bridge | [EmergencyForge/ef_bridge](https://github.com/EmergencyForge/ef_bridge/issues) |
 | Diese Doku | [EmergencyForge/Wiki](https://github.com/EmergencyForge/Wiki/issues) |
 
 Schreib dazu, welche Version du nutzt, was du gemacht hast und was passiert ist. Zeigt ignis eine Fehler-ID an, gib sie mit an.

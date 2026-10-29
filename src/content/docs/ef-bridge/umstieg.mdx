@@ -1,0 +1,60 @@
+---
+title: Umstieg von ignisTab
+description: Von ignisTab auf ef_bridge wechseln und die alte config.lua und config_server.lua übernehmen.
+sidebar:
+  order: 9
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+ef_bridge ist ignisTab unter neuem Namen, ohne config-Dateien und mit dem Lex-Abgleich. Deine alten Einstellungen übernimmt ef_bridge selbst.
+
+## Umsteigen
+
+<Steps>
+
+1. Lade ef_bridge herunter und entpack es in den `resources`-Ordner, siehe [Installation](/ef-bridge/installation/).
+
+2. Ersetz in der `server.cfg` `ensure ignisTab` durch `ensure ef_bridge` und ergänze das Recht für das Admin-Panel:
+
+   ```sh title="server.cfg"
+   ensure ef_bridge
+   add_ace group.admin ef_bridge.admin allow
+   ```
+
+3. Kopier `config.lua` und `config_server.lua` aus dem alten Ordner `resources/ignisTab` in den neuen Ordner `resources/ef_bridge`. Dann lösch den alten Ordner.
+
+4. Starte den Server. Beim ersten Start übernimmt ef_bridge die Werte aus beiden Dateien, den API-Schlüssel eingeschlossen. In der Konsole steht, was es übernommen hat und was nicht, etwa einen ungültigen Wert.
+
+5. Prüf das Ergebnis mit `/efbridge` und lösch die beiden Dateien. ef_bridge liest sie ab jetzt nicht mehr und erinnert beim Start daran, solange sie noch im Ordner liegen.
+
+</Steps>
+
+Die automatische Übernahme passiert nur, solange auf dem Server noch nie eine Einstellung gespeichert wurde. Hast du ef_bridge schon eingerichtet, leg die Dateien in den Ordner und ruf `efbridge import` auf. Im Panel geht es unter **Import** auch ohne Dateien: Inhalt einfügen, Vorschau ansehen, übernehmen. „Aus dem Ordner lesen“ nimmt die Dateien aus dem Ordner.
+
+ef_bridge versteht dabei auch die Namen aus älteren Versionen, etwa `Config.BaseURL`, `Config.TabletLogin.Enabled`, `Config.eNOTF` und `ServerConfig.APIKey`, und schreibt in die Konsole, wohin es sie übernommen hat. Platzhalter wie `CHANGE_ME` oder `https://deine-url.de/` übernimmt es nicht.
+
+Die Dateien liest ef_bridge in einer abgeschotteten Umgebung, ohne Zugriff auf Natives, andere Ressourcen oder Dateien. Größer als 64 KB darf eine Datei nicht sein. Sie stehen nicht im Manifest, Spieler bekommen sie also nie.
+
+## Was sich sonst ändert
+
+| ignisTab | ef_bridge |
+|---|---|
+| `exports['ignisTab']` oder `exports.ignisTab` | `exports['ef_bridge']`. Die Namen der Exporte sind gleich geblieben. |
+| Events `enotf-billing:*` und `emd:*` | unverändert |
+| Recht `ignistab.billing` | `ef_bridge.billing`, das alte Recht gilt weiter |
+| `/ignistabtest` | `/efbridgetest` |
+| `Config.Debug = true` in der `config.lua` | `efbridge set Debug on` oder im Panel unter Allgemein |
+| Tablets ab Werk an | Tablets ab Werk aus, „Tablet aktiv“ im Panel |
+| Neustart nach jeder Änderung | Änderungen gelten sofort, bis auf Befehle, Tasten, Framework und Statustabelle |
+| Anmeldung über ignisTab in ignis | heißt in neueren ignis-Versionen Anmeldung über ef_bridge |
+
+Hattest du eigene Abrechnungslogik in `server/billing-custom.lua`, übernimm sie in die Funktion `ProcessBilling` der neuen Datei, siehe [eNOTF-Abrechnung](/ef-bridge/module/#eigene-logik-in-billing-customlua).
+
+## Alter Schlüssel in der config.lua
+
+Ganz alte Versionen hatten den API-Schlüssel als `Config.APIKey` in der `config.lua`. Damit war er für jeden Spieler lesbar. ef_bridge übernimmt ihn trotzdem und weist in der Konsole darauf hin. Erzeug in ignis einen neuen Schlüssel und trag ihn mit `efbridge key ignis <Schlüssel>` ein.
+
+## Einstellungen auf einen anderen Server umziehen
+
+`efbridge export` schreibt alle geänderten Einstellungen ohne Schlüssel nach `settings-export.json` im Ordner von ef_bridge. Leg die Datei auf dem neuen Server in den Ordner und ruf dort `efbridge import` auf, oder füg den Inhalt im Panel unter Import ein. Die Schlüssel trägst du danach neu ein.

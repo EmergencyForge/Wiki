@@ -1,3 +1,9 @@
 /setup-and-konfiguration/discord-applikation-erstellen /ignis/discord/ 301
 /setup-and-konfiguration/intrarp-aufsetzen-and-einrichten /ignis/installation/ 301
 /optionelle-funktionen/schnittstelle-verwenden /ignis/einrichtung/ 301
+/ignistab/konfiguration /ef-bridge/einstellungen/ 301
+/ignistab/konfiguration/ /ef-bridge/einstellungen/ 301
+/ignistab/bedienung /ef-bridge/befehle/ 301
+/ignistab/bedienung/ /ef-bridge/befehle/ 301
+/ignistab /ef-bridge/ 301
+/ignistab/* /ef-bridge/:splat 301

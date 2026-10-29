@@ -1,6 +1,6 @@
 ---
 title: Ersteinrichtung
-description: Was du nach der ersten Anmeldung einstellst, wo der API-Schlüssel für ignisTab liegt und wie du einen Administrator festlegst.
+description: Was du nach der ersten Anmeldung einstellst, wo der API-Schlüssel für ef_bridge liegt und wie du einen Administrator festlegst.
 sidebar:
   order: 4
 ---
@@ -44,9 +44,9 @@ Einladungen erstellst du unter **Einstellungen › Zugang › Einladungen** oder
 Soll nur deine Fraktion rein, stell auf „Nur mit Einladungscode“, bevor du die Adresse herumgibst.
 :::
 
-## ignisTab anbinden
+## ef_bridge anbinden
 
-[ignisTab](/ignistab/) und andere Schnittstellen sprechen mit ignis über den API-Schlüssel. Den erzeugt ignis bei der Installation selbst, du musst ihn nur kopieren.
+[ef_bridge](/ef-bridge/) (vormals ignisTab) und andere Schnittstellen sprechen mit ignis über den API-Schlüssel. Den erzeugt ignis bei der Installation selbst, du musst ihn nur kopieren.
 
 <Steps>
 
@@ -54,7 +54,7 @@ Soll nur deine Fraktion rein, stell auf „Nur mit Einladungscode“, bevor du d
 
 2. Beim Feld **API-Schlüssel** blendest du den Schlüssel mit dem Auge-Symbol ein und kopierst ihn mit dem Kopier-Symbol daneben.
 
-3. Trag ihn in ignisTab ein. Wo genau, steht in der [Anleitung zu ignisTab](/ignistab/).
+3. Trag ihn in ef_bridge ein, im Admin-Panel unter ignis oder in der Serverkonsole mit `efbridge key ignis <Schlüssel>`. Mehr dazu in der [Installation von ef_bridge](/ef-bridge/installation/).
 
 </Steps>
 
@@ -64,7 +64,7 @@ Mit dem Pfeil-Symbol neben dem Schlüssel erzeugst du einen neuen. Der alte ist 
 
 ### Anmeldung im Spiel
 
-Die Anmeldung über Discord funktioniert im Browser von FiveM nicht. Damit sich Spieler auf dem Tablet trotzdem anmelden können, schaltest du unter **Einstellungen › System-Konfiguration › Funktionen** die Option **Anmeldung über ignisTab** ein. Ab Werk ist sie aus.
+Die Anmeldung über Discord funktioniert im Browser von FiveM nicht. Damit sich Spieler auf dem Tablet trotzdem anmelden können, schaltest du unter **Einstellungen › System-Konfiguration › Funktionen** die Option **Anmeldung über ef_bridge** ein, in älteren Versionen heißt sie **Anmeldung über ignisTab**. Ab Werk ist sie aus. Wie du den [Tablet-Login](/ef-bridge/tablet-login/) in ef_bridge einschaltest, steht dort.
 
 Der FiveM-Server holt dann mit dem API-Schlüssel einen Einmal-Link für die Discord-ID des Spielers. Das klappt nur für aktive Benutzer, deren Discord-ID in ignis hinterlegt ist. Neue Konten entstehen dabei nie. Die Discord-ID kommt vom FiveM-Server, sie ist also nur so verlässlich wie die Discord-Pflicht auf deinem Server.
 

@@ -1,0 +1,89 @@
+---
+title: Konsole, Befehle und Rechte
+description: Der Konsolenbefehl efbridge, die Chatbefehle, Exporte und ACE-Rechte von ef_bridge.
+sidebar:
+  order: 4
+---
+
+## Serverkonsole
+
+In der Serverkonsole, also in txAdmin oder im Terminal, geht alles auch ohne Panel. So richtest du einen Server ein, bevor jemand darauf spielt.
+
+| Befehl | Wirkung |
+|---|---|
+| `efbridge status` | Version, Framework, Datenbank, ob die Schlüssel gesetzt sind, EMD-Sync und Abrechnung an oder aus, letzter Lex-Abgleich. `efbridge` ohne Zusatz macht dasselbe. |
+| `efbridge list [Bereich]` | alle Einstellungen mit Wert, mit Bereich nur dessen Einträge, zum Beispiel `efbridge list lex` |
+| `efbridge get <Einstellung>` | ein Wert, zum Beispiel `efbridge get Lex.BatchSize` |
+| `efbridge set <Einstellung> <Wert>` | ändert einen Wert |
+| `efbridge reset <Einstellung>` | zurück auf den Standard |
+| `efbridge key ignis <Schlüssel>` | API-Schlüssel von ignis setzen, `efbridge key ignis clear` löscht ihn |
+| `efbridge key lex <Schlüssel>` | API-Schlüssel von Lex setzen, `efbridge key lex clear` löscht ihn |
+| `efbridge import` | `config.lua`, `config_server.lua` oder `settings-export.json` aus dem Ordner übernehmen |
+| `efbridge export` | geänderte Einstellungen ohne Schlüssel nach `settings-export.json` im Ordner schreiben |
+| `efbridge lexsync` | vollständigen Abgleich mit Lex starten |
+| `efbridge test` | Verbindung zu ignis und Lex prüfen |
+
+Bei einem unbekannten Unterbefehl, etwa `efbridge help`, zeigt ef_bridge die Übersicht aller Unterbefehle.
+
+Die Bereiche für `list` heißen wie im Panel: `allgemein`, `ignis`, `enotf-tablet`, `firetab`, `emd-sync`, `enotf-abrechnung` und `lex`. Die Namen der Einstellungen stehen unter [Admin-Panel und Einstellungen](/ef-bridge/einstellungen/).
+
+Bei `set` gilt:
+
+- Schalter nehmen `on`, `true` oder `1` für an und `off`, `false` oder `0` für aus.
+- Listen trennst du mit Komma: `efbridge set Tablets.eNOTF.AllowedJobs ambulance,doj`
+- Ohne Wert leert `set` eine Einstellung, die leer sein darf, etwa `efbridge set Tablets.FireTab.OpenKey`.
+- API-Schlüssel gehen nur mit `key`, nicht mit `set`.
+- Braucht die Änderung einen Neustart, steht das in der Antwort.
+
+Jede Änderung, egal ob aus Panel, Konsole oder Import, schreibt ef_bridge mit Namen der Einstellung in die Konsole, aber nie mit dem Wert.
+
+Mit `export` und `import` ziehst du die Einstellungen auf einen anderen Server um. Die Schlüssel trägst du dort neu ein, ein Export enthält keine.
+
+## Chatbefehle
+
+| Befehl | Wer darf | Was er tut |
+|---|---|---|
+| `/efbridge` | Recht `ef_bridge.admin` | öffnet das [Admin-Panel](/ef-bridge/einstellungen/) |
+| `/enotf` | Spieler mit passendem Job | öffnet das eNOTF-Tablet. Der Name kommt aus `Tablets.eNOTF.Command`. |
+| `/firetab` | Spieler mit passendem Job | öffnet das FireTab. Der Name kommt aus `Tablets.FireTab.Command`. |
+| `/efbridgetest` | alle | zeigt Name und Job des Charakters als Benachrichtigung. So siehst du, ob ef_bridge das Framework findet. |
+| `/emdsync` | Serverkonsole und Recht `command.emdsync` | stößt einen EMD-Sync-Abgleich sofort an |
+| `/enotf-billing-sync` | Serverkonsole und Recht `command.enotf-billing-sync` | ruft freigegebene eNOTF-Protokolle aus ignis ab |
+
+:::caution[Abruf mit /enotf-billing-sync]
+Jeder Abruf markiert die Protokolle in ignis als abgerechnet. Steht in `server/billing-custom.lua` keine eigene Logik, stehen die Protokolle danach nur in der Serverkonsole. Mehr dazu unter [eNOTF-Abrechnung](/ef-bridge/module/#enotf-abrechnung).
+:::
+
+Tasten und Hinweise der Tablets stehen unter [Tablets im Spiel](/ef-bridge/tablets/).
+
+## Rechte (ACE)
+
+```sh title="server.cfg"
+add_ace group.admin ef_bridge.admin allow
+add_ace group.admin command.emdsync allow
+add_ace group.admin command.enotf-billing-sync allow
+add_ace group.admin ef_bridge.billing allow
+```
+
+| Recht | Erlaubt |
+|---|---|
+| `ef_bridge.admin` | das Admin-Panel, damit auch das Setzen der API-Schlüssel |
+| `command.emdsync` | `/emdsync` und das Anstoßen eines Abgleichs vom Client aus |
+| `command.enotf-billing-sync` | `/enotf-billing-sync` |
+| `ef_bridge.billing` | abrechnungsfertige Protokolle mit Patientendaten an den eigenen Client schicken lassen |
+
+Gib `ef_bridge.admin` und `ef_bridge.billing` nur Gruppen, die sie wirklich brauchen. Die Protokolle enthalten Namen und Geburtsdaten von Patienten. Das alte Recht `ignistab.billing` gilt weiter.
+
+## Exporte und Events
+
+Andere Ressourcen auf dem Server sprechen ef_bridge über `exports['ef_bridge']` an:
+
+| Export | Was er tut |
+|---|---|
+| `syncHeartbeat()` | EMD-Sync sofort anstoßen. `syncDispatchData`, `syncStatusMessages` und `syncLagemeldungen` machen dasselbe. |
+| `getReleasedENOTFProtocols()` | freigegebene eNOTF-Protokolle abrufen, wartet auf ignis |
+| `processBilling(protocols)` | ruft `ProcessBilling` aus `server/billing-custom.lua` mit diesen Protokollen auf |
+| `LexSyncCharacter(id)` | einen Charakter samt Fahrzeugen mit dem nächsten Durchgang an Lex schicken. `id` ist die Spieler-Source, die Citizen-ID oder der ESX-Identifier. |
+| `LexFullSync()` | vollständigen Abgleich mit Lex im Hintergrund starten |
+
+Die Events von EMD-Sync und der Abrechnung stehen unter [EMD-Sync und Abrechnung](/ef-bridge/module/).

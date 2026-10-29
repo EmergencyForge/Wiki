@@ -1,0 +1,145 @@
+---
+title: Admin-Panel und Einstellungen
+description: Das Admin-Panel /efbridge und alle Einstellungen von ef_bridge mit ihren Standardwerten.
+sidebar:
+  order: 3
+---
+
+## Das Panel
+
+`/efbridge` öffnet im Spiel das Admin-Panel. Dafür braucht das Konto das ACE-Recht `ef_bridge.admin`. Der Server prüft das bei jedem Öffnen, Speichern und Knopfdruck neu. Fehlt es, kommt der Hinweis „Für das ef_bridge-Panel fehlt dir das Recht.“
+
+Links stehen die Bereiche:
+
+- **Status** zeigt Version, Framework, Datenbank, welche Schlüssel gesetzt sind und was der letzte Lex-Abgleich ergeben hat. Hier liegen auch die Knöpfe „Verbindung testen“ für ignis und Lex, „EMD jetzt abgleichen“ und „Jetzt vollständig abgleichen“ für Lex.
+- **Allgemein**, **ignis**, **eNOTF-Tablet**, **FireTab**, **EMD-Sync**, **eNOTF-Abrechnung** und **Lex** enthalten die Einstellungen aus den Tabellen unten.
+- **Import** übernimmt alte config-Dateien von ignisTab oder einen Export, siehe [Umstieg von ignisTab](/ef-bridge/umstieg/).
+
+Änderungen sammelt das Panel, bis du auf Speichern drückst. Schließt du es mit ungespeicherten Änderungen, fragt es nach. Mit ESC schließt du das Panel, mit `[` klappst du die Navigation ein und aus.
+
+Zum Verhalten:
+
+- Änderungen gelten sofort. Ausnahmen sind mit „nach Neustart“ markiert und gelten nach `restart ef_bridge`: Chatbefehle, Standardtasten, das Framework und die Statustabelle von EMD-Sync.
+- Bei einer geänderten Einstellung steht der Standardwert darunter, „Auf Standard zurücksetzen“ nimmt die Änderung zurück.
+- API-Schlüssel lassen sich setzen und mit „Schlüssel löschen“ entfernen, aber nie wieder anzeigen, auch nicht für Admins. Das Panel zeigt nur „gesetzt“ oder „nicht gesetzt“.
+- Einträge mit „nur Server“ gehen nur an Admins, die das Panel öffnen. Alle anderen Werte bekommen alle Spieler, weil die Tablets sie brauchen.
+- Lage des Tablets an der Hand und die Animation stehen im jeweiligen Bereich unter „Erweitert“.
+
+Der Server speichert die Einstellungen in seinem KVP-Speicher. Sie überstehen einen Neustart und ein Update, das den Ordner ersetzt. Dasselbe geht in der Serverkonsole mit [`efbridge`](/ef-bridge/befehle/). Die Namen in den Tabellen sind die, die `efbridge get` und `efbridge set` verstehen.
+
+## Allgemein
+
+| Einstellung | Im Panel | Standard |
+|---|---|---|
+| `Framework` | Framework (nach Neustart) | `auto` |
+| `Debug` | Ausführliche Meldungen in der Konsole | aus |
+| `Animation.dict` | Animation: Dictionary (Erweitert) | `amb@world_human_seat_wall_tablet@female@base` |
+| `Animation.anim` | Animation: Name (Erweitert) | `base` |
+| `Animation.flag` | Animation: Flag (Erweitert) | `50` |
+
+`Framework` kennt `auto`, `qbcore`, `esx` und `standalone`. Mit `auto` nimmt ef_bridge `qb-core` oder `es_extended`, je nachdem, was läuft. Qbox zählt als QBCore. `standalone` ist für Server ohne Framework: Das Tablet nimmt dann den FiveM-Namen, und die erlaubten Jobs gelten nicht. Von selbst wählt ef_bridge `standalone` nie.
+
+`Debug` schreibt ausführliche Meldungen in die Serverkonsole und in die F8-Konsole der Spieler.
+
+## ignis
+
+| Einstellung | Im Panel | Standard |
+|---|---|---|
+| `Ignis.BaseURL` | Adresse von ignis | leer |
+| `Ignis.APIKey` | API-Schlüssel | nicht gesetzt |
+| `Ignis.TabletLogin` | Tablet-Login über Discord-ID | aus |
+
+Die Adresse muss mit `https://` beginnen, den `/` am Ende ergänzt ef_bridge selbst. Leer heißt: ignis wird nicht genutzt. Den Schlüssel setzt du in der Konsole mit `efbridge key ignis <Schlüssel>`, nicht mit `set`. Was der Tablet-Login braucht, steht unter [Tablet-Login](/ef-bridge/tablet-login/).
+
+## Tablets
+
+`Tablets.eNOTF.*` (Bereich eNOTF-Tablet) und `Tablets.FireTab.*` (Bereich FireTab) sind gleich aufgebaut:
+
+| Einstellung | Im Panel | eNOTF | FireTab |
+|---|---|---|---|
+| `Enabled` | Tablet aktiv | aus | aus |
+| `AllowedJobs` | Erlaubte Jobs | `ambulance`, `admin` | `fire`, `admin` |
+| `RequireItem` | Nur mit Gegenstand im Inventar | aus | aus |
+| `RequiredItem` | Gegenstand | `tablet` | `tablet` |
+| `UseProp` | Tablet in der Hand zeigen | an | an |
+| `Display` | Darstellung | `window` (Fenster) | `window` (Fenster) |
+| `KeepMinutes` | Seite im Hintergrund halten (Minuten) | `15` | `15` |
+| `Path` | Seite in ignis | `enotf/overview.php` | `einsatz/list.php` |
+| `Command` | Chatbefehl (nach Neustart) | `enotf` | `firetab` |
+| `OpenKey` | Standardtaste (nach Neustart) | `F9` | leer |
+
+Unter „Erweitert“ steht die Lage des Tablets an der Hand:
+
+| Einstellung | Im Panel | eNOTF | FireTab |
+|---|---|---|---|
+| `Prop.model` | Modell in der Hand | `notfpad` | `firetab` |
+| `Prop.bone` | Knochen (Bone-ID) | `18905` | `18905` |
+| `Prop.offset.x`, `.y`, `.z` | Versatz X, Y, Z | `0.124`, `0.055`, `0.155` | `0.1188`, `0.0535`, `0.1545` |
+| `Prop.offset.xRot`, `.yRot`, `.zRot` | Drehung X, Y, Z | `-76`, `-186`, `58.3` | `18`, `-186`, `58.3` |
+
+Der Versatz geht von -2 bis 2, die Drehung von -360 bis 360. Die Modelle `notfpad` und `firetab` liegen im Ordner `stream`.
+
+Was man leicht übersieht:
+
+- Die Jobnamen in `AllowedJobs` müssen genau so geschrieben sein wie in deinem Framework. Im Panel steht ein Job pro Zeile, in der Konsole trennst du sie mit Komma. Eine leere Liste lässt keinen Job zu. Mit `standalone` gilt die Liste nicht.
+- Befehl und Taste gibt es auch für ein abgeschaltetes Tablet, der Befehl meldet dann nur „Dieses Tablet ist nicht aktiviert!“. Schaltest du das Tablet im Panel ein, braucht es deshalb keinen Neustart.
+- `OpenKey` ist nur die Vorbelegung, leer heißt keine Taste. Spieler ändern die Taste selbst, siehe [Tablets im Spiel](/ef-bridge/tablets/#öffnen-und-schließen).
+- Für `RequireItem` legst du den Gegenstand selbst in deinem Inventar an, ef_bridge bringt keinen mit. Läuft `ox_inventory`, prüft ef_bridge dort, sonst im Inventar von QBCore oder ESX. Ohne Framework geht es nur mit `ox_inventory`.
+- `Display` ist `window` für das Fenster oder `hand` für das Tablet-Modell in der Hand mit Nahansicht, siehe [Tablets im Spiel](/ef-bridge/tablets/#fenster-oder-in-der-hand).
+- `KeepMinutes` geht von 5 bis 45. So lange bleibt die Seite nach dem Schließen geladen, wer in der Zeit wieder öffnet, macht genau dort weiter. Danach lädt sie neu.
+- `Path` ist der Pfad hinter der Adresse von ignis.
+
+## EMD-Sync
+
+Alle Einträge sind „nur Server“.
+
+| Einstellung | Im Panel | Standard |
+|---|---|---|
+| `EMDSync.Enabled` | EMD-Sync aktiv | aus |
+| `EMDSync.HeartbeatInterval` | Grundtakt (ms) | `5000` |
+| `EMDSync.DispatchSync.Enabled` | Einsatzdaten | an |
+| `EMDSync.DispatchSync.TickMultiplier` | Einsatzdaten alle … Takte | `6` |
+| `EMDSync.StatusSync.Enabled` | Status | an |
+| `EMDSync.StatusSync.TickMultiplier` | Status alle … Takte | `1` |
+| `EMDSync.StatusSync.SyncStatuses` | Abgeglichene Status | `C`, `1`, `2`, `3`, `4`, `7`, `8` |
+| `EMDSync.StatusSync.SourceTable` | Tabelle mit den Statusmeldungen (nach Neustart) | `emd_dispatchlog` |
+| `EMDSync.LagemeldungSync.Enabled` | Lagemeldungen | an |
+| `EMDSync.LagemeldungSync.TickMultiplier` | Lagemeldungen alle … Takte | `6` |
+
+Der Grundtakt geht von 1000 bis 60000 Millisekunden. Der `TickMultiplier` sagt, bei jedem wievielten Takt ein Teil mitläuft, erlaubt sind 1 bis 120. Mit dem Grundtakt von 5 Sekunden laufen Status also alle 5 Sekunden, Einsatzdaten und Lagemeldungen alle 30 Sekunden. Was genau abgeglichen wird, steht unter [EMD-Sync und Abrechnung](/ef-bridge/module/).
+
+## eNOTF-Abrechnung
+
+Alle Einträge sind „nur Server“.
+
+| Einstellung | Im Panel | Standard |
+|---|---|---|
+| `ENOTFBilling.Enabled` | Abrechnung aktiv | aus |
+| `ENOTFBilling.AutoSync` | Im Hintergrund abrufen | aus |
+| `ENOTFBilling.SyncInterval` | Abstand (ms) | `900000`, also 15 Minuten |
+| `ENOTFBilling.FilterProcessed` | Schon abgerechnete Protokolle überspringen | an |
+
+Der Abstand geht von 60000 (eine Minute) bis 86400000 (ein Tag). Wie die Abrechnung abläuft, steht unter [EMD-Sync und Abrechnung](/ef-bridge/module/#enotf-abrechnung).
+
+## Lex
+
+Alle Einträge sind „nur Server“.
+
+| Einstellung | Im Panel | Standard |
+|---|---|---|
+| `Lex.Enabled` | Abgleich mit Lex aktiv | aus |
+| `Lex.BaseURL` | Adresse von Lex | leer |
+| `Lex.APIKey` | API-Schlüssel | nicht gesetzt |
+| `Lex.Persons` | Charaktere als Personen | an |
+| `Lex.Vehicles` | Fahrzeuge mit Halter | an |
+| `Lex.SyncOnLogin` | Beim Einloggen sofort abgleichen | an |
+| `Lex.FullSync.IntervalMinutes` | Vollständiger Abgleich alle … Minuten | `360` |
+| `Lex.FullSync.OnStart` | Vollständiger Abgleich beim Start | an |
+| `Lex.FullSync.RetireMissingVehicles` | Verschwundene Fahrzeuge abmelden | an |
+| `Lex.BatchSize` | Datensätze pro Anfrage | `100` |
+
+Das Intervall geht von 0 bis 10080 Minuten, 0 heißt nur beim Start und von Hand. Pro Anfrage gehen 10 bis 200 Datensätze raus. Den Schlüssel setzt du mit `efbridge key lex <Schlüssel>`. Was der Abgleich macht, steht unter [Lex-Abgleich](/ef-bridge/lex/).
+
+## Fest eingebaut
+
+Zwei Dinge lassen sich nicht ändern, weil du sie brauchst, um überhaupt ins Panel zu kommen: der Befehl `efbridge` und das Recht `ef_bridge.admin`.

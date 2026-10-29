@@ -1,0 +1,119 @@
+---
+title: EMD-Sync und Abrechnung
+description: Den Abgleich mit emergencydispatch und die eNOTF-Abrechnung einrichten und an eigene Skripte anbinden.
+sidebar:
+  order: 7
+---
+
+Beide Module sind ab Werk aus und brauchen die Adresse und den API-Schlüssel von ignis. EMD-Sync braucht dazu `emergencydispatch` und `oxmysql`, die Abrechnung `oxmysql` für die Tabelle `enotf_billing`. Die Einstellungen stehen unter [Admin-Panel und Einstellungen](/ef-bridge/einstellungen/#emd-sync).
+
+## EMD-Sync
+
+EMD-Sync gleicht das Einsatzleitsystem `emergencydispatch` mit ignis ab. ef_bridge schickt dafür in einem festen Takt eine Anfrage an ignis, ab Werk alle 5 Sekunden. Jede Anfrage nimmt mit, was in diesem Takt fällig ist, und verarbeitet die Antwort von ignis.
+
+An ignis gehen:
+
+- besetzte Fahrzeuge mit ihren Einsätzen, dazu Einsatzort, Stichwort, Meldung, Anrufer, Koordinaten, Sondersignal und Patienten aus der Tabelle `emd_dispatchlist`
+- neue Statusmeldungen aus der Tabelle `emd_dispatchlog` (`EMDSync.StatusSync.SourceTable`), aber nur die Status aus `SyncStatuses`
+- Status von Fahrzeugen ohne Einsatz. ef_bridge sammelt sie und schickt sie mit dem nächsten Takt.
+- Lagemeldungen zu den laufenden Einsätzen
+- die Fahrzeugliste aus der Tabelle `emd_vehicles`, wenn ignis danach fragt
+
+Von ignis zurück kommen, ef_bridge trägt sie in `emergencydispatch` ein:
+
+- Statuswechsel, die zum Beispiel im FireTab gesetzt wurden. ef_bridge gibt sie an den Spieler weiter, der das Fahrzeug besetzt.
+- Lagemeldungen, die in ignis geschrieben wurden
+- Patientendaten zu Einsätzen
+
+Schlägt eine Anfrage fehl, behält ef_bridge die gesammelten Status und schickt sie beim nächsten Mal.
+
+### Einschalten
+
+1. Sorg dafür, dass `oxmysql` und `emergencydispatch` vor ef_bridge starten.
+2. Im Panel unter EMD-Sync „EMD-Sync aktiv“ einschalten, oder in der Konsole `efbridge set EMDSync.Enabled on`.
+
+Ein Neustart ist nicht nötig, der Abgleich beginnt mit dem nächsten Takt. Nur eine andere Statustabelle gilt erst nach `restart ef_bridge`.
+
+Mit `efbridge set Debug on` siehst du in der Serverkonsole für jeden Takt eine Zeile mit `[Heartbeat]` und den Teilen, die er mitgeschickt hat. Lehnt ignis den API-Schlüssel ab, steht das auch ohne Debug einmal in der Konsole.
+
+### Abgleich sofort anstoßen
+
+Normalerweise läuft der Abgleich von selbst. Sofort anstoßen kannst du ihn so:
+
+| Weg | Aufruf | Bedingung |
+|---|---|---|
+| Panel | „EMD jetzt abgleichen“ unter Status | Recht `ef_bridge.admin` |
+| Befehl | `/emdsync` | Serverkonsole oder Recht `command.emdsync` |
+| Export, serverseitig | `exports['ef_bridge']:syncHeartbeat()` | keine |
+| Event, serverseitig | `TriggerEvent('emd:vehicleAlerted')` oder `TriggerEvent('emd:statusChanged')` | keine |
+| Event vom Client | `TriggerServerEvent('emd:syncNow')` | Recht `command.emdsync` |
+
+Die älteren Exporte `syncDispatchData`, `syncStatusMessages` und `syncLagemeldungen` gibt es noch. Sie machen dasselbe wie `syncHeartbeat`.
+
+## eNOTF-Abrechnung
+
+Die Abrechnung holt freigegebene eNOTF-Protokolle aus ignis, damit ein Skript auf deinem Server Rechnungen stellen oder Geld abbuchen kann. ef_bridge liefert die Daten, die Rechnung stellt deine eigene Logik. Du brauchst ignis ab 2026.0.26-beta.
+
+Einschalten mit „Abrechnung aktiv“ (`ENOTFBilling.Enabled`). Mit „Im Hintergrund abrufen“ (`ENOTFBilling.AutoSync`) ruft ef_bridge alle 15 Minuten ab, den Abstand stellst du mit `ENOTFBilling.SyncInterval` ein. Von Hand geht es mit `/enotf-billing-sync`.
+
+### Ablauf
+
+1. ef_bridge fragt bei ignis alle freigegebenen Protokolle ab, die noch nicht abgerufen wurden.
+2. ignis schickt sie und markiert sie im selben Schritt als abgerechnet. Ein zweiter Abruf liefert sie nicht noch einmal.
+3. ef_bridge wirft doppelte Einträge raus. Gleicher Name mit `123`, `123_1` und `123_2` zählt als ein Protokoll, entscheidend ist die Einsatznummer vor dem `_`.
+4. Mit „Schon abgerechnete Protokolle überspringen“ (`FilterProcessed`, ab Werk an) fallen außerdem Protokolle weg, deren Name und Einsatznummer schon in der Tabelle `enotf_billing` stehen.
+5. Das Ergebnis geht an `ProcessBilling` in `server/billing-custom.lua`.
+
+:::caution[Jeder Abruf zählt]
+Was ignis einmal geliefert hat, liefert es nicht noch einmal. Ruf Protokolle nur ab, wenn deine Logik sie auch verarbeitet. Das gilt auch für `/enotf-billing-sync`: Ist `ProcessBilling` leer, stehen die Protokolle danach nur in der Serverkonsole.
+:::
+
+### Eigene Logik in billing-custom.lua
+
+Was pro Protokoll passieren soll, schreibst du in die Funktion `ProcessBilling` in `server/billing-custom.lua`. Ab Werk ist sie leer. Sie läuft bei jedem Abruf mit mindestens einem Protokoll, im Hintergrund wie nach `/enotf-billing-sync`:
+
+```lua title="server/billing-custom.lua"
+function ProcessBilling(protocols, source)
+    -- protocols: Liste der Protokolle, Felder siehe unten
+    -- source: wer /enotf-billing-sync aufgerufen hat, nil im Hintergrund
+end
+```
+
+Die Datei ist Code und keine Einstellung, deshalb liegt sie weiter im Ordner. Ein Update ersetzt sie, sichere sie also vorher.
+
+Dahinter stehen zwei serverseitige Events, auf die auch eine eigene Ressource hören kann:
+
+| Event | Wann | Parameter |
+|---|---|---|
+| `enotf-billing:autoSync` | bei jedem Abruf im Hintergrund mit mindestens einem Protokoll | `protocols` |
+| `enotf-billing:manualSync` | nach `/enotf-billing-sync` mit mindestens einem Protokoll | `protocols`, `source` |
+
+:::danger[Kein RegisterNetEvent]
+Registriere diese Events nicht mit `RegisterNetEvent`. Sonst könnte jeder Spieler deine Abrechnung mit erfundenen Daten auslösen.
+:::
+
+### Die Tabelle enotf_billing
+
+Mit `FilterProcessed` legt ef_bridge die Tabelle `enotf_billing` selbst an. ef_bridge liest aus ihr nur `name` und `mission_number`, Einträge schreibt es keine. Soll der Filter greifen, muss deine Logik pro abgerechnetem Protokoll eine Zeile anlegen, mit der Einsatznummer vor dem `_` in `mission_number`. So fällt auch ein zweites Protokoll zum selben Einsatz (`123_2`) weg, das erst bei einem späteren Abruf kommt.
+
+### Was ein Protokoll enthält
+
+| Feld | Inhalt |
+|---|---|
+| `name` | Name des Patienten |
+| `birthdate` | Geburtsdatum, `YYYY-MM-DD` |
+| `transport` | `true`, wenn der Patient transportiert wurde |
+| `missionNumber` | Einsatznummer, zum Beispiel `123` oder `123_1` |
+| `protocolType` | `0` Notfallprotokoll (Rettungsdienst), `1` Notarztprotokoll |
+| `vehicleCallsign` | Funkrufname des Fahrzeugs, zum Beispiel `RTW 1-82-1` |
+
+### Protokolle direkt abrufen
+
+| Weg | Aufruf | Ergebnis |
+|---|---|---|
+| Export, serverseitig | `exports['ef_bridge']:getReleasedENOTFProtocols()` | gibt die Liste zurück, wartet auf ignis |
+| Export, serverseitig | `exports['ef_bridge']:processBilling(protocols)` | ruft `ProcessBilling` mit dieser Liste auf |
+| Event, serverseitig | `TriggerEvent('enotf-billing:requestProtocols', playerId)` | Liste geht an den Client von `playerId` |
+| Event vom Client | `TriggerServerEvent('enotf-billing:requestProtocols')` | Liste geht an den eigenen Client, nur mit Recht `ef_bridge.billing` |
+
+Beim Client kommt die Liste im Event `enotf-billing:receiveProtocols` an. Auch diese Wege markieren die Protokolle in ignis als abgerechnet, `ProcessBilling` läuft dabei aber nicht.

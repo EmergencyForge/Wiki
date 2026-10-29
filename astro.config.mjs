@@ -19,7 +19,7 @@ export default defineConfig({
 			editLink: { baseUrl: 'https://github.com/EmergencyForge/Wiki/edit/main/' },
 			sidebar: [
 				{ label: 'ignis', items: [{ autogenerate: { directory: 'ignis' } }] },
-				{ label: 'ignisTab', items: [{ autogenerate: { directory: 'ignistab' } }] },
+				{ label: 'ef_bridge', items: [{ autogenerate: { directory: 'ef-bridge' } }] },
 				{ label: 'Mitmachen', items: [{ autogenerate: { directory: 'mitmachen' } }] },
 			],
 		}),

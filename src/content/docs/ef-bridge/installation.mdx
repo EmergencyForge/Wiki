@@ -1,0 +1,105 @@
+---
+title: Installation
+description: ef_bridge herunterladen, in der server.cfg starten und im Admin-Panel oder in der Serverkonsole mit ignis und Lex verbinden.
+sidebar:
+  order: 2
+---
+
+import { Steps, FileTree } from '@astrojs/starlight/components';
+
+## Bevor du anfängst
+
+Für die Tablets, EMD-Sync und die Abrechnung brauchst du eine laufende ignis-Installation mit HTTPS. Falls die noch fehlt, fang bei [ignis installieren](/ignis/installation/) an. Aus ignis brauchst du den API-Schlüssel, er steht unter Einstellungen › System-Konfiguration › Technik › API-Schlüssel. Mehr dazu unter [ef_bridge anbinden](/ignis/einrichtung/#ef_bridge-anbinden).
+
+Für den Lex-Abgleich brauchst du Adresse und Schlüssel aus Lex, siehe [Lex-Abgleich](/ef-bridge/lex/).
+
+Kommst du von ignisTab, lies zuerst [Umstieg von ignisTab](/ef-bridge/umstieg/). Deine alten config-Dateien übernimmt ef_bridge selbst.
+
+## Installieren
+
+<Steps>
+
+1. Lade auf der [Release-Seite](https://github.com/EmergencyForge/ef_bridge/releases) die neueste ZIP-Datei herunter, sie heißt `ef_bridge-v<Version>.zip`. Entpack sie in den `resources`-Ordner deines Servers. Danach sieht es so aus:
+
+   <FileTree>
+   - resources/
+     - ef_bridge/
+       - client/
+       - html/
+       - server/
+       - shared/
+       - stream/
+       - fxmanifest.lua
+       - …
+   </FileTree>
+
+   Lass den Ordnernamen bei `ef_bridge`. Andere Skripte sprechen die Ressource über `exports['ef_bridge']` an, und der Server legt die Einstellungen unter diesem Namen ab.
+
+2. Trag ef_bridge in die `server.cfg` ein. Es muss nach dem Framework und den anderen Ressourcen starten, die es braucht. Die `add_ace`-Zeile gibt der Gruppe `admin` das Recht für das Admin-Panel:
+
+   ```sh title="server.cfg"
+   ensure oxmysql
+   ensure qb-core              # oder: ensure qbx_core / ensure es_extended
+   ensure ox_inventory         # nur wenn du es nutzt
+   ensure emergencydispatch    # nur für EMD-Sync
+   ensure ef_bridge
+
+   add_ace group.admin ef_bridge.admin allow
+   ```
+
+   Weitere Rechte für die Befehle stehen unter [Konsole, Befehle und Rechte](/ef-bridge/befehle/#rechte-ace).
+
+3. Starte den Server. Beim ersten Start ohne Einstellungen schreibt ef_bridge in die Konsole, dass noch nichts eingestellt ist.
+
+4. Geh als Admin ins Spiel und öffne mit `/efbridge` das Admin-Panel. Trag ein, was du nutzt:
+
+   - unter **ignis** die Adresse, mit `https://` und `/` am Ende, und den API-Schlüssel. Liegt ignis in einem Unterordner, gehört er zur Adresse, zum Beispiel `https://example.de/ignis/`.
+   - unter **eNOTF-Tablet** und **FireTab** den Schalter „Tablet aktiv“, dazu die erlaubten Jobs prüfen
+   - EMD-Sync, eNOTF-Abrechnung und Lex nur, wenn du sie nutzt
+
+   Speichern. Die Änderungen gelten sofort, außer bei Einträgen mit „nach Neustart“.
+
+5. Unter **Status** prüft „Verbindung testen“ Adresse und Schlüssel von ignis. Die Antwort sollte „ignis erreichbar, Schlüssel passt.“ lauten.
+
+6. Geh mit einem Charakter im Job `ambulance` ins Spiel und öffne das Tablet mit `/enotf` oder F9. Es sollte die eNOTF-Seite deiner ignis-Installation laden. Das FireTab öffnest du mit `/firetab` im Job `fire`.
+
+</Steps>
+
+Bleibt das Tablet weiß oder kommt eine Fehlermeldung, schau unter [Hilfe bei Problemen](/ef-bridge/fehlerbehebung/) nach.
+
+## Einrichten ohne Spieler
+
+Ist noch niemand auf dem Server, geht Schritt 4 auch in der Serverkonsole, also in txAdmin oder im Terminal:
+
+```sh title="Serverkonsole"
+efbridge set Ignis.BaseURL https://ignis.example.de/
+efbridge key ignis dein-schluessel-aus-ignis
+efbridge set Tablets.eNOTF.Enabled on
+efbridge set Tablets.FireTab.Enabled on
+efbridge test
+```
+
+Alle Befehle stehen unter [Konsole, Befehle und Rechte](/ef-bridge/befehle/), alle Einstellungen unter [Admin-Panel und Einstellungen](/ef-bridge/einstellungen/).
+
+## Was in ignis eingestellt sein muss
+
+| In ignis | Wofür |
+|---|---|
+| HTTPS mit gültigem Zertifikat | alles |
+| Plugins eNOTF und fireTab eingeschaltet | die beiden Tablets |
+| API-Schlüssel (System-Konfiguration › Technik) | alles, was der FiveM-Server mit ignis bespricht |
+| Anmeldung über ef_bridge (System-Konfiguration › Funktionen) | [Tablet-Login](/ef-bridge/tablet-login/) |
+| System-URL gleich der Adresse von ignis in ef_bridge | Tablet-Login |
+| bei nginx die `map`-Blöcke für FiveM aus `nginx.conf.example` | ohne sie bleibt das Tablet weiß |
+
+Die `map`-Blöcke erkennen den Spielbrowser von FiveM und lassen für ihn das Einbetten der Seiten zu. Läuft ignis im Docker-Image, setzt ignis diese Header selbst, dann brauchst du die Blöcke im vorgeschalteten nginx nicht.
+
+Erzeugst du in ignis einen neuen API-Schlüssel, ist der alte sofort ungültig. Trag den neuen dann mit `efbridge key ignis <Schlüssel>` oder im Panel ein.
+
+## Updates
+
+Lade die neue ZIP-Datei herunter, ersetz den Ordner `resources/ef_bridge` und gib `restart ef_bridge` in der Serverkonsole ein oder starte den Server neu. Die Einstellungen liegen im KVP-Speicher des Servers, nicht im Ordner, und bleiben erhalten.
+
+Sichere vorher nur `server/billing-custom.lua`, wenn du dort eigene Abrechnungslogik hast. Das Update ersetzt die Datei.
+
+Ob es ein neueres Release gibt, steht ab v2026.4.0 beim Start in der Serverkonsole, siehe [Version](/ef-bridge/#version).
