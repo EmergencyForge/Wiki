@@ -1,0 +1,151 @@
+---
+title: Hilfsfunktionen
+description: Cache, Abklingzeiten, Modelle und Animationen laden, Spieler und Fahrzeuge in der Nähe finden, Fahrzeugeigenschaften speichern und der Versionscheck.
+sidebar:
+  order: 11
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Cache
+
+ef_lib fragt alle 100 ms ein paar Werte ab, die fast jedes Script braucht, und meldet jede Änderung als Event `ef_lib:cache`. Damit reagierst du auf Einsteigen, Platzwechsel oder Waffe ziehen, ohne eine eigene Schleife.
+
+| Schlüssel | Inhalt |
+|---|---|
+| `playerId` | eigene Player-ID auf dem Client |
+| `serverId` | eigene Server-ID |
+| `ped` | eigener Ped |
+| `vehicle` | Fahrzeug, in dem der Spieler sitzt, sonst `false` |
+| `seat` | Sitz im Fahrzeug, `-1` ist der Fahrer, sonst `false` |
+| `weapon` | Hash der Waffe in der Hand, sonst `false` |
+
+```lua title="client.lua"
+AddEventHandler('ef_lib:cache', function(key, value, old)
+    if key == 'seat' and value == -1 then
+        local model = GetEntityModel(exports.ef_lib:GetCache('vehicle'))
+        if model == `ambulance` then
+            exports.ef_lib:ShowHint('F6', 'Fahrzeugmenü', 'rtw_menu')
+        end
+    elseif key == 'vehicle' and not value then
+        exports.ef_lib:HideHint('rtw_menu')
+    end
+end)
+```
+
+Das Event bekommt Schlüssel, neuen und alten Wert. Beim Start von ef_lib kommt für jeden Schlüssel einmal ein Event mit `old = nil`. Startet dein Script später, hat es diese Events verpasst. Lies die Anfangswerte dann mit `GetCache`.
+
+[GetCache](/referenz/ef-lib/#getcache) liest einen Wert direkt, ohne Schlüssel kommt die ganze Tabelle. `vehicle`, `seat` und `weapon` sind `false` statt `nil`, wenn es nichts gibt. Prüf also mit `if value then`, nicht mit `~= nil`.
+
+:::tip
+`GetCache` ist ein Export-Aufruf über Ressourcengrenzen hinweg und damit teurer als ein Native. In Code, der jeden Frame läuft, ist `PlayerPedId()` schneller. Der Cache lohnt sich vor allem über das Event.
+:::
+
+## Abklingzeiten
+
+[Cooldown](/referenz/ef-lib/#cooldown) prüft und startet eine Abklingzeit in einem Aufruf. Ist sie frei, startet sie und du bekommst `true`. Läuft sie noch, bekommst du `false` und die verbleibenden Millisekunden. Die Exports gibt es auf Client und Server.
+
+```lua title="server.lua"
+RegisterNetEvent('rd:materialAuffuellen', function()
+    local src = source
+    local free, remaining = exports.ef_lib:Cooldown(('material:%d'):format(src), 10 * 60000)
+    if not free then
+        return exports.ef_lib:SendNotification(src, 'error', 'Materiallager',
+            ('Wieder möglich in %d min.'):format(math.ceil(remaining / 60000)))
+    end
+    -- Material ausgeben
+end)
+```
+
+[GetCooldown](/referenz/ef-lib/#getcooldown) gibt die verbleibenden Millisekunden zurück, 0 wenn frei. [ClearCooldown](/referenz/ef-lib/#clearcooldown) gibt sofort frei.
+
+Was du wissen musst:
+
+- Die Schlüssel gelten pro aufrufender Ressource. Zwei Scripts mit demselben Schlüssel kommen sich nicht in die Quere.
+- Client und Server haben getrennte Abklingzeiten.
+- `Cooldown` startet die Zeit sofort. Scheitert die Aktion danach, etwa weil das Lager leer ist, gib sie mit `ClearCooldown` wieder frei.
+- Abklingzeiten auf dem Client kann ein Cheater umgehen. Alles, was Geld, Gegenstände oder Belohnungen ausgibt, prüfst du auf dem Server.
+- Für Abklingzeiten pro Spieler nimm die Server-ID oder die Charakter-ID in den Schlüssel. Nach einem Neustart von ef_lib sind alle Abklingzeiten weg.
+
+## Modelle und Animationen laden
+
+[RequestModel](/referenz/ef-lib/#requestmodel) und [RequestAnimDict](/referenz/ef-lib/#requestanimdict) laden und warten, bis es fertig ist. Sie geben `true` oder `false` zurück. Nach 10 Sekunden geben sie auf, eine andere Grenze setzt du als zweiten Wert in ms.
+
+```lua title="client.lua"
+if not exports.ef_lib:RequestModel('prop_cs_trolley_01') then
+    return print('Trage-Modell nicht geladen')
+end
+local trage = CreateObject(`prop_cs_trolley_01`, coords.x, coords.y, coords.z, true, true, false)
+SetModelAsNoLongerNeeded(`prop_cs_trolley_01`)
+
+if exports.ef_lib:RequestAnimDict('amb@medic@standing@kneel@base', 5000) then
+    TaskPlayAnim(PlayerPedId(), 'amb@medic@standing@kneel@base', 'base', 3.0, 1.0, -1, 1, 0, false, false, false)
+end
+```
+
+`RequestModel` nimmt Namen oder Hash. Ein ungültiges Modell gibt sofort `false` zurück. `SetModelAsNoLongerNeeded` und `RemoveAnimDict` rufst du danach selbst auf.
+
+## Geo-Helfer
+
+Drei Funktionen suchen auf dem Client, wer oder was in der Nähe ist. Alle nehmen einen `vector3` und einen Radius in Metern.
+
+| Export | Rückgabe |
+|---|---|
+| [GetClosestPlayer](/referenz/ef-lib/#getclosestplayer) | Player-ID, Ped und Koordinaten des nächsten anderen Spielers, sonst `nil` |
+| [GetNearbyPlayers](/referenz/ef-lib/#getnearbyplayers) | Liste `{ id, ped, coords, distance }`, nach Abstand sortiert. Mit drittem Wert `true` ist der eigene Spieler dabei. |
+| [GetClosestVehicle](/referenz/ef-lib/#getclosestvehicle) | Fahrzeug und Koordinaten, sonst `nil`. Das eigene Fahrzeug nur mit drittem Wert `true`. |
+
+```lua title="client.lua"
+RegisterCommand('patient', function()
+    local myCoords = GetEntityCoords(PlayerPedId())
+    local playerId = exports.ef_lib:GetClosestPlayer(myCoords, 2.0)
+    if not playerId then
+        return exports.ef_lib:SendNotification('error', 'Kein Patient', 'Niemand in deiner Nähe.')
+    end
+    TriggerServerEvent('rd:patientUntersuchen', GetPlayerServerId(playerId))
+end, false)
+```
+
+:::caution
+Die Player-ID aus `GetClosestPlayer` und `GetNearbyPlayers` ist die lokale ID auf dem Client, nicht die Server-ID. Für Server-Events wandelst du sie mit `GetPlayerServerId` um, wie im Beispiel.
+:::
+
+## Fahrzeugeigenschaften
+
+[GetVehicleProperties](/referenz/ef-lib/#getvehicleproperties) liest Farben, Tuning, Extras, Kennzeichen, Schäden und weitere Werte eines Fahrzeugs in eine Tabelle. [SetVehicleProperties](/referenz/ef-lib/#setvehicleproperties) setzt sie wieder. Das Format entspricht `lib.getVehicleProperties` von ox_lib, gespeicherte Daten aus ox_lib passen also.
+
+```lua title="client.lua"
+-- beim Einparken
+local props = exports.ef_lib:GetVehicleProperties(vehicle)
+TriggerServerEvent('garage:speichern', props.plate, props)
+
+-- beim Ausparken
+local isOwner = exports.ef_lib:SetVehicleProperties(vehicle, props)
+```
+
+`GetVehicleProperties` gibt `nil` zurück, wenn das Fahrzeug nicht existiert. `SetVehicleProperties` gibt zurück, ob der Client das Fahrzeug besitzt. Mit drittem Wert `true` repariert es das Fahrzeug danach.
+
+:::note
+Eigenschaften setzt nur der Besitzer der Entity zuverlässig. Setz sie direkt nach dem Spawn auf dem Client, der das Fahrzeug gespawnt hat. Gibt `SetVehicleProperties` `false` zurück, gehört das Fahrzeug einem anderen Client, und manche Werte gehen beim nächsten Abgleich verloren.
+:::
+
+## Versionscheck und Banner
+
+[CheckVersion](/referenz/ef-lib/#checkversion) ist für Scripts auf dem Server. Beim Start schreibt es das EmergencyForge-Banner mit Name und Version in die Serverkonsole und meldet, wenn es ein neueres Release gibt.
+
+```lua title="server.lua"
+exports.ef_lib:CheckVersion('Fraktionsgarage')
+
+-- heißt der Ordner anders als das Script auf emergencyforge.de
+exports.ef_lib:CheckVersion('Fraktionsgarage', 'ef_fraktionsgarage')
+```
+
+Die eigene Version liest ef_lib aus `version` in der `fxmanifest.lua` des aufrufenden Scripts. Fehlt sie, steht `v0.0.0` im Banner. Die neueste Version holt es von `https://emergencyforge.de/api/versions/<name>`, als Name dient der zweite Wert oder der Ordnername. Gibt es eine neuere, steht in der Konsole eine Zeile wie diese, darunter die Adresse des Releases, wenn die Seite eine mitliefert:
+
+```txt title="Serverkonsole"
+[ef_fraktionsgarage] Neue Version verfügbar: v1.2.0 (a1b2c3d)
+```
+
+Antwortet die Seite nicht oder kennt sie das Script nicht, kommt nur das Banner. Die Versionen vergleicht ef_lib als `Major.Minor.Patch`.
+
+Alle Parameter stehen in der [Referenz unter Hilfsfunktionen](/referenz/ef-lib/#hilfsfunktionen).

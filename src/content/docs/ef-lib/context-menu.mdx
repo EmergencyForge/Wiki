@@ -1,0 +1,117 @@
+---
+title: Context-Menü
+description: Menüs mit onSelect-Funktionen direkt in den Optionen, aufgebaut wie registerContext und showContext bei ox_lib.
+sidebar:
+  order: 5
+---
+
+Das Context-Menü ist eine zweite Art, ein Menü zu bauen. Statt auf `ef_lib:menuAction` zu hören, hängst du an jede Option eine Funktion `onSelect`. Das ist kürzer, wenn jede Option etwas anderes tut, und es entspricht `lib.registerContext` von ox_lib. Angezeigt wird es im selben Menü wie bei [Menüs](/ef-lib/menues/).
+
+## Registrieren und anzeigen
+
+[ContextMenu](/referenz/ef-lib/#contextmenu) registriert und zeigt in einem Aufruf:
+
+```lua title="client.lua"
+exports.ef_lib:ContextMenu({
+    id = 'fw_hlf',
+    title = 'HLF 20',
+    options = {
+        {
+            title = 'Schlauch verlegen',
+            description = 'B-Schlauch zum nächsten Hydranten',
+            icon = 'fire-extinguisher',
+            onSelect = function()
+                TriggerEvent('fw:schlauchVerlegen')
+            end,
+        },
+        {
+            title = 'Hydraulisches Rettungsgerät',
+            icon = 'screwdriver-wrench',
+            onSelect = function()
+                TriggerEvent('fw:rettungsgeraet')
+            end,
+        },
+        {
+            title = 'Wärmebildkamera',
+            icon = 'camera',
+            disabled = true,
+            description = 'Akku leer',
+        },
+    }
+})
+```
+
+Brauchst du dasselbe Menü öfter, registrierst du es einmal mit [RegisterContext](/referenz/ef-lib/#registercontext) und zeigst es später mit [ShowContext](/referenz/ef-lib/#showcontext):
+
+```lua title="client.lua"
+exports.ef_lib:RegisterContext({ id = 'fw_hlf', title = 'HLF 20', options = { ... } })
+
+-- später, etwa am Fahrzeugheck
+exports.ef_lib:ShowContext('fw_hlf')
+```
+
+## Felder einer Option
+
+| Feld | Bedeutung |
+|---|---|
+| `title` | angezeigter Text, `label` geht auch |
+| `description` | zweite Zeile |
+| `icon`, `iconColor` | Font-Awesome-Name und Farbe |
+| `disabled` | ausgegraut, nicht auswählbar |
+| `readonly` | sichtbar, aber nicht auswählbar, etwa für reine Info-Zeilen |
+| `onSelect` | Funktion, die beim Auswählen läuft. Sie bekommt dieselbe Tabelle wie `ef_lib:menuAction`. |
+
+## Verhalten nach der Auswahl
+
+Nach der Auswahl läuft `onSelect` in einem eigenen Thread. Du kannst darin also warten, etwa auf einen [Dialog](/ef-lib/dialoge/) oder einen [Callback](/ef-lib/callbacks/). Etwa 100 ms später schließt ef_lib das Menü, außer `onSelect` hat ein weiteres Context-Menü gezeigt.
+
+Ruft `onSelect` `ShowContext` auf, erscheint das neue Menü als Untermenü. Der Spieler kommt mit Pfeil links oder Backspace zurück, die `onSelect`-Funktionen des vorigen Menüs gelten weiter. So baust du Untermenüs, deren Inhalt erst beim Öffnen feststeht:
+
+```lua title="client.lua"
+exports.ef_lib:ContextMenu({
+    id = 'leitstelle',
+    title = 'Leitstelle',
+    options = {
+        {
+            title = 'Offene Einsätze',
+            icon = 'list',
+            onSelect = function()
+                local einsaetze = exports.ef_lib:CallbackAwait('leitstelle:offeneEinsaetze')
+                local options = {}
+                for _, e in ipairs(einsaetze) do
+                    options[#options + 1] = {
+                        title = e.stichwort,
+                        description = e.adresse,
+                        onSelect = function() TriggerServerEvent('leitstelle:uebernehmen', e.id) end,
+                    }
+                end
+                exports.ef_lib:ContextMenu({ id = 'leitstelle_einsaetze', title = 'Offene Einsätze', options = options })
+            end,
+        },
+    }
+})
+```
+
+:::caution
+Dauert der Callback länger als 100 ms, hat ef_lib das Menü schon geschlossen, bevor das zweite kommt. `ShowContext` öffnet dann ein neues Menü statt eines Untermenüs, der Weg zurück fehlt. Halt solche Abfragen kurz oder lad die Daten, bevor du das erste Menü zeigst.
+:::
+
+Ein Context-Menü zeigt immer den Mauszeiger, der Spieler kann sich dabei nicht bewegen. `showCursor` und `allowMove` aus `OpenMenu` gibt es hier nicht.
+
+## Umstieg von ox_lib
+
+Für einfache Menüs tauschst du nur den Aufruf:
+
+```lua title="Vorher mit ox_lib"
+lib.registerContext({ id = 'fw_hlf', title = 'HLF 20', options = { ... } })
+lib.showContext('fw_hlf')
+```
+
+```lua title="Nachher mit ef_lib"
+exports.ef_lib:RegisterContext({ id = 'fw_hlf', title = 'HLF 20', options = { ... } })
+exports.ef_lib:ShowContext('fw_hlf')
+```
+
+Nicht übernommen werden diese Felder von ox_lib: `menu` (Verweis auf ein anderes Context-Menü), `event`, `serverEvent`, `args`, `arrow`, `metadata`, `progress`, `colorScheme` und `image` an den Optionen sowie `menu`, `onExit`, `onBack` und `canClose` am Menü. Ein Event löst du stattdessen in `onSelect` aus, ein verknüpftes Menü zeigst du dort mit `ShowContext`. Ein `lib.hideContext` gibt es nicht, dafür nimmst du [CloseMenu](/referenz/ef-lib/#closemenu).
+
+Alle Felder stehen in der [Referenz unter Context-Menü](/referenz/ef-lib/#context-menu).

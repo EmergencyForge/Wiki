@@ -1,0 +1,29 @@
+---
+title: Referenz
+description: Exports und Events der FiveM-Ressourcen von EmergencyForge zum Nachschlagen.
+sidebar:
+  order: 1
+  label: Übersicht
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Hier stehen die Exports und Events unserer Ressourcen, die du aus eigenen Scripts nutzen kannst. Jeder Eintrag hat einen eigenen Link, den du weitergeben kannst. Die Anleitungen zu jeder Ressource erklären, wie die Teile zusammenspielen.
+
+<CardGrid>
+	<LinkCard
+		title="ef_lib"
+		description="Menüs, Dialoge, Meldungen, Fortschrittsbalken, Minispiele, Callbacks, Zonen und Hilfsfunktionen."
+		href="/referenz/ef-lib/"
+	/>
+</CardGrid>
+
+## Schreibweise
+
+| Angabe | Bedeutung |
+|---|---|
+| <span class="ref-badge-inline client">Client</span> | läuft im Client-Script |
+| <span class="ref-badge-inline server">Server</span> | läuft im Server-Script |
+| <span class="ref-badge-inline shared">Shared</span> | gibt es auf beiden Seiten mit gleichem Aufruf |
+| <span class="ref-badge-inline event">Event</span> | ein Event statt eines Exports. Der Aufruf zeigt, ob du zuhörst (`AddEventHandler`) oder es auslöst (`TriggerClientEvent`, `TriggerServerEvent`). |
+| `optional` | der Parameter darf fehlen, dann gilt der genannte Standard |

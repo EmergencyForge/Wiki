@@ -1,0 +1,142 @@
+---
+title: Installation und Konfiguration
+description: ef_lib installieren, in eigenen Scripts als Dependency eintragen und über config.lua einstellen.
+sidebar:
+  order: 2
+---
+
+import { Steps, FileTree } from '@astrojs/starlight/components';
+
+## Installieren
+
+<Steps>
+
+1. Lade ef_lib von [GitHub](https://github.com/EmergencyForge/ef_lib) herunter, als ZIP über **Code › Download ZIP** oder mit `git clone`. Leg den Ordner in den `resources`-Ordner deines Servers:
+
+   <FileTree>
+   - resources/
+     - ef_lib/
+       - client/
+       - server/
+       - shared/
+       - web/
+         - dist/
+       - config.lua
+       - fxmanifest.lua
+   </FileTree>
+
+   Der Ordner muss `ef_lib` heißen. Alle Scripts sprechen die Ressource über `exports.ef_lib` an. Endet der Ordner beim Entpacken auf `-main`, benenn ihn um.
+
+2. Trag ef_lib in die `server.cfg` ein, vor allen Scripts, die es benutzen:
+
+   ```sh title="server.cfg"
+   ensure ef_lib
+   ensure mein_script
+   ```
+
+3. Pass `config.lua` an, siehe [Konfiguration](#konfiguration).
+
+4. Starte den Server. In der Serverkonsole steht `[EF_LIB] Server-side initialized`, in der F8-Konsole des Clients `[EF_LIB] NUI is ready`.
+
+</Steps>
+
+Die gebaute Oberfläche liegt in `web/dist` und ist im Repo enthalten. `npm install` und `npm run build` im Ordner `web` brauchst du nur, wenn du die Oberfläche selbst änderst.
+
+## In eigenen Scripts nutzen
+
+Trag ef_lib in der `fxmanifest.lua` deines Scripts als Dependency ein. Dann startet FiveM dein Script erst, wenn ef_lib läuft:
+
+```lua title="fxmanifest.lua"
+fx_version 'cerulean'
+game 'gta5'
+
+dependencies { 'ef_lib' }
+
+client_script 'client.lua'
+server_script 'server.lua'
+```
+
+Danach rufst du die Exports direkt auf, ein `@ef_lib/...`-Import wie bei ox_lib ist nicht nötig.
+
+## Demo abschalten
+
+ef_lib bringt ein Demo-Menü mit, das alle Item-Typen zeigt. Es ist an, wenn in `config.lua` `Config.EnableDemo = true` steht. Dann öffnet `/efmenu` oder `Config.MenuKey` (ab Werk F2) das Menü. Auf einem Live-Server lässt du es aus:
+
+```lua title="config.lua"
+Config.EnableDemo = false
+```
+
+Die Änderung gilt nach `restart ef_lib`.
+
+## Konfiguration
+
+Alle Einstellungen stehen in `config.lua` im Ordner von ef_lib. Sie gelten nach `restart ef_lib`.
+
+| Schlüssel | Standard | Wirkung |
+|---|---|---|
+| `Config.AccentColor` | `'#f0500a'` | Akzentfarbe der Oberfläche als Hex-Wert mit sechs Stellen |
+| `Config.Locale` | `'de'` | Sprache der eingebauten Texte, `'de'` oder `'en'` |
+| `Config.RequestKeys` | `{ accept = 'Y', decline = 'N' }` | Starttasten für [Anfragen](/ef-lib/dialoge/#anfragen). Spieler können sie in den FiveM-Tastenbelegungen ändern. |
+| `Config.ScreenBlur` | `true` | Spielbild hinter Dialogen, Minispielen und dem Radialmenü verwischen |
+| `Config.EnableDemo` | `false` | Demo-Menü mit `/efmenu` und `Config.MenuKey` |
+| `Config.ShowCursor` | `false` | Mauszeiger in Menüs. `false` heißt nur Tastatur, der Spieler behält die Kamera. |
+| `Config.AllowMove` | `true` | Spieler darf sich bei offenem Menü bewegen |
+| `Config.MenuKey` | `'F2'` | Taste für das Demo-Menü, nur mit `EnableDemo` |
+
+`ShowCursor` und `AllowMove` sind nur der Standard. Jedes Menü kann sie mit `showCursor` und `allowMove` in [OpenMenu](/referenz/ef-lib/#openmenu) überschreiben, siehe [Menüs](/ef-lib/menues/#cursor-und-bewegung).
+
+`Config.Locale = 'en'` stellt Knöpfe, Steuerhinweise, Minispiele, das Einstellungsmenü und die Konsolenmeldung des Versionschecks auf Englisch. Titel, Labels und Meldungen aus deinem Script bleiben, wie du sie übergibst.
+
+## Akzentfarbe
+
+Die Akzentfarbe färbt die Markierung im Menü, Knöpfe, Fortschrittsanzeigen und Minispiele. Schrift auf der Akzentfarbe wird je nach Helligkeit schwarz oder weiß. Ab Werk ist es das Orange von EmergencyForge.
+
+Zur Laufzeit änderst du sie auf dem Client mit [SetAccentColor](/referenz/ef-lib/#setaccentcolor):
+
+```lua title="client.lua"
+-- Polizei-Blau für alle Fenster von ef_lib auf diesem Client
+exports.ef_lib:SetAccentColor('#2563eb')
+```
+
+Werte, die nicht dem Muster `#rrggbb` entsprechen, ignoriert ef_lib.
+
+:::caution
+Hat ein Spieler im Einstellungsmenü eine eigene Farbe gesetzt, bleibt seine Farbe. `Config.AccentColor` und `SetAccentColor` greifen nur, solange er noch das Orange (oder das ältere Blau `#3b82f6`) hat. Übernimmt ein Spieler einmal eine andere Serverfarbe, gilt sie danach als seine eigene. Wechselst du die Farbe später noch einmal, sieht er die neue erst nach **Zurücksetzen** im Einstellungsmenü.
+:::
+
+## Einstellungen der Spieler
+
+Spieler können Menüposition (links, Mitte, rechts), Akzentfarbe und Position der Meldungen selbst wählen. ef_lib speichert das im Browser-Speicher des Spiels, es bleibt über Neustarts erhalten.
+
+Ein eigenes Einstellungsmenü hat ef_lib nicht. Du hängst das fertige Untermenü von [GetUISettingsMenu](/referenz/ef-lib/#getuisettingsmenu) in eines deiner Menüs:
+
+```lua title="client.lua"
+exports.ef_lib:OpenMenu({
+    title = 'Einstellungen',
+    items = {
+        { id = 'hud_toggle', label = 'HUD anzeigen', type = 'checkbox', checked = true },
+        exports.ef_lib:GetUISettingsMenu(),
+    }
+})
+```
+
+Die Einträge des Untermenüs haben IDs mit `_settings_` am Anfang. ef_lib verarbeitet sie selbst, dein Script muss nichts tun.
+
+## Tasten im Spiel
+
+So bedienen Spieler ein offenes Menü:
+
+| Taste | Wirkung |
+|---|---|
+| Pfeil hoch, Pfeil runter | Eintrag wählen |
+| Enter | Eintrag auslösen, Untermenü öffnen, Checkbox umschalten, Auswahl weiterschalten |
+| Pfeil rechts | bei Zahlenwählern Zahl erhöhen, sonst wie Enter |
+| Pfeil links | bei Zahlenwählern Zahl verringern, sonst eine Ebene zurück |
+| Backspace | eine Ebene zurück, auf oberster Ebene schließen |
+| ESC | Menü schließen. Mit `allowMove = false` erst eine Ebene zurück wie Backspace. |
+
+W, A, S und D steuern das Menü nicht. ef_lib meldet sie als Event `ef_lib:keyPress`, damit dein Script selbst entscheiden kann, was passiert, siehe [Navigation von außen](/ef-lib/menues/#navigation-von-außen).
+
+Die Tasten für Anfragen (ab Werk `Y` und `N`) stehen in den FiveM-Einstellungen unter **Tastenbelegung › FiveM** als „Anfrage annehmen“ und „Anfrage ablehnen“.
+
+Was jeder Export genau annimmt, steht in der [Referenz](/referenz/ef-lib/).

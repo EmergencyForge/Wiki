@@ -1,0 +1,126 @@
+---
+title: Meldungen und Hinweise
+description: Benachrichtigungen vom Client und vom Server schicken, Tastenhinweise einblenden und Ereignis-Banner für Beförderungen oder Einsatzende zeigen.
+sidebar:
+  order: 7
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Benachrichtigungen
+
+Benachrichtigungen erscheinen in einer Ecke des Bildschirms, stapeln sich untereinander und verschwinden nach ihrer Dauer von selbst. Eine Leiste am unteren Rand zeigt, wie lange sie noch steht. Wegklicken kann der Spieler sie nicht, er hat dabei ja meist keinen Mauszeiger.
+
+Es gibt vier Typen, jeder mit eigener Farbe und eigenem Symbol:
+
+| Typ | Farbe | Wofür |
+|---|---|---|
+| `success` | Grün | etwas hat geklappt |
+| `error` | Rot | etwas ging nicht |
+| `warning` | Orange | Achtung, aber kein Fehler |
+| `info` | Blau | neutrale Information, auch der Standard ohne Typ |
+
+<Tabs>
+<TabItem label="Client">
+
+```lua title="client.lua"
+exports.ef_lib:SendNotification('success', 'Patient übergeben', 'Übergabe an die Notaufnahme dokumentiert.')
+
+-- eigene Dauer in ms, ab Werk 5000
+exports.ef_lib:SendNotification('warning', 'Sauerstoff', 'Flasche unter 50 bar.', 8000)
+
+-- nur ein Titel
+exports.ef_lib:SendNotification('info', 'Dienst angetreten')
+```
+
+</TabItem>
+<TabItem label="Server">
+
+```lua title="server.lua"
+-- an einen Spieler
+exports.ef_lib:SendNotification(source, 'error', 'Alarmierung', 'Kein freies Fahrzeug auf der Wache.')
+
+-- an alle
+exports.ef_lib:SendNotificationToAll('warning', 'Serverneustart', 'Der Server startet in 5 Minuten neu.', 10000)
+```
+
+</TabItem>
+</Tabs>
+
+Auf dem Client heißt der Export [SendNotification](/referenz/ef-lib/#sendnotification-client) mit `type, title, message, duration`. Auf dem Server heißt er genauso, bekommt aber vorne die `source`, siehe [SendNotification auf dem Server](/referenz/ef-lib/#sendnotification-server). Für alle Spieler gibt es [SendNotificationToAll](/referenz/ef-lib/#sendnotificationtoall).
+
+Wo die Meldungen stehen, entscheidet der Spieler: oben rechts (Standard), oben links, unten rechts oder unten links. Er stellt das im Einstellungsmenü unter **Meldungen** ein, das du mit `GetUISettingsMenu` einbindest, siehe [Einstellungen der Spieler](/ef-lib/installation/#einstellungen-der-spieler). Von deinem Script aus lässt sich die Position nicht setzen.
+
+:::caution
+Mit `duration = 0` bleibt eine Meldung stehen. Einen Export, der sie wieder entfernt, gibt es nicht, sie steht dann bis zum nächsten `restart ef_lib`. Gib immer eine Dauer an.
+:::
+
+Die Server-Exports schicken intern das Net-Event `ef_lib:notify` mit `type, title, message, duration`. Du kannst es auch direkt mit `TriggerClientEvent` auslösen, die Exports sind aber der stabilere Weg, falls sich das Event später ändert.
+
+## Tastenhinweise
+
+Ein Tastenhinweis zeigt eine Taste und was sie tut, etwa „E Fahrzeug durchsuchen“. Er steht, bis du ihn ausblendest. Typisch zeigst du ihn beim Betreten einer [Zone](/ef-lib/zonen/) und blendest ihn beim Verlassen aus.
+
+```lua title="client.lua"
+exports.ef_lib:ShowHint('E', 'Spind öffnen', 'wache_spind')
+exports.ef_lib:ShowHint('G', 'Dienstkleidung', 'wache_kleidung', 'shirt')
+
+-- später
+exports.ef_lib:HideHint('wache_spind')
+exports.ef_lib:HideAllHints()
+```
+
+[ShowHint](/referenz/ef-lib/#showhint) bekommt Taste, Text, eine ID, optional ein Font-Awesome-Symbol und optional eine Position. Mehrere Hinweise stehen bei mittiger Position nebeneinander, sonst untereinander. Zeigst du einen Hinweis mit einer ID, die schon steht, ersetzt er den alten. Gib deshalb immer eine ID an, sonst stapeln sich gleiche Hinweise, wenn dein Code `ShowHint` mehrfach aufruft.
+
+[HideHint](/referenz/ef-lib/#hidehint) ohne ID blendet alle aus, genau wie [HideAllHints](/referenz/ef-lib/#hideallhints).
+
+Ab Werk stehen die Hinweise unten links. Andere Positionen setzt du mit [SetHintPosition](/referenz/ef-lib/#sethintposition) oder als fünften Wert von `ShowHint`: `'bottom-left'`, `'bottom-center'`, `'bottom-right'`, `'top-left'`, `'top-center'` und `'top-right'`.
+
+:::note
+Die Position gilt für alle Hinweise auf dem Bildschirm, auch die von anderen Scripts. `HideAllHints` setzt sie wieder auf unten links zurück. `SetHintPosition` ohne Wert setzt unten mittig, nicht unten links.
+:::
+
+Ein Hinweis fragt die Taste nicht ab, er zeigt sie nur. Den Tastendruck prüfst du selbst, etwa mit `IsControlJustPressed` im `inside` deiner Zone oder mit `RegisterKeyMapping`.
+
+Vom Server aus gehen die Net-Events `ef_lib:showHint`, `ef_lib:hideHint` und `ef_lib:hideAllHints` mit denselben Parametern.
+
+## Ereignis-Banner
+
+Der Banner ist für Momente, die mehr sind als eine Meldung: Beförderung, Einsatz beendet, Schichtbeginn. Eine Karte mit Medaille erscheint im oberen Drittel und geht nach `duration` von selbst, ab Werk nach 5 Sekunden. Kommen mehrere Banner, zeigt ef_lib sie nacheinander.
+
+<Tabs>
+<TabItem label="Client">
+
+```lua title="client.lua"
+exports.ef_lib:Banner({
+    title = 'Befördert zum Oberbrandmeister',
+    message = 'Feuer- und Rettungswache 1',
+    icon = 'medal',
+    stats = {
+        { label = 'Dienstzeit', value = '124 h' },
+        { label = 'Einsätze', value = 87 },
+    },
+})
+```
+
+</TabItem>
+<TabItem label="Server">
+
+```lua title="server.lua"
+-- an einen Spieler
+exports.ef_lib:Banner(source, { title = 'Einsatz beendet', message = 'B3 Wohnungsbrand, Grove Street' })
+
+-- an alle
+exports.ef_lib:Banner(-1, { title = 'Großschadenslage', message = 'Alle Kräfte zur Wache 1', icon = 'triangle-exclamation' })
+```
+
+</TabItem>
+</Tabs>
+
+Nur `title` ist Pflicht. `stats` sind kleine Kennzahlen unter dem Text, jede mit `label` und `value`. Nimm zwei oder drei, mehr wird unübersichtlich.
+
+:::tip
+Banner nutzen sich ab. Zeig sie für seltene Ereignisse und nimm für alles Alltägliche eine Benachrichtigung.
+:::
+
+Alle Parameter stehen in der [Referenz unter Meldungen und Hinweise](/referenz/ef-lib/#meldungen-und-hinweise).

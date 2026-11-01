@@ -1,0 +1,1751 @@
+# Referenzdaten für alle öffentlichen Exports und Events von ef_lib.
+# Quelle ist der Code in ef_lib (client/, server/, shared/). Schema: src/content.config.ts.
+
+# ─── callbacks ───
+
+- id: callbackawait
+  name: CallbackAwait
+  kind: export
+  realm: client
+  category: callbacks
+  description: >-
+    Ruft einen auf dem Server registrierten Callback auf und wartet auf die Antwort. Blockiert den
+    aktuellen Thread, nutze es also in `CreateThread`, einem Command oder Event-Handler. Nach 30 Sekunden
+    ohne Antwort kommt `nil` und eine Fehlermeldung zurück.
+  params:
+    - name: name
+      type: string
+      description: "Name, unter dem der Server den Callback mit `RegisterCallback` registriert hat."
+    - name: "..."
+      type: any
+      optional: true
+      description: "Beliebige Argumente, die der Handler auf dem Server nach `source` bekommt."
+  returns:
+    - type: any
+      name: "..."
+      description: "Alle Rückgabewerte des Server-Handlers. Ist der Callback nicht registriert, wirft der Handler einen Fehler oder läuft das Timeout ab, kommt `nil` und ein Fehlertext als zweiter Wert."
+  example: |
+    CreateThread(function()
+        local ok, msg = exports.ef_lib:CallbackAwait('ef_fw:equipHose', 'B-Schlauch', 2)
+        if ok then
+            exports.ef_lib:SendNotification('success', 'Ausgerüstet', msg)
+        else
+            exports.ef_lib:SendNotification('error', 'Fehler', msg or 'Keine Antwort vom Server')
+        end
+    end)
+  guide: /ef-lib/callbacks/
+
+- id: callbackasync
+  name: CallbackAsync
+  kind: export
+  realm: client
+  category: callbacks
+  description: >-
+    Ruft einen Server-Callback auf, ohne zu warten. Der Code läuft sofort weiter, die Antwort landet in
+    deiner Funktion. Läuft das Timeout von 30 Sekunden ab, wird die Funktion gar nicht aufgerufen.
+  params:
+    - name: name
+      type: string
+      description: "Name des Callbacks auf dem Server."
+    - name: cb
+      type: function
+      description: "Bekommt die Rückgabewerte des Server-Handlers als Argumente."
+    - name: "..."
+      type: any
+      optional: true
+      description: "Argumente für den Server-Handler."
+  example: |
+    exports.ef_lib:CallbackAsync('ef_rd:getPatientInfo', function(info)
+        if not info then return end
+        exports.ef_lib:SendNotification('info', 'Patient', ('%s, Puls %d'):format(info.name, info.pulse))
+    end, targetServerId)
+  guide: /ef-lib/callbacks/
+
+- id: registercallback
+  name: RegisterCallback
+  kind: export
+  realm: server
+  category: callbacks
+  description: >-
+    Registriert einen Callback, den Clients mit `CallbackAwait` oder `CallbackAsync` aufrufen. Der Handler
+    läuft geschützt in `pcall`, ein Fehler landet in der Konsole und beim Client kommt `nil` an. Stoppt deine
+    Resource, entfernt ef_lib ihre Callbacks von selbst.
+  params:
+    - name: name
+      type: string
+      description: "Eindeutiger Name, am besten mit Präfix deiner Resource, etwa `'ef_fw:getVehicles'`. Registriert eine andere Resource denselben Namen, wird überschrieben und eine Warnung ausgegeben."
+    - name: handler
+      type: function
+      description: "Bekommt `source` und die Argumente vom Client. Was er zurückgibt, geht an den Client, auch mehrere Werte."
+  example: |
+    exports.ef_lib:RegisterCallback('ef_fw:getVehicles', function(source, wache)
+        if not IsPlayerAceAllowed(source, 'ef.feuerwehr') then
+            return false, 'Kein Zugriff'
+        end
+        return true, {
+            { model = 'firetruk', plate = 'FW 3-46-1' },
+            { model = 'ambulance', plate = 'RD 3-83-1' },
+        }
+    end)
+  guide: /ef-lib/callbacks/
+
+- id: unregistercallback
+  name: UnregisterCallback
+  kind: export
+  realm: server
+  category: callbacks
+  description: >-
+    Entfernt einen registrierten Callback. Beim Stoppen einer Resource passiert das automatisch, du brauchst
+    es nur, wenn ein Callback zur Laufzeit wegfallen soll.
+  params:
+    - name: name
+      type: string
+      description: "Name des Callbacks."
+  example: |
+    RegisterCommand('fw_wartung', function(source)
+        -- Während der Wartung keine Fahrzeugabfragen annehmen
+        exports.ef_lib:UnregisterCallback('ef_fw:getVehicles')
+        print('Fahrzeugabfrage deaktiviert')
+    end, true)
+  guide: /ef-lib/callbacks/
+
+# ─── menu ───
+
+- id: openmenu
+  name: OpenMenu
+  kind: export
+  realm: client
+  category: menu
+  description: >-
+    Öffnet ein Menü mit Einträgen, Untermenüs und Eingabefeldern. Ist schon ein Menü offen, passiert nichts.
+    Die Auswahl des Spielers kommt als Event `ef_lib:menuAction` an.
+  params:
+    - name: menuData
+      type: table
+      description: "Felder `title`, `items` (Liste der Einträge), `showCursor` (Standard `Config.ShowCursor`, in der mitgelieferten config.lua `false`) und `allowMove` (Standard `Config.AllowMove`, `true`). Ein Eintrag hat `id`, `label` und optional `description`, `icon` (Font-Awesome-Name), `iconColor`, `disabled`, `readonly`, `data`, `submenu = { title, items }` und `confirm` (`true` oder `{ title, message, confirmLabel, cancelLabel }`). Mit `type` wird er zu `'checkbox'` (`checked`), `'input'` (`value`, `placeholder`), `'select'` (`value`, `options`) oder `'number'` (`min`, `max`, `step`, `current`). Standard ist `'button'`."
+  example: |
+    exports.ef_lib:OpenMenu({
+        title = 'Fahrzeughalle',
+        items = {
+            { id = 'hlf', label = 'HLF 20', description = 'Löschgruppenfahrzeug', icon = 'truck' },
+            { id = 'blaulicht', label = 'Sondersignal', type = 'checkbox', checked = false },
+            { id = 'besatzung', label = 'Besatzung', type = 'number', min = 1, max = 9, current = 6 },
+            { id = 'abmelden', label = 'Vom Dienst abmelden', confirm = true },
+        },
+    })
+  guide: /ef-lib/menues/
+
+- id: closemenu
+  name: CloseMenu
+  kind: export
+  realm: client
+  category: menu
+  description: >-
+    Schließt das offene Menü und löst danach `ef_lib:menuClosed` aus. Ist kein Menü offen, passiert nichts.
+  example: |
+    AddEventHandler('ef_lib:menuAction', function(data)
+        if data.id == 'abmelden' then
+            TriggerServerEvent('ef_fw:offDuty')
+            exports.ef_lib:CloseMenu()
+        end
+    end)
+  guide: /ef-lib/menues/
+
+- id: togglemenu
+  name: ToggleMenu
+  kind: export
+  realm: client
+  category: menu
+  description: >-
+    Blendet das zuletzt geöffnete Menü aus oder wieder ein, ohne seinen Inhalt zu verwerfen. Stammt aus älteren
+    Versionen und löst kein `ef_lib:menuClosed` aus. Für neue Scripts nimm `OpenMenu` und `CloseMenu`.
+  params:
+    - name: show
+      type: boolean
+      description: "`true` zeigt das Menü, `false` blendet es aus."
+  example: |
+    -- Menü kurz ausblenden, solange die Kamera auf das Fahrzeug fährt
+    exports.ef_lib:ToggleMenu(false)
+    Wait(1500)
+    exports.ef_lib:ToggleMenu(true)
+  guide: /ef-lib/menues/
+
+- id: ismenuopen
+  name: IsMenuOpen
+  kind: export
+  realm: client
+  category: menu
+  description: >-
+    Sagt, ob gerade ein Menü von ef_lib offen ist. Das gilt auch für Kontextmenüs.
+  returns:
+    - type: boolean
+      description: "`true`, wenn ein Menü offen ist."
+  example: |
+    RegisterCommand('wache', function()
+        if exports.ef_lib:IsMenuOpen() then return end
+        OpenWachenMenu()
+    end, false)
+  guide: /ef-lib/menues/
+
+- id: getuisettingsmenu
+  name: GetUISettingsMenu
+  kind: export
+  realm: client
+  category: menu
+  description: >-
+    Liefert den eingebauten Eintrag "Oberfläche" als fertiges Menü-Item mit Untermenü. Dort stellt der Spieler
+    Menüposition, Akzentfarbe und Position der Meldungen ein. Häng ihn einfach an die `items` deines Menüs an.
+  returns:
+    - type: table
+      description: "Menü-Item mit `id = '_ui_settings'` und Untermenü."
+  example: |
+    exports.ef_lib:OpenMenu({
+        title = 'Einstellungen',
+        items = {
+            { id = 'funk', label = 'Funkkanal wählen' },
+            exports.ef_lib:GetUISettingsMenu(),
+        },
+    })
+  guide: /ef-lib/menues/
+
+- id: updatemenuitem
+  name: UpdateMenuItem
+  kind: export
+  realm: client
+  category: menu
+  description: >-
+    Ändert einen Eintrag im offenen Menü, ohne es neu zu öffnen, etwa Grenzen eines Zahlenwählers oder die
+    Beschreibung. Fehlt `id` oder `updates`, passiert nichts.
+  params:
+    - name: id
+      type: string
+      description: "`id` des Eintrags."
+    - name: updates
+      type: table
+      description: "Felder, die überschrieben werden, zum Beispiel `label`, `description`, `current`, `min`, `max`, `checked`, `value` oder `disabled`. ef_lib setzt in dieser Tabelle zusätzlich `id`."
+  example: |
+    local frei = exports.ef_lib:CallbackAwait('ef_rd:freeBeds')
+    exports.ef_lib:UpdateMenuItem('betten', {
+        max = frei,
+        description = ('%d Betten frei'):format(frei),
+        disabled = frei == 0,
+    })
+  guide: /ef-lib/menues/
+
+- id: navigatemenu
+  name: NavigateMenu
+  kind: export
+  realm: client
+  category: menu
+  description: >-
+    Steuert das offene Menü von außen, als hätte der Spieler eine Taste gedrückt. Typischer Fall ist das
+    Weiterleiten von WASD aus `ef_lib:keyPress`.
+  params:
+    - name: action
+      type: string
+      description: "`'up'`, `'down'`, `'left'` (Zahl verringern oder zurück), `'right'` (Zahl erhöhen oder auswählen), `'select'`, `'back'` (zurück, auf oberster Ebene schließen) oder `'close'`."
+  example: |
+    local map = { w = 'up', s = 'down', a = 'left', d = 'right' }
+
+    AddEventHandler('ef_lib:keyPress', function(key)
+        if map[key] then
+            exports.ef_lib:NavigateMenu(map[key])
+        end
+    end)
+  guide: /ef-lib/menues/
+
+- id: openradial
+  name: OpenRadial
+  kind: export
+  realm: client
+  category: menu
+  description: >-
+    Öffnet ein Radialmenü für Schnellaktionen. Gedacht für Taste halten und loslassen: auf Taste runter
+    `OpenRadial`, auf Taste hoch `CloseRadial`. Blockiert nicht, der Spieler kann sich weiter bewegen.
+  params:
+    - name: data
+      type: table
+      description: "`items` mit höchstens 8 Einträgen pro Ebene, jeder mit `id`, `label` und optional `icon`, `submenu` (Liste weiterer Items) und `keepOpen` (Radial bleibt nach der Auswahl offen). `onSelect(id)` wird mit der `id` des gewählten Eintrags aufgerufen, ohne Auswahl gar nicht."
+  example: |
+    RegisterCommand('+rd_aktionen', function()
+        exports.ef_lib:OpenRadial({
+            items = {
+                { id = 'trage', label = 'Trage', icon = 'bed-pulse' },
+                { id = 'defi', label = 'Defibrillator', icon = 'heart-pulse' },
+                { id = 'funk', label = 'Funk', icon = 'walkie-talkie' },
+            },
+            onSelect = function(id) TriggerEvent('ef_rd:action', id) end,
+        })
+    end, false)
+    RegisterCommand('-rd_aktionen', function() exports.ef_lib:CloseRadial() end, false)
+    RegisterKeyMapping('+rd_aktionen', 'Rettungsdienst-Aktionen', 'keyboard', 'Z')
+  guide: /ef-lib/menues/
+
+- id: closeradial
+  name: CloseRadial
+  kind: export
+  realm: client
+  category: menu
+  description: >-
+    Schließt das offene Radialmenü und führt die Auswahl unter dem Mauszeiger aus. Steht der Zeiger auf einem
+    Eintrag mit `keepOpen`, bleibt das Radial im Klickmodus offen.
+  example: |
+    RegisterCommand('-pol_aktionen', function()
+        exports.ef_lib:CloseRadial()
+    end, false)
+  guide: /ef-lib/menues/
+
+- id: openmenuforplayer
+  name: OpenMenuForPlayer
+  kind: export
+  realm: server
+  category: menu
+  description: >-
+    Öffnet beim angegebenen Spieler ein Menü, wie `OpenMenu` auf dem Client. Die Auswahl kommt dort als
+    `ef_lib:menuAction` an, nicht auf dem Server. Funktionen in `menuData` überleben den Weg über das Netz nicht.
+  params:
+    - name: source
+      type: number
+      description: "Server-ID des Spielers."
+    - name: menuData
+      type: table
+      description: "Wie bei `OpenMenu`."
+  example: |
+    RegisterCommand('leitstelle', function(source)
+        exports.ef_lib:OpenMenuForPlayer(source, {
+            title = 'Leitstelle',
+            items = {
+                { id = 'status2', label = 'Status 2', description = 'Einsatzbereit auf Wache' },
+                { id = 'status6', label = 'Status 6', description = 'Außer Dienst' },
+            },
+        })
+    end, true)
+  guide: /ef-lib/menues/
+
+- id: closemenuforplayer
+  name: CloseMenuForPlayer
+  kind: export
+  realm: server
+  category: menu
+  description: >-
+    Schließt beim angegebenen Spieler das offene Menü, wie `CloseMenu` auf dem Client.
+  params:
+    - name: source
+      type: number
+      description: "Server-ID des Spielers."
+  example: |
+    AddEventHandler('ef_fw:alarm', function(source)
+        exports.ef_lib:CloseMenuForPlayer(source)
+    end)
+  guide: /ef-lib/menues/
+
+- id: event-menuaction
+  name: ef_lib:menuAction
+  kind: event
+  usage: listen
+  realm: client
+  category: menu
+  description: >-
+    Lokales Client-Event, das ef_lib bei jeder Aktion im Menü auslöst: Klick auf einen Eintrag, Checkbox
+    umschalten, Select oder Zahl ändern, Enter im Eingabefeld. Kommt auch bei Einträgen aus Kontextmenüs.
+    Lausche mit `AddEventHandler` und prüfe `data.id`.
+  params:
+    - name: data
+      type: table
+      description: "Felder `id`, `type` (`'button'`, wenn nicht gesetzt), `label`, `checked`, `value` (bei `'number'` der aktuelle Zahlenwert) und `data` (die eigenen Daten des Eintrags)."
+  example: |
+    AddEventHandler('ef_lib:menuAction', function(data)
+        if data.id == 'blaulicht' then
+            TriggerServerEvent('ef_fw:setSiren', data.checked)
+        elseif data.id == 'besatzung' then
+            TriggerServerEvent('ef_fw:setCrew', data.value)
+        end
+    end)
+  guide: /ef-lib/menues/
+
+- id: event-menuclosed
+  name: ef_lib:menuClosed
+  kind: event
+  usage: listen
+  realm: client
+  category: menu
+  description: >-
+    Lokales Client-Event, das kommt, nachdem ein Menü geschlossen wurde, egal ob durch ESC, Backspace auf
+    oberster Ebene oder `CloseMenu`. Gut zum Aufräumen, etwa Kamera zurücksetzen.
+  example: |
+    AddEventHandler('ef_lib:menuClosed', function()
+        if garageCam then
+            RenderScriptCams(false, true, 500, true, true)
+            DestroyCam(garageCam, false)
+            garageCam = nil
+        end
+    end)
+  guide: /ef-lib/menues/
+
+- id: event-keypress
+  name: ef_lib:keyPress
+  kind: event
+  usage: listen
+  realm: client
+  category: menu
+  description: >-
+    Lokales Client-Event für W, A, S und D, solange ein Menü offen ist und der Spieler nicht in einem Feld tippt.
+    ef_lib navigiert damit nicht selbst. Willst du WASD im Menü, leite die Tasten an `NavigateMenu` weiter.
+  params:
+    - name: key
+      type: string
+      description: "Die Taste klein geschrieben: `'w'`, `'a'`, `'s'` oder `'d'`."
+  example: |
+    AddEventHandler('ef_lib:keyPress', function(key)
+        if key == 'w' then exports.ef_lib:NavigateMenu('up')
+        elseif key == 's' then exports.ef_lib:NavigateMenu('down')
+        end
+    end)
+  guide: /ef-lib/menues/
+
+- id: event-servermenuaction
+  name: ef_lib:serverMenuAction
+  kind: event
+  usage: trigger
+  realm: server
+  category: menu
+  description: >-
+    Net-Event auf dem Server, das ein Client mit `TriggerServerEvent` schickt. ef_lib schreibt dazu nur eine
+    Zeile mit `data.action` in die Konsole. Eigene Server-Scripts können mitlauschen, müssen das Event dafür
+    selbst mit `RegisterNetEvent` registrieren und `source` prüfen.
+  params:
+    - name: data
+      type: table
+      description: "Beliebige Tabelle vom Client. ef_lib liest nur `action` für die Konsolenzeile."
+  example: |
+    -- Client
+    TriggerServerEvent('ef_lib:serverMenuAction', { action = 'status', value = 2 })
+
+    -- Server
+    RegisterNetEvent('ef_lib:serverMenuAction', function(data)
+        if data.action == 'status' then
+            TriggerEvent('ef_leitstelle:setStatus', source, data.value)
+        end
+    end)
+  guide: /ef-lib/menues/
+
+- id: event-openmenu
+  name: ef_lib:openMenu
+  kind: event
+  usage: trigger
+  realm: client
+  category: menu
+  description: >-
+    Net-Event, das beim Spieler `OpenMenu` aufruft. Vom Server mit `TriggerClientEvent` auslösen, genau das
+    macht auch `OpenMenuForPlayer`. Den Export zu nehmen ist sicherer bei späteren Updates.
+  params:
+    - name: menuData
+      type: table
+      description: "Wie bei `OpenMenu`."
+  example: |
+    TriggerClientEvent('ef_lib:openMenu', source, {
+        title = 'Ausrüstung',
+        items = {
+            { id = 'pa', label = 'Atemschutzgerät' },
+            { id = 'wbk', label = 'Wärmebildkamera' },
+        },
+    })
+  guide: /ef-lib/menues/
+
+- id: event-closemenu
+  name: ef_lib:closeMenu
+  kind: event
+  usage: trigger
+  realm: client
+  category: menu
+  description: >-
+    Net-Event, das beim Spieler `CloseMenu` aufruft. Vom Server mit `TriggerClientEvent` auslösen, wie
+    `CloseMenuForPlayer`.
+  example: |
+    RegisterNetEvent('ef_fw:alarmed', function()
+        -- Offenes Menü schließen, sobald der Alarm kommt
+        TriggerClientEvent('ef_lib:closeMenu', source)
+    end)
+  guide: /ef-lib/menues/
+
+# ─── context ───
+
+- id: registercontext
+  name: RegisterContext
+  kind: export
+  realm: client
+  category: context
+  description: >-
+    Registriert ein Kontextmenü unter einer ID, ohne es anzuzeigen. Aufbau wie bei ox_lib, damit der Umstieg
+    leicht fällt. Anzeigen mit `ShowContext`.
+  params:
+    - name: data
+      type: table
+      description: "`id` (Pflicht), `title` (Standard `'Menu'`) und `options`. Jede Option hat `title` (oder `label`) und optional `description`, `icon`, `iconColor`, `disabled`, `readonly` und `onSelect(data)`."
+  example: |
+    exports.ef_lib:RegisterContext({
+        id = 'rd_patient',
+        title = 'Patient',
+        options = {
+            { title = 'Vitalwerte messen', icon = 'heart-pulse', onSelect = function() MeasureVitals() end },
+            { title = 'Verband anlegen', icon = 'bandage', onSelect = function() ApplyBandage() end },
+            { title = 'Transportfähig', icon = 'truck-medical', disabled = true },
+        },
+    })
+  guide: /ef-lib/context-menu/
+
+- id: showcontext
+  name: ShowContext
+  kind: export
+  realm: client
+  category: context
+  description: >-
+    Zeigt ein mit `RegisterContext` registriertes Kontextmenü. Ist schon ein Menü offen, erscheint es als
+    Untermenü und der Spieler kommt mit Pfeil links zurück. Nach `onSelect` schließt sich das Menü von selbst,
+    außer `onSelect` zeigt innerhalb von 100 ms ein weiteres Kontextmenü.
+  params:
+    - name: id
+      type: string
+      description: "ID aus `RegisterContext`."
+  example: |
+    RegisterCommand('patient', function()
+        exports.ef_lib:ShowContext('rd_patient')
+    end, false)
+  guide: /ef-lib/context-menu/
+
+- id: contextmenu
+  name: ContextMenu
+  kind: export
+  realm: client
+  category: context
+  description: >-
+    Registriert und zeigt ein Kontextmenü in einem Aufruf. Praktisch für Menüs, deren Optionen sich jedes Mal
+    ändern.
+  params:
+    - name: data
+      type: table
+      description: "Wie bei `RegisterContext`."
+  example: |
+    exports.ef_lib:ContextMenu({
+        id = 'pol_fahrzeug',
+        title = ('Fahrzeug %s'):format(plate),
+        options = {
+            { title = 'Halter abfragen', icon = 'id-card', onSelect = function() QueryOwner(plate) end },
+            { title = 'Durchsuchen', icon = 'magnifying-glass', onSelect = function() SearchVehicle(vehicle) end },
+        },
+    })
+  guide: /ef-lib/context-menu/
+
+# ─── dialog ───
+
+- id: inputdialog
+  name: InputDialog
+  kind: export
+  realm: client
+  category: dialog
+  description: >-
+    Öffnet einen Dialog mit einem oder mehreren Eingabefeldern und wartet, bis der Spieler bestätigt oder
+    abbricht. Blockiert den aktuellen Thread. Ist schon ein Eingabedialog offen, kommt sofort `nil`.
+  params:
+    - name: title
+      type: string
+      description: "Titel des Dialogs."
+    - name: fields
+      type: "table[]"
+      description: "Liste der Felder mit `type`, `label` und optional `description`, `placeholder`, `required`, `default`. Typen: `'input'`, `'number'` und `'slider'` (`min`, `max`, `step`), `'checkbox'` (`checked`), `'select'` (`options` als Strings oder `{ label, value }`), `'textarea'`, `'color'` (`options` als Hex-Werte, sonst 8 Standardfarben), `'date'` (`min`, `max` als `'YYYY-MM-DD'`), `'multi-select'` (`options` mit `{ label, value, icon }`, `default` als Liste)."
+  returns:
+    - type: "table|nil"
+      name: values
+      description: "Die Werte in Reihenfolge der Felder, oder `nil` bei Abbruch."
+  example: |
+    local input = exports.ef_lib:InputDialog('Einsatzbericht', {
+        { type = 'input', label = 'Einsatzort', placeholder = 'Straße, Hausnummer', required = true },
+        { type = 'select', label = 'Stichwort', options = { 'B1', 'B2', 'B3', 'THL1', 'RD1' } },
+        { type = 'number', label = 'Kräfte vor Ort', min = 1, max = 50, default = 9 },
+        { type = 'textarea', label = 'Lage' },
+    })
+    if not input then return end
+
+    TriggerServerEvent('ef_fw:saveReport', input[1], input[2], input[3], input[4])
+  guide: /ef-lib/dialoge/
+
+- id: alertdialog
+  name: AlertDialog
+  kind: export
+  realm: client
+  category: dialog
+  description: >-
+    Zeigt einen Bestätigungsdialog und wartet auf die Antwort. Blockiert den aktuellen Thread. Ist schon ein
+    Bestätigungsdialog offen, kommt sofort `'cancel'`.
+  params:
+    - name: data
+      type: table
+      description: "`header`, optional `content`, `centered` (Standard `true`), `cancel` (Abbrechen-Knopf zeigen, Standard `true`), `confirmLabel` (Standard `'Bestätigen'`) und `cancelLabel` (Standard `'Abbrechen'`)."
+  returns:
+    - type: string
+      description: "`'confirm'` oder `'cancel'`."
+  example: |
+    local antwort = exports.ef_lib:AlertDialog({
+        header = 'Fahrzeug außer Dienst nehmen?',
+        content = 'Das HLF 20 wird für alle Kräfte gesperrt.',
+        confirmLabel = 'Außer Dienst',
+    })
+    if antwort == 'confirm' then
+        TriggerServerEvent('ef_fw:setVehicleStatus', 'hlf20', 6)
+    end
+  guide: /ef-lib/dialoge/
+
+- id: request-client
+  name: Request
+  kind: export
+  realm: client
+  category: dialog
+  description: >-
+    Stellt dem Spieler eine Frage, die er mit einer Taste beantwortet, während er weiterspielt. Die Tasten sind
+    Key Mappings (Standard aus `Config.RequestKeys`, Y und N). Blockiert den aktuellen Thread. Kommt eine Anfrage,
+    während eine andere offen ist, wartet sie.
+  params:
+    - name: data
+      type: table
+      description: "`title` (Pflicht), optional `message`, `icon` (Font-Awesome-Name), `duration` (ms bis zur Zeitüberschreitung, Standard 15000), `acceptLabel` und `declineLabel`."
+  returns:
+    - type: boolean
+      name: accepted
+      description: "`true`, wenn der Spieler angenommen hat."
+    - type: string
+      name: answer
+      description: "`'accept'`, `'decline'` oder `'timeout'`. Fehlt `title`, kommt sofort `false, 'timeout'`."
+  example: |
+    local accepted = exports.ef_lib:Request({
+        title = 'Nachalarmierung',
+        message = 'Die Leitstelle fordert dich für B3 Wohnungsbrand an.',
+        icon = 'tower-broadcast',
+        acceptLabel = 'Ausrücken',
+        declineLabel = 'Ablehnen',
+    })
+    if accepted then
+        SetNewWaypoint(einsatz.x, einsatz.y)
+    end
+  guide: /ef-lib/dialoge/
+
+- id: request-server
+  name: Request
+  kind: export
+  realm: server
+  category: dialog
+  description: >-
+    Stellt einem Spieler eine Anfrage vom Server aus und wartet auf seine Antwort. Blockiert den aktuellen
+    Thread. Verlässt der Spieler den Server oder kommt nach `duration` plus 60 Sekunden keine Antwort, gibt der
+    Export `false, 'timeout'` zurück.
+  params:
+    - name: source
+      type: number
+      description: "Server-ID des Spielers."
+    - name: data
+      type: table
+      description: "Wie beim Client-Export `Request`."
+  returns:
+    - type: boolean
+      name: accepted
+      description: "`true`, wenn der Spieler angenommen hat."
+    - type: string
+      name: answer
+      description: "`'accept'`, `'decline'` oder `'timeout'`."
+  example: |
+    RegisterNetEvent('ef_pol:requestSearch', function(target)
+        local officer = source
+        local ok = exports.ef_lib:Request(target, {
+            title = 'Durchsuchung',
+            message = ('%s möchte dich durchsuchen.'):format(GetPlayerName(officer)),
+            icon = 'magnifying-glass',
+        })
+        exports.ef_lib:SendNotification(officer, ok and 'success' or 'error', 'Durchsuchung', ok and 'Zugestimmt' or 'Abgelehnt')
+    end)
+  guide: /ef-lib/dialoge/
+
+# ─── notify ───
+
+- id: sendnotification-client
+  name: SendNotification
+  kind: export
+  realm: client
+  category: notify
+  description: >-
+    Zeigt eine Meldung oben rechts auf dem eigenen Bildschirm. Der Spieler kann die Position in den
+    UI-Einstellungen ändern.
+  params:
+    - name: type
+      type: string
+      optional: true
+      description: "`'success'`, `'error'`, `'warning'` oder `'info'`. Standard `'info'`."
+    - name: title
+      type: string
+      optional: true
+      description: "Titel, Standard `''`."
+    - name: message
+      type: string
+      optional: true
+      description: "Text unter dem Titel, Standard `''`."
+    - name: duration
+      type: number
+      optional: true
+      description: "Anzeigedauer in ms, Standard 5000. Bei `0` bleibt die Meldung stehen, ef_lib hat keinen Export, um sie wieder zu entfernen."
+  example: |
+    exports.ef_lib:SendNotification('success', 'Fahrzeug betankt', 'Der RTW ist wieder voll.', 3000)
+
+    -- Ohne duration bleibt die Meldung 5 Sekunden
+    exports.ef_lib:SendNotification('warning', 'Atemschutz', 'Restdruck unter 60 bar')
+  guide: /ef-lib/meldungen/
+
+- id: sendnotification-server
+  name: SendNotification
+  kind: export
+  realm: server
+  category: notify
+  description: >-
+    Schickt einem Spieler eine Meldung vom Server. Gleiche Parameter wie auf dem Client, davor die Server-ID.
+  params:
+    - name: source
+      type: number
+      description: "Server-ID des Spielers, `-1` für alle."
+    - name: type
+      type: string
+      optional: true
+      description: "`'success'`, `'error'`, `'warning'` oder `'info'`. Standard `'info'`."
+    - name: title
+      type: string
+      optional: true
+      description: "Titel, Standard `''`."
+    - name: message
+      type: string
+      optional: true
+      description: "Text, Standard `''`."
+    - name: duration
+      type: number
+      optional: true
+      description: "Anzeigedauer in ms, Standard 5000."
+  example: |
+    RegisterNetEvent('ef_rd:patientDelivered', function(hospital)
+        exports.ef_lib:SendNotification(source, 'success', 'Übergabe', ('Patient an %s übergeben'):format(hospital))
+    end)
+  guide: /ef-lib/meldungen/
+
+- id: sendnotificationtoall
+  name: SendNotificationToAll
+  kind: export
+  realm: server
+  category: notify
+  description: >-
+    Schickt allen Spielern dieselbe Meldung, etwa für Serverhinweise oder Großschadenslagen.
+  params:
+    - name: type
+      type: string
+      optional: true
+      description: "`'success'`, `'error'`, `'warning'` oder `'info'`. Standard `'info'`."
+    - name: title
+      type: string
+      optional: true
+      description: "Titel, Standard `''`."
+    - name: message
+      type: string
+      optional: true
+      description: "Text, Standard `''`."
+    - name: duration
+      type: number
+      optional: true
+      description: "Anzeigedauer in ms, Standard 5000."
+  example: |
+    RegisterCommand('unwetter', function()
+        exports.ef_lib:SendNotificationToAll('warning', 'Unwetterwarnung',
+            'Sturmböen im ganzen Stadtgebiet. Alle Wachen in Bereitschaft.', 10000)
+    end, true)
+  guide: /ef-lib/meldungen/
+
+- id: showhint
+  name: ShowHint
+  kind: export
+  realm: client
+  category: notify
+  description: >-
+    Zeigt einen Tastenhinweis wie "E Tür öffnen". Mit `id` kannst du mehrere Hinweise gleichzeitig zeigen und
+    gezielt wieder ausblenden, ein neuer Hinweis mit derselben `id` ersetzt den alten.
+  params:
+    - name: key
+      type: string
+      description: "Angezeigte Taste, etwa `'E'`. Leerer String zeigt keine Taste."
+    - name: label
+      type: string
+      description: "Text neben der Taste."
+    - name: id
+      type: string
+      optional: true
+      description: "Kennung für `HideHint`."
+    - name: icon
+      type: string
+      optional: true
+      description: "Font-Awesome-Name, etwa `'door-open'`."
+    - name: position
+      type: string
+      optional: true
+      description: "Setzt die Position aller Hinweise, siehe `SetHintPosition`."
+  example: |
+    exports.ef_lib:CreateSphereZone({
+        coords = vector3(1193.5, -1473.2, 34.9),
+        radius = 2.0,
+        onEnter = function() exports.ef_lib:ShowHint('E', 'Spind öffnen', 'fw_spind', 'shirt') end,
+        onExit = function() exports.ef_lib:HideHint('fw_spind') end,
+    })
+  guide: /ef-lib/meldungen/
+
+- id: sethintposition
+  name: SetHintPosition
+  kind: export
+  realm: client
+  category: notify
+  description: >-
+    Legt fest, wo die Tastenhinweise stehen. Gilt für alle Hinweise. Beim Start stehen sie unten links,
+    `HideAllHints` setzt die Position dorthin zurück.
+  params:
+    - name: position
+      type: string
+      optional: true
+      description: "`'bottom-left'`, `'bottom-center'`, `'bottom-right'`, `'top-left'`, `'top-center'` oder `'top-right'`. Ohne Wert `'bottom-center'`."
+  example: |
+    exports.ef_lib:SetHintPosition('bottom-center')
+    exports.ef_lib:ShowHint('G', 'Schlauch kuppeln', 'fw_schlauch')
+    exports.ef_lib:ShowHint('H', 'Verteiler setzen', 'fw_verteiler')
+  guide: /ef-lib/meldungen/
+
+- id: hidehint
+  name: HideHint
+  kind: export
+  realm: client
+  category: notify
+  description: >-
+    Blendet den Hinweis mit dieser `id` aus. Ohne `id` verschwinden alle Hinweise, die Position bleibt aber
+    erhalten.
+  params:
+    - name: id
+      type: string
+      optional: true
+      description: "`id` aus `ShowHint`."
+  example: |
+    exports.ef_lib:ShowHint('E', 'Spind öffnen', 'fw_spind')
+    Wait(5000)
+    exports.ef_lib:HideHint('fw_spind')
+  guide: /ef-lib/meldungen/
+
+- id: hideallhints
+  name: HideAllHints
+  kind: export
+  realm: client
+  category: notify
+  description: >-
+    Blendet alle Tastenhinweise aus und setzt die Position auf unten links zurück.
+  example: |
+    AddEventHandler('ef_lib:cache', function(key, value)
+        if key == 'vehicle' and value then
+            exports.ef_lib:HideAllHints()
+        end
+    end)
+  guide: /ef-lib/meldungen/
+
+- id: banner-client
+  name: Banner
+  kind: export
+  realm: client
+  category: notify
+  description: >-
+    Zeigt ein Ereignis-Banner oben in der Mitte, für Momente, die mehr sind als eine Meldung: Beförderung,
+    Einsatz beendet, Schichtbeginn. Mehrere Banner erscheinen nacheinander.
+  params:
+    - name: data
+      type: table
+      description: "`title` (Pflicht), optional `message`, `icon` (Font-Awesome-Name, Standard Medaille), `stats` (Liste von `{ label, value }`) und `duration` (ms, Standard 5000)."
+  example: |
+    exports.ef_lib:Banner({
+        title = 'Befördert zum Oberbrandmeister',
+        message = 'Feuer- und Rettungswache 1',
+        icon = 'medal',
+        stats = {
+            { label = 'Dienstzeit', value = '124 h' },
+            { label = 'Einsätze', value = 87 },
+        },
+    })
+  guide: /ef-lib/meldungen/
+
+- id: banner-server
+  name: Banner
+  kind: export
+  realm: server
+  category: notify
+  description: >-
+    Zeigt einem Spieler oder allen ein Ereignis-Banner, wie der Client-Export `Banner`.
+  params:
+    - name: source
+      type: number
+      description: "Server-ID des Spielers, `-1` für alle."
+    - name: data
+      type: table
+      description: "Wie beim Client-Export `Banner`."
+  example: |
+    exports.ef_lib:Banner(-1, {
+        title = 'Einsatz beendet',
+        message = 'B3 Wohnungsbrand, Grove Street',
+        icon = 'fire-extinguisher',
+    })
+  guide: /ef-lib/meldungen/
+
+- id: setaccentcolor
+  name: SetAccentColor
+  kind: export
+  realm: client
+  category: notify
+  description: >-
+    Setzt die Akzentfarbe der Oberfläche zur Laufzeit. Hat der Spieler in den UI-Einstellungen eine eigene
+    Farbe gewählt, bleibt seine Farbe und der Aufruf wirkt nicht.
+  params:
+    - name: hexColor
+      type: string
+      description: "Farbe als Hex-Code, etwa `'#f0500a'`."
+  example: |
+    AddEventHandler('ef_pol:onDuty', function()
+        exports.ef_lib:SetAccentColor('#2563eb')
+    end)
+  guide: /ef-lib/meldungen/
+
+- id: setconfig
+  name: SetConfig
+  kind: export
+  realm: client
+  category: notify
+  description: >-
+    Schickt Einstellungen an die Oberfläche. Ausgewertet werden nur Akzentfarbe und Sprache der NUI-Texte.
+    Für die Farbe gilt dasselbe wie bei `SetAccentColor`.
+  params:
+    - name: config
+      type: table
+      description: "`accentColor` (Hex-Code) und `locale` (`'de'` oder `'en'`). `locale` stellt nur die Texte der Oberfläche um, nicht die Lua-Texte aus `Config.Locale`."
+  example: |
+    RegisterNetEvent('ef_rd:onDuty', function()
+        exports.ef_lib:SetConfig({ accentColor = '#dc2626', locale = 'de' })
+        exports.ef_lib:SendNotification('info', 'Dienstbeginn', 'Rettungswache Süd')
+    end)
+  guide: /ef-lib/meldungen/
+
+- id: event-notify
+  name: ef_lib:notify
+  kind: event
+  usage: trigger
+  realm: client
+  category: notify
+  description: >-
+    Net-Event, das beim Spieler `SendNotification` aufruft. Vom Server mit `TriggerClientEvent` auslösen, `-1`
+    als Ziel erreicht alle. Die Server-Exports machen intern genau das und sind bei Updates die sicherere Wahl.
+  params:
+    - name: type
+      type: string
+      optional: true
+      description: "`'success'`, `'error'`, `'warning'` oder `'info'`."
+    - name: title
+      type: string
+      optional: true
+      description: "Titel."
+    - name: message
+      type: string
+      optional: true
+      description: "Text."
+    - name: duration
+      type: number
+      optional: true
+      description: "Anzeigedauer in ms, Standard 5000."
+  example: |
+    -- An einen Spieler
+    TriggerClientEvent('ef_lib:notify', source, 'info', 'Alarm', 'THL1 Verkehrsunfall, Route 68', 8000)
+
+    -- An alle Spieler
+    TriggerClientEvent('ef_lib:notify', -1, 'warning', 'Stromausfall', 'Ampeln im Stadtgebiet aus')
+  guide: /ef-lib/meldungen/
+
+- id: event-showhint
+  name: ef_lib:showHint
+  kind: event
+  usage: trigger
+  realm: client
+  category: notify
+  description: >-
+    Net-Event, das beim Spieler `ShowHint` aufruft. Vom Server mit `TriggerClientEvent` auslösen.
+  params:
+    - name: key
+      type: string
+      description: "Angezeigte Taste."
+    - name: label
+      type: string
+      description: "Text neben der Taste."
+    - name: id
+      type: string
+      optional: true
+      description: "Kennung für `ef_lib:hideHint`."
+    - name: icon
+      type: string
+      optional: true
+      description: "Font-Awesome-Name."
+    - name: position
+      type: string
+      optional: true
+      description: "Position aller Hinweise."
+  example: |
+    RegisterNetEvent('ef_rd:atHospital', function()
+        TriggerClientEvent('ef_lib:showHint', source, 'E', 'Patient übernehmen', 'rd_uebergabe', 'user-injured')
+    end)
+  guide: /ef-lib/meldungen/
+
+- id: event-hidehint
+  name: ef_lib:hideHint
+  kind: event
+  usage: trigger
+  realm: client
+  category: notify
+  description: >-
+    Net-Event, das beim Spieler `HideHint` aufruft. Vom Server mit `TriggerClientEvent` auslösen.
+  params:
+    - name: id
+      type: string
+      optional: true
+      description: "`id` des Hinweises, ohne Wert alle."
+  example: |
+    RegisterNetEvent('ef_rd:leftHospital', function()
+        TriggerClientEvent('ef_lib:hideHint', source, 'rd_uebergabe')
+    end)
+  guide: /ef-lib/meldungen/
+
+- id: event-hideallhints
+  name: ef_lib:hideAllHints
+  kind: event
+  usage: trigger
+  realm: client
+  category: notify
+  description: >-
+    Net-Event, das beim Spieler `HideAllHints` aufruft. Vom Server mit `TriggerClientEvent` auslösen.
+  example: |
+    AddEventHandler('ef_fw:shiftEnded', function(source)
+        -- Alle Hinweise der Wache beim Schichtende entfernen
+        TriggerClientEvent('ef_lib:hideAllHints', source)
+    end)
+  guide: /ef-lib/meldungen/
+
+- id: event-banner
+  name: ef_lib:banner
+  kind: event
+  usage: trigger
+  realm: client
+  category: notify
+  description: >-
+    Net-Event, das beim Spieler `Banner` aufruft. Vom Server mit `TriggerClientEvent` auslösen, so arbeitet
+    auch der Server-Export `Banner`.
+  params:
+    - name: data
+      type: table
+      description: "Wie beim Client-Export `Banner`."
+  example: |
+    TriggerClientEvent('ef_lib:banner', source, {
+        title = 'Schichtbeginn',
+        message = 'Rettungswache Süd',
+        icon = 'truck-medical',
+    })
+  guide: /ef-lib/meldungen/
+
+# ─── progress ───
+
+- id: progressbar
+  name: ProgressBar
+  kind: export
+  realm: client
+  category: progress
+  description: >-
+    Zeigt einen Fortschrittsbalken und wartet, bis er voll ist oder abgebrochen wird. Spielt auf Wunsch eine
+    Animation ab, hängt ein Prop an und sperrt Steuerungen. Blockiert den aktuellen Thread. Läuft schon einer,
+    kommt sofort `false`.
+  params:
+    - name: data
+      type: table
+      description: "`label`, `duration` (ms, Pflicht, größer 0), optional `icon` (Font-Awesome-Name), `canCancel` (Standard `false`, abgebrochen wird immer mit X), `cancelKey` (nur die angezeigte Taste, Standard `'X'`), `anim = { dict, clip, flag = 49, blendIn = 3.0, blendOut = 1.0 }`, `prop = { model, bone = 60309, pos, rot }` und `disableControls = { move, car, combat, mouse }` (alle Standard `false`)."
+  returns:
+    - type: boolean
+      name: completed
+      description: "`true`, wenn der Balken durchgelaufen ist, `false` bei Abbruch."
+  example: |
+    local done = exports.ef_lib:ProgressBar({
+        label = 'Patient wird versorgt',
+        duration = 8000,
+        icon = 'kit-medical',
+        canCancel = true,
+        anim = { dict = 'mini@cpr@char_a@cpr_str', clip = 'cpr_pumpchest' },
+        disableControls = { move = true, combat = true },
+    })
+    if done then
+        TriggerServerEvent('ef_rd:treatPatient', targetServerId)
+    end
+  guide: /ef-lib/fortschritt/
+
+- id: progresscircle
+  name: ProgressCircle
+  kind: export
+  realm: client
+  category: progress
+  description: >-
+    Wie `ProgressBar`, nur als kleiner Kreis mit Symbol in der Mitte. Passt zu kurzen Aktionen wie Durchsuchen
+    oder Kabel anschließen. `IsProgressBarActive` und `CancelProgressBar` gelten auch hier.
+  params:
+    - name: data
+      type: table
+      description: "Wie bei `ProgressBar`."
+  returns:
+    - type: boolean
+      name: completed
+      description: "`true`, wenn er durchgelaufen ist, `false` bei Abbruch."
+  example: |
+    local done = exports.ef_lib:ProgressCircle({
+        label = 'Fahrzeug durchsuchen',
+        duration = 5000,
+        icon = 'magnifying-glass',
+        canCancel = true,
+    })
+  guide: /ef-lib/fortschritt/
+
+- id: isprogressbaractive
+  name: IsProgressBarActive
+  kind: export
+  realm: client
+  category: progress
+  description: >-
+    Sagt, ob gerade ein Fortschrittsbalken oder Fortschrittskreis läuft.
+  returns:
+    - type: boolean
+      description: "`true`, wenn einer läuft."
+  example: |
+    if exports.ef_lib:IsProgressBarActive() then
+        return exports.ef_lib:SendNotification('error', 'Beschäftigt', 'Erst die laufende Aktion beenden')
+    end
+  guide: /ef-lib/fortschritt/
+
+- id: cancelprogressbar
+  name: CancelProgressBar
+  kind: export
+  realm: client
+  category: progress
+  description: >-
+    Bricht den laufenden Fortschrittsbalken oder Fortschrittskreis ab. Der wartende Aufruf bekommt `false`,
+    die Animation des Spielers wird mit `ClearPedTasks` beendet.
+  returns:
+    - type: boolean
+      name: cancelled
+      description: "`true`, wenn etwas abgebrochen wurde."
+  example: |
+    AddEventHandler('ef_rd:playerDowned', function()
+        exports.ef_lib:CancelProgressBar()
+    end)
+  guide: /ef-lib/fortschritt/
+
+- id: event-progressbar
+  name: ef_lib:progressBar
+  kind: event
+  usage: trigger
+  realm: client
+  category: progress
+  description: >-
+    Net-Event, das beim Spieler `ProgressBar` startet. Vom Server mit `TriggerClientEvent` auslösen. Das
+    Ergebnis kommt nicht zurück, brauchst du es, ruf den Export auf dem Client auf.
+  params:
+    - name: data
+      type: table
+      description: "Wie bei `ProgressBar`."
+  example: |
+    TriggerClientEvent('ef_lib:progressBar', source, {
+        label = 'Atemschutzgerät wird geprüft',
+        duration = 4000,
+        icon = 'lungs',
+    })
+  guide: /ef-lib/fortschritt/
+
+- id: event-progresscircle
+  name: ef_lib:progressCircle
+  kind: event
+  usage: trigger
+  realm: client
+  category: progress
+  description: >-
+    Net-Event, das beim Spieler `ProgressCircle` startet. Vom Server mit `TriggerClientEvent` auslösen. Das
+    Ergebnis kommt nicht zurück.
+  params:
+    - name: data
+      type: table
+      description: "Wie bei `ProgressBar`."
+  example: |
+    TriggerClientEvent('ef_lib:progressCircle', source, {
+        label = 'Funkgerät koppeln',
+        duration = 3000,
+        icon = 'walkie-talkie',
+    })
+  guide: /ef-lib/fortschritt/
+
+- id: event-cancelprogressbar
+  name: ef_lib:cancelProgressBar
+  kind: event
+  usage: trigger
+  realm: client
+  category: progress
+  description: >-
+    Net-Event, das beim Spieler `CancelProgressBar` aufruft. Vom Server mit `TriggerClientEvent` auslösen.
+  example: |
+    AddEventHandler('ef_pol:cuffed', function(target)
+        -- Gefesselte Spieler können ihre Aktion nicht beenden
+        TriggerClientEvent('ef_lib:cancelProgressBar', target)
+    end)
+  guide: /ef-lib/fortschritt/
+
+# ─── minigame ───
+
+- id: minigame
+  name: Minigame
+  kind: export
+  realm: client
+  category: minigame
+  description: >-
+    Startet eines von vier Minispielen und wartet auf das Ergebnis: Schloss knacken, Tresor, Reaktionskette
+    oder Kabel verbinden. Blockiert den aktuellen Thread. Läuft schon eines oder ist `gameType` ungültig, kommt
+    sofort `false`.
+  params:
+    - name: gameType
+      type: string
+      description: "`'lockpick'`, `'safedial'`, `'reactionchain'` oder `'wires'`."
+    - name: difficulty
+      type: "string|table"
+      optional: true
+      description: "`'easy'`, `'medium'`, `'hard'` oder `'extreme'`, Standard `'medium'`. Oder eine Options-Tabelle mit `difficulty`, `time` (Sekunden, mindestens 3), `retries` (mindestens 1), `sound` (Standard `true`) und den Werten des Spiels, etwa `pins` bei `lockpick`, `code` bei `safedial` oder `keys` (höchstens 6) bei `reactionchain`."
+    - name: retries
+      type: integer
+      optional: true
+      description: "Eigene Anzahl Versuche. Wirkt nur, wenn `difficulty` ein String ist."
+  returns:
+    - type: boolean
+      name: success
+      description: "`true`, wenn der Spieler es geschafft hat."
+    - type: table
+      name: details
+      description: "`success`, `time` (Sekunden bis zum Ende) und `misses` (Fehlversuche)."
+  example: |
+    local ok, result = exports.ef_lib:Minigame('wires', 'medium')
+    if ok then
+        local quality = result.misses == 0 and 'sauber' or 'provisorisch'
+        TriggerServerEvent('ef_fw:powerRestored', quality)
+    else
+        exports.ef_lib:SendNotification('error', 'Kurzschluss', 'Der Verteiler ist ausgefallen')
+    end
+  guide: /ef-lib/minispiele/
+
+- id: skillcheck
+  name: SkillCheck
+  kind: export
+  realm: client
+  category: minigame
+  description: >-
+    Kurzer Timing-Test auf einem Ring: Der Spieler drückt die angezeigte Taste, solange der Punkt im hellen
+    Bogen ist, und kann dabei weiterlaufen. Ein falscher Druck oder eine Runde ohne Druck lässt den Check
+    scheitern. Blockiert den aktuellen Thread.
+  params:
+    - name: difficulty
+      type: "string|table"
+      optional: true
+      description: "`'easy'` (60°, 1,6 s), `'medium'` (45°, 1,25 s, Standard), `'hard'` (30°, 1,0 s) oder `'extreme'` (20°, 0,8 s). Eine Liste davon ergibt mehrere Stufen hintereinander. Eigene Stufen als `{ zone = Grad, speed = Sekunden pro Runde }`, `zone` zwischen 5 und 180, `speed` ab 0,3."
+    - name: keys
+      type: "string[]"
+      optional: true
+      description: "Tasten, aus denen jede Stufe eine abfragt. Standard `{ 'E' }`."
+  returns:
+    - type: boolean
+      name: success
+      description: "`true`, wenn alle Stufen geschafft sind. `false` bei Fehlschlag, Abbruch, ungültiger Stufe oder wenn schon ein Check läuft."
+  example: |
+    local ok = exports.ef_lib:SkillCheck({ 'easy', 'medium' })
+    if ok then
+        exports.ef_lib:SendNotification('success', 'Zugang gelegt', 'Venenzugang sitzt')
+    else
+        exports.ef_lib:SendNotification('error', 'Fehlpunktion', 'Neuer Versuch nötig')
+    end
+  guide: /ef-lib/minispiele/
+
+- id: isskillcheckactive
+  name: IsSkillCheckActive
+  kind: export
+  realm: client
+  category: minigame
+  description: >-
+    Sagt, ob gerade ein Skillcheck läuft.
+  returns:
+    - type: boolean
+      description: "`true`, wenn einer läuft."
+  example: |
+    RegisterCommand('beatmen', function()
+        if exports.ef_lib:IsSkillCheckActive() then return end
+        local ok = exports.ef_lib:SkillCheck('medium')
+        TriggerServerEvent('ef_rd:ventilate', ok)
+    end, false)
+  guide: /ef-lib/minispiele/
+
+- id: cancelskillcheck
+  name: CancelSkillCheck
+  kind: export
+  realm: client
+  category: minigame
+  description: >-
+    Bricht den laufenden Skillcheck ab. Der wartende `SkillCheck` gibt dann `false` zurück. Läuft keiner,
+    passiert nichts.
+  example: |
+    AddEventHandler('ef_lib:cache', function(key, value)
+        if key == 'vehicle' and value then
+            exports.ef_lib:CancelSkillCheck()
+        end
+    end)
+  guide: /ef-lib/minispiele/
+
+- id: event-minigame
+  name: ef_lib:minigame
+  kind: event
+  usage: trigger
+  realm: client
+  category: minigame
+  description: >-
+    Net-Event, das beim Spieler `Minigame` startet. Vom Server mit `TriggerClientEvent` auslösen. Das Ergebnis
+    geht verloren, für alles mit Folgen ruf den Export auf dem Client auf und melde das Ergebnis selbst.
+  params:
+    - name: gameType
+      type: string
+      description: "`'lockpick'`, `'safedial'`, `'reactionchain'` oder `'wires'`."
+    - name: difficulty
+      type: "string|table"
+      optional: true
+      description: "Wie bei `Minigame`."
+    - name: retries
+      type: integer
+      optional: true
+      description: "Wie bei `Minigame`."
+  example: |
+    RegisterCommand('uebung', function(source)
+        -- Übungsrunde in der Feuerwehrschule, Ergebnis zählt nicht
+        TriggerClientEvent('ef_lib:minigame', source, 'reactionchain', 'easy')
+    end, false)
+  guide: /ef-lib/minispiele/
+
+# ─── zone ───
+
+- id: createspherezone
+  name: CreateSphereZone
+  kind: export
+  realm: client
+  category: zone
+  description: >-
+    Legt eine kugelförmige Zone an und ruft deine Funktionen beim Betreten, Verlassen und solange der Spieler
+    drin ist. Geprüft wird alle 300 ms. Ohne `coords` kommt `nil` zurück.
+  params:
+    - name: data
+      type: table
+      description: "`coords` (`vector3` oder `{ x, y, z }`, Pflicht), `radius` (Meter, Standard 2.0), optional `onEnter(self)`, `onExit(self)`, `inside(self)` (bei jeder Prüfung, also alle 300 ms) und `data` für eigene Werte. Weitere Felder landen ebenfalls im Zonen-Objekt."
+  returns:
+    - type: table
+      name: zone
+      description: "Zonen-Objekt mit `id`, `coords`, `radius`, `isInside`, `distance`, `data` und der Methode `zone:remove()`."
+  example: |
+    local zone = exports.ef_lib:CreateSphereZone({
+        coords = vector3(1193.5, -1473.2, 34.9),
+        radius = 3.0,
+        data = { wache = 'FW 3' },
+        onEnter = function(self) exports.ef_lib:ShowHint('E', 'Ausrüstung', 'fw_ausruestung') end,
+        onExit = function(self) exports.ef_lib:HideHint('fw_ausruestung') end,
+    })
+
+    -- später
+    zone:remove()
+  guide: /ef-lib/zonen/
+
+- id: createboxzone
+  name: CreateBoxZone
+  kind: export
+  realm: client
+  category: zone
+  description: >-
+    Legt eine Zone über eine Größe an. Intern ist das eine Kugelzone, deren Radius die halbe längste Seite von
+    `size` ist. Für genaue Rechtecke reicht das nicht, für Eingänge und Stellplätze meist schon.
+  params:
+    - name: data
+      type: table
+      description: "Wie bei `CreateSphereZone`, statt `radius` aber `size` (`vector3` oder `{ x, y, z }`)."
+  returns:
+    - type: table
+      name: zone
+      description: "Zonen-Objekt wie bei `CreateSphereZone`."
+  example: |
+    local stellplatz = exports.ef_lib:CreateBoxZone({
+        coords = vector3(1200.1, -1461.8, 34.8),
+        size = vector3(4.0, 9.0, 3.0),
+        onEnter = function() exports.ef_lib:ShowHint('E', 'Fahrzeug einparken', 'fw_parken') end,
+        onExit = function() exports.ef_lib:HideHint('fw_parken') end,
+    })
+  guide: /ef-lib/zonen/
+
+# ─── util ───
+
+- id: getcache
+  name: GetCache
+  kind: export
+  realm: client
+  category: util
+  description: >-
+    Liest Werte, die ef_lib alle 100 ms aktualisiert: Spieler-ID, Server-ID, Ped, Fahrzeug, Sitz und Waffe.
+    Für Code, der jeden Frame läuft, ist der Native schneller, weil ein Export über Resource-Grenzen geht.
+  params:
+    - name: key
+      type: string
+      optional: true
+      description: "`'playerId'`, `'serverId'`, `'ped'`, `'vehicle'`, `'seat'` (`-1` ist Fahrer) oder `'weapon'` (Hash). Ohne Schlüssel die ganze Tabelle."
+  returns:
+    - type: any
+      description: "Der Wert, oder die ganze Tabelle. `vehicle`, `seat` und `weapon` sind `false`, wenn es nichts gibt."
+  example: |
+    local vehicle = exports.ef_lib:GetCache('vehicle')
+    if vehicle and exports.ef_lib:GetCache('seat') == -1 then
+        SetVehicleSiren(vehicle, true)
+    end
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: cooldown
+  name: Cooldown
+  kind: export
+  realm: shared
+  category: util
+  description: >-
+    Startet eine Abklingzeit, wenn sie gerade frei ist, und sagt sonst, wie lange sie noch läuft. Schlüssel
+    gelten pro aufrufender Resource, Client und Server zählen getrennt.
+  params:
+    - name: key
+      type: "string|number"
+      description: "Name der Aktion, auf dem Server meist mit Spieler-ID, etwa `('alarm:%d'):format(source)`."
+    - name: duration
+      type: number
+      description: "Dauer in ms."
+  returns:
+    - type: boolean
+      name: free
+      description: "`true`, wenn die Abklingzeit frei war und jetzt startet."
+    - type: number
+      name: remaining
+      description: "Verbleibende ms, wenn sie noch läuft, sonst 0."
+  example: |
+    RegisterNetEvent('ef_fw:triggerSiren', function()
+        local free, remaining = exports.ef_lib:Cooldown(('sirene:%d'):format(source), 30000)
+        if not free then
+            return exports.ef_lib:SendNotification(source, 'error', 'Sirene', ('Wieder in %d s'):format(math.ceil(remaining / 1000)))
+        end
+        TriggerClientEvent('ef_fw:playSiren', -1, source)
+    end)
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: getcooldown
+  name: GetCooldown
+  kind: export
+  realm: shared
+  category: util
+  description: >-
+    Sagt, wie viele Millisekunden eine Abklingzeit noch läuft, ohne sie zu starten.
+  params:
+    - name: key
+      type: "string|number"
+      description: "Derselbe Schlüssel wie bei `Cooldown`."
+  returns:
+    - type: number
+      description: "Verbleibende ms, 0 wenn frei."
+  example: |
+    local rest = exports.ef_lib:GetCooldown('funkruf')
+    if rest > 0 then
+        exports.ef_lib:ShowHint('', ('Funk frei in %d s'):format(math.ceil(rest / 1000)), 'funk_cd', 'clock')
+    end
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: clearcooldown
+  name: ClearCooldown
+  kind: export
+  realm: shared
+  category: util
+  description: >-
+    Gibt eine Abklingzeit sofort frei.
+  params:
+    - name: key
+      type: "string|number"
+      description: "Derselbe Schlüssel wie bei `Cooldown`."
+  example: |
+    AddEventHandler('ef_fw:missionEnded', function(wache)
+        -- Nach dem Ende des Einsatzes darf sofort neu alarmiert werden
+        exports.ef_lib:ClearCooldown(('alarm:%s'):format(wache))
+    end)
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: requestmodel
+  name: RequestModel
+  kind: export
+  realm: client
+  category: util
+  description: >-
+    Lädt ein Modell und wartet, bis es geladen ist. Blockiert den aktuellen Thread bis zum Timeout. Ist das
+    Modell ungültig, kommt sofort `false`.
+  params:
+    - name: model
+      type: "string|number"
+      description: "Modellname oder Hash."
+    - name: timeout
+      type: number
+      optional: true
+      description: "Maximale Wartezeit in ms, Standard 10000."
+  returns:
+    - type: boolean
+      name: success
+      description: "`true`, wenn das Modell geladen ist."
+  example: |
+    if exports.ef_lib:RequestModel('prop_roadcone02a') then
+        local pos = GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0, 1.0, 0.0)
+        local cone = CreateObject(`prop_roadcone02a`, pos.x, pos.y, pos.z, true, true, false)
+        PlaceObjectOnGroundProperly(cone)
+        SetModelAsNoLongerNeeded(`prop_roadcone02a`)
+    end
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: requestanimdict
+  name: RequestAnimDict
+  kind: export
+  realm: client
+  category: util
+  description: >-
+    Lädt ein Animations-Dictionary und wartet, bis es geladen ist. Blockiert den aktuellen Thread bis zum
+    Timeout.
+  params:
+    - name: dict
+      type: string
+      description: "Name des Dictionaries."
+    - name: timeout
+      type: number
+      optional: true
+      description: "Maximale Wartezeit in ms, Standard 10000."
+  returns:
+    - type: boolean
+      name: success
+      description: "`true`, wenn das Dictionary geladen ist."
+  example: |
+    if exports.ef_lib:RequestAnimDict('amb@medic@standing@kneel@base') then
+        TaskPlayAnim(PlayerPedId(), 'amb@medic@standing@kneel@base', 'base', 8.0, -8.0, -1, 1, 0, false, false, false)
+    end
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: getclosestplayer
+  name: GetClosestPlayer
+  kind: export
+  realm: client
+  category: util
+  description: >-
+    Sucht den nächsten anderen Spieler im Radius um einen Punkt. Der eigene Spieler zählt nicht.
+  params:
+    - name: coords
+      type: vector3
+      description: "Mittelpunkt der Suche."
+    - name: radius
+      type: number
+      description: "Maximaler Abstand in Metern."
+  returns:
+    - type: "number|nil"
+      name: playerId
+      description: "Client-Spieler-ID (für `GetPlayerServerId`), `nil` wenn niemand in Reichweite ist."
+    - type: "number|nil"
+      name: ped
+      description: "Ped des Spielers."
+    - type: "vector3|nil"
+      name: coords
+      description: "Position des Peds."
+  example: |
+    local playerId = exports.ef_lib:GetClosestPlayer(GetEntityCoords(PlayerPedId()), 2.5)
+    if not playerId then
+        return exports.ef_lib:SendNotification('error', 'Kein Patient', 'Niemand in der Nähe')
+    end
+    TriggerServerEvent('ef_rd:revive', GetPlayerServerId(playerId))
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: getnearbyplayers
+  name: GetNearbyPlayers
+  kind: export
+  realm: client
+  category: util
+  description: >-
+    Liefert alle Spieler im Radius, sortiert nach Abstand, der nächste zuerst.
+  params:
+    - name: coords
+      type: vector3
+      description: "Mittelpunkt der Suche."
+    - name: radius
+      type: number
+      description: "Maximaler Abstand in Metern."
+    - name: includeSelf
+      type: boolean
+      optional: true
+      description: "Eigenen Spieler mitzählen, Standard `false`."
+  returns:
+    - type: "table[]"
+      description: "Einträge mit `id` (Client-Spieler-ID), `ped`, `coords` und `distance`."
+  example: |
+    local crew = exports.ef_lib:GetNearbyPlayers(GetEntityCoords(PlayerPedId()), 15.0)
+    local ids = {}
+    for _, p in ipairs(crew) do
+        ids[#ids + 1] = GetPlayerServerId(p.id)
+    end
+    TriggerServerEvent('ef_fw:assignCrew', ids)
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: getclosestvehicle
+  name: GetClosestVehicle
+  kind: export
+  realm: client
+  category: util
+  description: >-
+    Sucht das nächste Fahrzeug im Radius um einen Punkt. Das Fahrzeug, in dem der Spieler sitzt, zählt nur mit
+    `includeSelf`.
+  params:
+    - name: coords
+      type: vector3
+      description: "Mittelpunkt der Suche."
+    - name: radius
+      type: number
+      description: "Maximaler Abstand in Metern."
+    - name: includeSelf
+      type: boolean
+      optional: true
+      description: "Eigenes Fahrzeug mitzählen, Standard `false`."
+  returns:
+    - type: "number|nil"
+      name: vehicle
+      description: "Fahrzeug-Handle, `nil` wenn keins in Reichweite ist."
+    - type: "vector3|nil"
+      name: coords
+      description: "Position des Fahrzeugs."
+  example: |
+    local vehicle = exports.ef_lib:GetClosestVehicle(GetEntityCoords(PlayerPedId()), 5.0)
+    if vehicle then
+        SetVehicleDoorOpen(vehicle, 5, false, false)
+    end
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: getvehicleproperties
+  name: GetVehicleProperties
+  kind: export
+  realm: client
+  category: util
+  description: >-
+    Liest alle Eigenschaften eines Fahrzeugs in eine Tabelle, im selben Format wie ox_lib. Damit speicherst du
+    Fahrzeuge in der Datenbank und stellst sie mit `SetVehicleProperties` wieder her.
+  params:
+    - name: vehicle
+      type: number
+      description: "Fahrzeug-Handle."
+  returns:
+    - type: "table|nil"
+      name: props
+      description: "Unter anderem `model`, `plate`, `bodyHealth`, `engineHealth`, `fuelLevel`, `color1`, `color2`, `livery`, `extras`, `windows`, `doors`, `tyres` und alle `mod*`-Werte. `nil`, wenn das Fahrzeug nicht existiert."
+  example: |
+    local vehicle = exports.ef_lib:GetCache('vehicle')
+    if vehicle then
+        local props = exports.ef_lib:GetVehicleProperties(vehicle)
+        TriggerServerEvent('ef_garage:store', props.plate, props)
+    end
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: setvehicleproperties
+  name: SetVehicleProperties
+  kind: export
+  realm: client
+  category: util
+  description: >-
+    Setzt Eigenschaften aus einer Tabelle im ox_lib-Format auf ein Fahrzeug. Nur Felder, die in der Tabelle
+    stehen, werden geändert. Der Client sollte Besitzer des Fahrzeugs sein, sonst überschreibt der Besitzer
+    die Werte wieder.
+  params:
+    - name: vehicle
+      type: number
+      description: "Fahrzeug-Handle."
+    - name: props
+      type: table
+      description: "Eigenschaften wie aus `GetVehicleProperties`."
+    - name: fixVehicle
+      type: boolean
+      optional: true
+      description: "Fahrzeug danach mit `SetVehicleFixed` reparieren."
+  returns:
+    - type: boolean
+      description: "`true`, wenn das Fahrzeug nicht vernetzt ist oder dem eigenen Client gehört. `false`, wenn es nicht existiert oder ein anderer Client Besitzer ist."
+  example: |
+    RegisterNetEvent('ef_garage:spawned', function(netId, props)
+        local vehicle = NetToVeh(netId)
+        exports.ef_lib:SetVehicleProperties(vehicle, props, true)
+        SetVehicleNumberPlateText(vehicle, 'FW 3-46-1')
+    end)
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: checkversion
+  name: CheckVersion
+  kind: export
+  realm: server
+  category: util
+  description: >-
+    Druckt beim Start das EmergencyForge-Banner mit Name und Version deiner Resource und meldet in der Konsole,
+    wenn es ein neueres Release gibt. Die eigene Version kommt aus `version` in deiner fxmanifest.lua, die
+    neueste von emergencyforge.de. Antwortet die Seite nicht, erscheint nur das Banner.
+  params:
+    - name: label
+      type: string
+      optional: true
+      description: "Name im Banner, Standard ist der Resource-Name."
+    - name: repo
+      type: string
+      optional: true
+      description: "Name unter emergencyforge.de/api/versions, wenn der Ordner anders heißt. Standard ist der Resource-Name."
+  example: |
+    -- server.lua deines Scripts
+    exports.ef_lib:CheckVersion('Fraktionsgarage')
+
+    -- Heißt der Ordner anders als das Repo
+    exports.ef_lib:CheckVersion('Fraktionsgarage', 'ef_fraktionsgarage')
+  guide: /ef-lib/hilfsfunktionen/
+
+- id: event-cache
+  name: ef_lib:cache
+  kind: event
+  usage: listen
+  realm: client
+  category: util
+  description: >-
+    Lokales Client-Event, das kommt, wenn sich ein Wert im Cache ändert. Der günstige Weg, auf Einsteigen,
+    Sitzwechsel oder Waffe ziehen zu reagieren, ohne eine eigene Schleife.
+  params:
+    - name: key
+      type: string
+      description: "`'playerId'`, `'serverId'`, `'ped'`, `'vehicle'`, `'seat'` oder `'weapon'`."
+    - name: value
+      type: any
+      description: "Neuer Wert. `vehicle`, `seat` und `weapon` sind `false`, wenn es nichts gibt."
+    - name: old
+      type: any
+      description: "Vorheriger Wert, beim ersten Mal `nil`."
+  example: |
+    AddEventHandler('ef_lib:cache', function(key, value, old)
+        if key ~= 'vehicle' then return end
+        if value and GetVehicleClass(value) == 18 then
+            exports.ef_lib:ShowHint('Q', 'Sondersignal', 'sosi', 'tower-broadcast')
+        elseif old then
+            exports.ef_lib:HideHint('sosi')
+        end
+    end)
+  guide: /ef-lib/hilfsfunktionen/

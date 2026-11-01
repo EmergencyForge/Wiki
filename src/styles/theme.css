@@ -1,81 +1,214 @@
+/* Esse is the EmergencyForge house typeface (OFL, see public/fonts/OFL.txt). */
 @font-face {
-	font-family: 'Geist';
-	font-weight: 400;
+	font-family: 'Esse';
+	font-weight: 100 900;
+	font-style: normal;
 	font-display: swap;
-	src: url('/fonts/geist-400.woff2') format('woff2');
+	src: url('/fonts/esse-variable.woff2') format('woff2');
 }
 @font-face {
-	font-family: 'Geist';
-	font-weight: 500;
+	font-family: 'Esse';
+	font-weight: 100 900;
+	font-style: italic;
 	font-display: swap;
-	src: url('/fonts/geist-500.woff2') format('woff2');
+	src: url('/fonts/esse-italic-variable.woff2') format('woff2');
 }
 @font-face {
-	font-family: 'Geist';
-	font-weight: 600;
+	font-family: 'Esse Mono';
+	font-weight: 100 900;
 	font-display: swap;
-	src: url('/fonts/geist-600.woff2') format('woff2');
-}
-@font-face {
-	font-family: 'Geist';
-	font-weight: 700;
-	font-display: swap;
-	src: url('/fonts/geist-700.woff2') format('woff2');
-}
-@font-face {
-	font-family: 'Geist';
-	font-weight: 800;
-	font-display: swap;
-	src: url('/fonts/geist-800.woff2') format('woff2');
-}
-@font-face {
-	font-family: 'Geist Mono';
-	font-weight: 400;
-	font-display: swap;
-	src: url('/fonts/geist-mono-400.woff2') format('woff2');
-}
-@font-face {
-	font-family: 'Geist Mono';
-	font-weight: 500;
-	font-display: swap;
-	src: url('/fonts/geist-mono-500.woff2') format('woff2');
+	src: url('/fonts/esse-mono-variable.woff2') format('woff2');
 }
 
-/* Dark is Starlight's base theme; colours follow emergencyforge.de. */
+/* Dark is Starlight's base theme. Surfaces and orange follow emergencyforge.de:
+   warm near-black, the header one step lighter, #ff6a2b where orange is text. */
 :root {
-	--sl-font: 'Geist', system-ui, sans-serif;
-	--sl-font-mono: 'Geist Mono', ui-monospace, monospace;
-	--sl-color-accent-low: #3d1500;
+	--sl-font: 'Esse', system-ui, sans-serif;
+	--sl-font-mono: 'Esse Mono', ui-monospace, monospace;
+	--sl-color-accent-low: #3d1a08;
 	--sl-color-accent: #ff4d00;
-	/* Starlight uses accent-high for buttons, links and the current page in dark mode. */
-	--sl-color-accent-high: #ff4d00;
-	--sl-color-white: #ffffff;
-	--sl-color-gray-1: #ededed;
-	--sl-color-gray-2: #c9c9cc;
-	--sl-color-gray-3: #8b8b90;
-	--sl-color-gray-4: #5c5c61;
-	--sl-color-gray-5: #2e2e32;
-	--sl-color-gray-6: #18181b;
-	--sl-color-black: #09090a;
+	/* Starlight uses accent-high for links and accents in dark mode. */
+	--sl-color-accent-high: #ff6a2b;
+	--sl-color-white: #f3ebe4;
+	--sl-color-gray-1: #e6ddd5;
+	--sl-color-gray-2: #c4bab1;
+	--sl-color-gray-3: #8f857c;
+	--sl-color-gray-4: #5a524b;
+	--sl-color-gray-5: #2a2622;
+	--sl-color-gray-6: #181512;
+	--sl-color-black: #0c0a09;
+
+	--sl-color-bg-nav: #13110f;
+	--sl-color-bg-sidebar: var(--sl-color-bg);
+	--sl-color-hairline: #221e1b;
+	--sl-color-hairline-light: #2a2622;
+	--sl-color-hairline-shade: #000;
+
+	--sl-nav-height: 3.75rem;
+	--sl-content-width: 50rem;
+	--sl-line-height: 1.65;
+	--sl-text-h1: 2.125rem;
+	--sl-text-h2: 1.5rem;
+	--sl-text-h3: 1.25rem;
+	--sl-text-h4: 1.0625rem;
+
+	--ef-surface: #13110f;
+	--ef-surface-2: #1b1815;
+	--ef-radius: 8px;
+	--ef-client: #60a5fa;
+	--ef-server: #4ade80;
+	--ef-shared: #c4b5fd;
+	--ef-event: #fbbf24;
 }
 
 /* The orange darkens in light mode so links keep AA contrast on white. */
 :root[data-theme='light'] {
 	--sl-color-accent-low: #ffe1d1;
 	--sl-color-accent: #c23a00;
-	--sl-color-accent-high: #5c1c00;
-	--sl-color-white: #09090a;
-	--sl-color-gray-1: #18181b;
-	--sl-color-gray-2: #2e2e32;
-	--sl-color-gray-3: #4a4a50;
-	--sl-color-gray-4: #75757b;
-	--sl-color-gray-5: #c4c4c8;
-	--sl-color-gray-6: #ececee;
-	--sl-color-gray-7: #f6f6f7;
-	--sl-color-black: #ffffff;
+	--sl-color-accent-high: #8f2b00;
+	--sl-color-white: #1c1917;
+	--sl-color-gray-1: #2e2925;
+	--sl-color-gray-2: #45403b;
+	--sl-color-gray-3: #6b635c;
+	--sl-color-gray-4: #9a918a;
+	--sl-color-gray-5: #ddd6cf;
+	--sl-color-gray-6: #efeae5;
+	--sl-color-gray-7: #f6f3f0;
+	--sl-color-black: #fdfcfb;
+
+	--sl-color-bg-nav: #f6f3f0;
+	--sl-color-hairline: #e7e1db;
+	--sl-color-hairline-light: #ddd6cf;
+	--sl-color-hairline-shade: #c9c0b8;
+
+	--ef-surface: #f6f3f0;
+	--ef-surface-2: #efeae5;
+	--ef-client: #1d4ed8;
+	--ef-server: #15803d;
+	--ef-shared: #6d28d9;
+	--ef-event: #a16207;
 }
 
 /* The logo file is white only. */
 :root[data-theme='light'] .site-title img {
 	filter: invert(1);
+}
+
+header.header {
+	border-bottom-color: var(--sl-color-hairline);
+}
+
+/* Headings: tighter and bolder, closer to the Cfx docs than Starlight's large defaults. */
+.sl-markdown-content :is(h1, h2, h3, h4) {
+	font-weight: 700;
+	letter-spacing: -0.01em;
+}
+h1#_top {
+	font-size: var(--sl-text-h1);
+	font-weight: 700;
+	letter-spacing: -0.02em;
+}
+
+/* Links read as text until hovered, the underline then confirms. */
+.sl-markdown-content a:not(:where(.not-content *)) {
+	color: var(--sl-color-text-accent);
+	text-decoration: none;
+	font-weight: 500;
+}
+.sl-markdown-content a:not(:where(.not-content *)):hover {
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+
+.sl-markdown-content :not(pre) > code {
+	padding: 0.1em 0.35em;
+	border-radius: 4px;
+	border: 1px solid var(--sl-color-hairline-light);
+	font-size: 0.875em;
+}
+/* Commands in the first table column stay on one line instead of breaking per word. */
+.sl-markdown-content td:first-child code {
+	white-space: nowrap;
+}
+.sl-markdown-content table {
+	border-radius: var(--ef-radius);
+}
+
+/* Sidebar like the Cfx docs: small caps group labels, the current page as orange text with a bar. */
+nav.sidebar .group-label .large {
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--sl-color-gray-3);
+}
+nav.sidebar ul ul li {
+	margin-inline-start: 0;
+	border-inline-start: 0;
+	padding-inline-start: 0;
+}
+nav.sidebar a {
+	border-radius: 6px;
+	border-inline-start: 2px solid transparent;
+	color: var(--sl-color-gray-2);
+}
+nav.sidebar a:hover {
+	background: var(--ef-surface-2);
+	color: var(--sl-color-white);
+}
+nav.sidebar a[aria-current='page'],
+nav.sidebar a[aria-current='page']:hover,
+nav.sidebar a[aria-current='page']:focus {
+	font-weight: 600;
+	color: var(--sl-color-text-accent);
+	background: transparent;
+	border-inline-start-color: var(--sl-color-accent);
+	border-start-start-radius: 0;
+	border-end-start-radius: 0;
+}
+
+/* Search button styled as a field, like the Cfx header. */
+site-search > button[data-open-modal] {
+	background: var(--sl-color-bg);
+	border: 1px solid var(--sl-color-hairline-light);
+	border-radius: var(--ef-radius);
+	min-height: 2.5rem;
+}
+site-search > button[data-open-modal]:hover {
+	border-color: var(--sl-color-gray-4);
+}
+
+.ref-badge-inline {
+	font-size: 0.6875rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	padding: 0.125rem 0.5rem;
+	border-radius: 999px;
+	border: 1px solid currentColor;
+	white-space: nowrap;
+}
+.ref-badge-inline.client {
+	color: var(--ef-client);
+}
+.ref-badge-inline.server {
+	color: var(--ef-server);
+}
+.ref-badge-inline.shared {
+	color: var(--ef-shared);
+}
+.ref-badge-inline.event {
+	color: var(--ef-event);
+}
+
+/* The reference filter hides entries and headings with the hidden attribute; flex and grid would override it. */
+.sl-markdown-content [hidden] {
+	display: none !important;
+}
+
+.sl-markdown-content .starlight-aside {
+	border-radius: var(--ef-radius);
+}
+.card {
+	border-radius: var(--ef-radius);
 }

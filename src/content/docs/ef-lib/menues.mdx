@@ -1,0 +1,199 @@
+---
+title: Menüs
+description: Listenmenüs mit Untermenüs, Checkboxen, Eingaben, Auswahl und Zahlenwählern bauen, auf Aktionen reagieren und das Radialmenü für Schnellaktionen.
+sidebar:
+  order: 4
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Ein Menü ist eine Liste von Einträgen, die du als Tabelle an [OpenMenu](/referenz/ef-lib/#openmenu) gibst. Was der Spieler auswählt, kommt als Event `ef_lib:menuAction` zurück. Das Menü blockiert nicht, `OpenMenu` kehrt sofort zurück.
+
+## Ablauf
+
+1. Menü mit Titel und `items` öffnen. Untermenüs stehen gleich mit drin.
+2. Auf `ef_lib:menuAction` hören und nach der `id` des Eintrags unterscheiden.
+3. Menü mit [CloseMenu](/referenz/ef-lib/#closemenu) schließen, wenn die Aktion fertig ist, oder offen lassen.
+
+## Beispiel: Fahrzeugmenü im RTW
+
+```lua title="client.lua"
+local function openVehicleMenu()
+    exports.ef_lib:OpenMenu({
+        title = 'RTW 1/83-1',
+        items = {
+            { id = 'rtw:status', label = 'Status setzen', icon = 'tower-broadcast', type = 'select',
+              value = '2', options = {
+                { value = '1', label = 'Status 1, frei über Funk' },
+                { value = '2', label = 'Status 2, auf Wache' },
+                { value = '3', label = 'Status 3, Einsatz übernommen' },
+              } },
+            { id = 'rtw:blaulicht', label = 'Sondersignal', type = 'checkbox', checked = false },
+            { id = 'rtw:trage', label = 'Trage ausladen', icon = 'bed-pulse',
+              description = 'Stellt die Trage hinter das Fahrzeug' },
+            { id = 'rtw:material', label = 'Material', icon = 'kit-medical', submenu = {
+                title = 'Material',
+                items = {
+                    { id = 'rtw:material:notfallrucksack', label = 'Notfallrucksack' },
+                    { id = 'rtw:material:defi', label = 'Defibrillator' },
+                    { id = 'rtw:material:sauerstoff', label = 'Sauerstoff', disabled = true,
+                      description = 'Flasche leer' },
+                },
+            } },
+            { id = 'rtw:abmelden', label = 'Fahrzeug abmelden', icon = 'right-from-bracket',
+              confirm = { title = 'Fahrzeug abmelden?', message = 'Die Besatzung wird ausgetragen.',
+                          confirmLabel = 'Abmelden', cancelLabel = 'Zurück' } },
+        }
+    })
+end
+
+AddEventHandler('ef_lib:menuAction', function(data)
+    if data.id == 'rtw:status' then
+        TriggerServerEvent('rtw:setStatus', data.value)
+    elseif data.id == 'rtw:blaulicht' then
+        SetVehicleSiren(GetVehiclePedIsIn(PlayerPedId(), false), data.checked)
+    elseif data.id == 'rtw:trage' then
+        exports.ef_lib:CloseMenu()
+        TriggerEvent('rtw:trageAusladen')
+    elseif data.id:find('^rtw:material:') then
+        TriggerServerEvent('rtw:materialNehmen', data.id:sub(14))
+    elseif data.id == 'rtw:abmelden' then
+        exports.ef_lib:CloseMenu()
+        TriggerServerEvent('rtw:abmelden')
+    end
+end)
+```
+
+:::caution
+`ef_lib:menuAction` ist ein normales Client-Event. Jedes Script, das darauf hört, bekommt die Aktionen aller Menüs, auch die von fremden Scripts. Gib deinen IDs deshalb ein eigenes Präfix wie `rtw:` und reagier nur auf deine eigenen.
+:::
+
+## Item-Typen
+
+Jeder Eintrag braucht `id` und `label`. Ohne `type` ist er ein Button. Für alle Typen gelten außerdem `description` (zweite Zeile), `icon`, `iconColor`, `disabled` (ausgegraut) und `readonly` (sichtbar, aber nicht auslösbar). Mit `data` hängst du eigene Werte an, die im Event unverändert zurückkommen.
+
+| Typ | Wichtige Felder | Wann das Event kommt | Was `data` enthält |
+|---|---|---|---|
+| Button (ohne `type`) | | beim Auslösen | `id`, `label`, `data` |
+| `checkbox` | `checked` | bei jedem Umschalten | `checked` mit dem neuen Zustand |
+| `input` | `value`, `placeholder` | wenn der Spieler im Feld Enter drückt | `value` mit dem Text |
+| `select` | `value`, `options` | bei jedem Weiterschalten | `value` der neuen Option |
+| `number` | `current`, `min`, `max`, `step` | bei jeder Änderung mit links und rechts | `value` mit der Zahl |
+| Untermenü | `submenu = { title, items }` | kein Event, das Untermenü geht auf | |
+
+`options` bei `select` sind einfache Strings oder Tabellen `{ value, label }`, wenn im Menü ein anderer Text stehen soll als der Wert, der zurückkommt. Ein Klick oder Enter schaltet zur nächsten Option.
+
+Der Zahlenwähler zeigt `< 3 >` und läuft am Ende herum: nach `max` kommt `min` und umgekehrt. Ohne `min` und `max` gibt es keine Grenze. Er passt gut für Kleidung, Lackfarben oder Mengen.
+
+Icons sind Namen von Font Awesome Free. `'kit-medical'` und `'fa-kit-medical'` werden zur Solid-Variante, eine volle Klasse wie `'fa-regular fa-bell'` bleibt, wie sie ist. Emojis gehen nicht.
+
+### Bestätigung
+
+`confirm` geht auf jedem Eintrag. Mit `confirm = true` fragt ef_lib mit Standardtexten nach, mit einer Tabelle setzt du `title`, `message`, `confirmLabel` und `cancelLabel` selbst. Das Event kommt erst, wenn der Spieler bestätigt.
+
+### Untermenüs
+
+Untermenüs lassen sich beliebig tief schachteln. Zurück geht es mit Backspace oder Pfeil links. Beim Wechsel in ein Untermenü schickt ef_lib kein Event. Willst du die Einträge eines Untermenüs erst beim Öffnen laden, nimm stattdessen einen Button und öffne in dessen Aktion ein neues Menü oder ein [Context-Menü](/ef-lib/context-menu/).
+
+## Cursor und Bewegung
+
+Zwei Felder in `OpenMenu` steuern, wie sich das Menü anfühlt. Ohne sie gelten `Config.ShowCursor` und `Config.AllowMove`, siehe [Konfiguration](/ef-lib/installation/#konfiguration).
+
+| Feld | `true` | `false` |
+|---|---|---|
+| `showCursor` | Mauszeiger sichtbar, Einträge sind klickbar | nur Tastatur, der Spieler dreht weiter die Kamera |
+| `allowMove` | Spieler kann laufen und sich umsehen | Spieler steht still |
+
+Für eine Kleiderkammer passt `showCursor = false` mit `allowMove = true`: Der Spieler blättert mit den Pfeiltasten durch die Kleidung und dreht dabei die Kamera um sich herum. Für einen Shop mit Mausbedienung passt `showCursor = true` und `allowMove = false`.
+
+Ein Eingabefeld (`input`) holt sich beim Tippen kurz den Cursor und die Tastatur und gibt sie danach zurück.
+
+## Menü aktualisieren und schließen
+
+[IsMenuOpen](/referenz/ef-lib/#ismenuopen) sagt, ob gerade ein Menü offen ist. Ist eins offen, macht `OpenMenu` nichts. Willst du ein anderes Menü zeigen, ruf vorher `CloseMenu` auf.
+
+Mit [UpdateMenuItem](/referenz/ef-lib/#updatemenuitem) änderst du einen Eintrag, ohne das Menü neu zu öffnen. Das brauchst du etwa, wenn die Anzahl der Varianten erst nach einer Auswahl feststeht:
+
+```lua title="client.lua"
+AddEventHandler('ef_lib:menuAction', function(data)
+    if data.id ~= 'kleidung:jacke' then return end
+    local ped = PlayerPedId()
+    local textures = GetNumberOfPedTextureVariations(ped, 11, data.value)
+    exports.ef_lib:UpdateMenuItem('kleidung:jacke_farbe', {
+        current = 0,
+        max = textures - 1,
+        description = ('%d Farben'):format(textures),
+    })
+end)
+```
+
+`UpdateMenuItem` trifft nur Einträge der Ebene, die gerade zu sehen ist.
+
+Schließt der Spieler das Menü oder ruft ein Script `CloseMenu` auf, kommt das Event `ef_lib:menuClosed` ohne Parameter. Dort räumst du auf, etwa eine Kamera, die du für die Kleiderkammer gesetzt hast.
+
+## Navigation von außen
+
+[NavigateMenu](/referenz/ef-lib/#navigatemenu) bewegt das offene Menü, als hätte der Spieler eine Taste gedrückt. Möglich sind `'up'`, `'down'`, `'left'`, `'right'`, `'select'`, `'back'` und `'close'`.
+
+W, A, S und D steuern das Menü nicht selbst. ef_lib meldet sie als Event `ef_lib:keyPress` mit dem Buchstaben in Kleinbuchstaben. Soll WASD durch dein Menü blättern, leite die Tasten weiter:
+
+```lua title="client.lua"
+local wasd = { w = 'up', s = 'down', a = 'left', d = 'right' }
+
+AddEventHandler('ef_lib:keyPress', function(key)
+    if not kleiderkammerOffen then return end
+    if wasd[key] then exports.ef_lib:NavigateMenu(wasd[key]) end
+end)
+```
+
+Auch `ef_lib:keyPress` geht an alle Scripts. Prüf deshalb, ob gerade dein Menü offen ist.
+
+## Menü vom Server öffnen
+
+Auf dem Server gibt es [OpenMenuForPlayer](/referenz/ef-lib/#openmenuforplayer) und [CloseMenuForPlayer](/referenz/ef-lib/#closemenuforplayer). Die Daten gehen als Net-Event an den Client, Funktionen darin kommen dort nicht an. Die Auswahl landet als `ef_lib:menuAction` beim Client. Damit der Server davon erfährt, brauchst du auf dem Client einen Handler, der ein eigenes Server-Event auslöst.
+
+:::note
+IDs, die mit `_settings_` anfangen, gehören zum eingebauten Einstellungsmenü. ef_lib verarbeitet sie selbst und schickt für sie kein Event. Nimm sie nicht für eigene Einträge.
+:::
+
+## Radialmenü
+
+Das Radialmenü ist ein Rad wie die Waffenauswahl. Der Spieler hält eine Taste, zeigt mit der Maus in eine Richtung und lässt los. Der Teil, auf den die Maus zeigt, wird ausgelöst. Er kann dabei weiterlaufen. Für Schnellaktionen im Einsatz passt das besser als ein Listenmenü.
+
+Du öffnest es mit [OpenRadial](/referenz/ef-lib/#openradial) beim Drücken der Taste und schließt es mit [CloseRadial](/referenz/ef-lib/#closeradial) beim Loslassen. `CloseRadial` löst `onSelect` mit der ID des gewählten Teils aus. Zeigt die Maus beim Loslassen in die Mitte, passiert nichts.
+
+```lua title="client.lua"
+RegisterCommand('+polizei_rad', function()
+    exports.ef_lib:OpenRadial({
+        items = {
+            { id = 'funk', label = 'Funk', icon = 'walkie-talkie' },
+            { id = 'person', label = 'Person', icon = 'user', submenu = {
+                { id = 'person:durchsuchen', label = 'Durchsuchen', icon = 'magnifying-glass' },
+                { id = 'person:fesseln', label = 'Fesseln', icon = 'handcuffs', keepOpen = true },
+                { id = 'person:fuehren', label = 'Führen', icon = 'hand', keepOpen = true },
+                { id = 'person:loesen', label = 'Lösen', icon = 'lock-open' },
+            } },
+            { id = 'fahrzeug:kofferraum', label = 'Kofferraum', icon = 'car-rear' },
+        },
+        onSelect = function(id)
+            TriggerEvent('polizei:aktion', id)
+        end,
+    })
+end, false)
+
+RegisterCommand('-polizei_rad', function()
+    exports.ef_lib:CloseRadial()
+end, false)
+
+RegisterKeyMapping('+polizei_rad', 'Polizei: Schnellaktionen', 'keyboard', 'Z')
+```
+
+Was du wissen musst:
+
+- Pro Ebene zeigt das Rad höchstens 8 Einträge, der Rest wird abgeschnitten. Mehr Aktionen gruppierst du in `submenu`. Untermenüs lassen sich beliebig tief schachteln.
+- Ein Linksklick auf einen Eintrag löst ihn sofort aus, ein Linksklick auf ein Untermenü öffnet es, ein Linksklick in die Mitte geht eine Ebene zurück.
+- Mit `keepOpen = true` bleibt das Rad nach dem Auslösen offen und wechselt in den Klickmodus. Dann lösen nur noch Klicks aus. Es schließt mit ESC, einem Klick in die Mitte auf oberster Ebene oder einem Eintrag ohne `keepOpen`. So arbeitet ein Beamter mehrere Schritte nacheinander ab, ohne die Taste neu zu drücken.
+- Solange das Rad offen ist, sperrt ef_lib Schießen, Zielen, Nahkampf und die Kamera. Laufen geht weiter.
+- Gib bei Untermenüs IDs wie `person:fesseln`, dann siehst du in `onSelect` sofort, woher die Auswahl kommt.
+
+Alle Felder der Menü-Exports stehen in der [Referenz unter Menü](/referenz/ef-lib/#menü).

@@ -1,0 +1,165 @@
+---
+title: Dialoge
+description: Eingaben mit InputDialog abfragen, mit AlertDialog bestätigen lassen und dem Spieler mit Request eine Frage stellen, die er per Taste beantwortet.
+sidebar:
+  order: 6
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+ef_lib hat drei Arten, den Spieler etwas zu fragen. Alle drei halten den aufrufenden Thread an, bis die Antwort da ist. Ruf sie deshalb in Befehlen, Event-Handlern oder `CreateThread` auf.
+
+| Export | Wofür | Spieler behält die Steuerung |
+|---|---|---|
+| [InputDialog](/referenz/ef-lib/#inputdialog) | mehrere Werte abfragen, etwa für ein Formular | nein |
+| [AlertDialog](/referenz/ef-lib/#alertdialog) | Ja oder Nein vor einer Aktion | nein |
+| [Request](/referenz/ef-lib/#request-client) | Frage per Taste beantworten, etwa eine Einladung | ja |
+
+`InputDialog` und `AlertDialog` legen sich auch über ein offenes Menü. Danach bekommt das Menü Cursor und Tastatur zurück. Mit `Config.ScreenBlur` verwischt das Spielbild dahinter.
+
+## InputDialog
+
+[InputDialog](/referenz/ef-lib/#inputdialog) bekommt einen Titel und eine Liste von Feldern. Bestätigt der Spieler, kommt eine Liste der Werte in derselben Reihenfolge wie die Felder zurück. Bricht er ab, kommt `nil`.
+
+```lua title="client.lua"
+RegisterCommand('protokoll', function()
+    local input = exports.ef_lib:InputDialog('Einsatzprotokoll', {
+        { type = 'input', label = 'Patient', placeholder = 'Nachname, Vorname', required = true },
+        { type = 'number', label = 'Alter', min = 0, max = 120 },
+        { type = 'select', label = 'Transportziel', required = true, options = {
+            { label = 'Pillbox Medical Center', value = 'pillbox' },
+            { label = 'Mount Zonah', value = 'zonah' },
+            { label = 'Kein Transport', value = 'none' },
+        } },
+        { type = 'multi-select', label = 'Maßnahmen', options = {
+            { label = 'Zugang', value = 'iv', icon = 'syringe' },
+            { label = 'Sauerstoff', value = 'o2', icon = 'lungs' },
+            { label = 'EKG', value = 'ekg', icon = 'heart-pulse' },
+        } },
+        { type = 'slider', label = 'Schmerzskala', min = 0, max = 10, step = 1, default = 0 },
+        { type = 'textarea', label = 'Bemerkung', description = 'Wird ins eNOTF übernommen' },
+    })
+
+    if not input then return end -- abgebrochen
+
+    local patient, alter, ziel, massnahmen, schmerz, bemerkung = table.unpack(input)
+    TriggerServerEvent('rd:protokoll', patient, alter, ziel, massnahmen, schmerz, bemerkung)
+end, false)
+```
+
+### Feldtypen
+
+Für alle Felder gelten `type`, `label`, `description` (Hilfetext unter dem Feld) und `default`.
+
+| Typ | Eigene Felder | Rückgabe |
+|---|---|---|
+| `input` | `placeholder`, `required` | String |
+| `textarea` | `placeholder`, `required` | String mit Zeilenumbrüchen |
+| `number` | `min`, `max`, `step`, `placeholder`, `required` | Zahl, ohne `default` startet es bei `min` oder 0 |
+| `slider` | `min`, `max`, `step` | Zahl |
+| `checkbox` | `checked` | `true` oder `false` |
+| `select` | `options`, `required` | `value` der gewählten Option |
+| `multi-select` | `options` mit optionalem `icon`, `required` | Liste der gewählten Werte, `required` heißt mindestens einer |
+| `color` | `options` als Liste von Hex-Werten | Hex-Wert wie `'#e11d48'` |
+| `date` | `min`, `max`, `placeholder`, `required` | Datum als `'YYYY-MM-DD'` |
+
+`options` bei `select` und `multi-select` sind Tabellen `{ label, value }` oder einfache Strings.
+
+Das Farbfeld zeigt Kacheln. Ohne `options` sind es acht Farben, darunter das Orange von EmergencyForge, Rot, Blau, Weiß und Schwarz. Ohne `default` ist die erste Kachel gewählt. Für eine Fahrzeuglackierung gibst du die Farben vor, die es bei dir gibt:
+
+```lua
+{ type = 'color', label = 'Lackierung', options = { '#f5f5f4', '#dc2626', '#facc15' } }
+```
+
+Das Datumsfeld klappt einen Kalender auf. `min`, `max` und `default` gibst du als `'YYYY-MM-DD'` an:
+
+```lua
+{ type = 'date', label = 'Führerschein gültig bis', min = '2026-01-01', required = true }
+```
+
+:::caution
+`required` prüft nur, ob ein Feld leer ist. Ob eine Zahl im erlaubten Bereich liegt oder ein Name echt ist, prüfst du selbst, spätestens auf dem Server. Alles, was aus dem Dialog kommt, ist eine Eingabe des Spielers.
+:::
+
+Ist schon ein InputDialog offen, gibt ein zweiter Aufruf sofort `nil` zurück und schreibt eine Warnung in die F8-Konsole.
+
+## AlertDialog
+
+[AlertDialog](/referenz/ef-lib/#alertdialog) fragt vor einer Aktion nach, die sich nicht rückgängig machen lässt. Er gibt `'confirm'` oder `'cancel'` zurück.
+
+```lua title="client.lua"
+local antwort = exports.ef_lib:AlertDialog({
+    header = 'Einsatz abschließen?',
+    content = 'Der Einsatz wird geschlossen und an die Leitstelle gemeldet. Das Protokoll lässt sich danach nicht mehr ändern.',
+    confirmLabel = 'Abschließen',
+    cancelLabel = 'Zurück',
+})
+
+if antwort == 'confirm' then
+    TriggerServerEvent('leitstelle:einsatzAbschliessen', einsatzId)
+end
+```
+
+Mit `cancel = false` gibt es nur einen Knopf, das passt für reine Hinweise. `centered = false` richtet den Text links aus, für längere Texte. Ist schon ein AlertDialog offen, gibt ein zweiter Aufruf sofort `'cancel'` zurück.
+
+:::tip
+Für eine Bestätigung direkt an einem Menüeintrag brauchst du keinen AlertDialog. Dafür gibt es `confirm` am Eintrag, siehe [Menüs](/ef-lib/menues/#bestätigung).
+:::
+
+## Anfragen
+
+Eine Anfrage erscheint oben in der Mitte, der Spieler beantwortet sie mit einer Taste und spielt dabei weiter. Das passt für Einladungen in eine Fraktion, „Darf ich dich durchsuchen?“ oder eine Übergabe. Antwortet er nicht, läuft sie nach `duration` ab, ab Werk nach 15 Sekunden.
+
+Die Tasten sind Key Mappings, ab Werk `Y` und `N` aus `Config.RequestKeys`. Spieler können sie in den FiveM-Tastenbelegungen ändern, die Anzeige zeigt immer die Taste, die sie belegt haben.
+
+Meistens fragt der Server, weil er weiß, wen er fragen will. Der Server-Export bekommt die `source` des Spielers und wartet auf seine Antwort:
+
+<Tabs>
+<TabItem label="Server">
+
+```lua title="server.lua"
+RegisterNetEvent('polizei:durchsuchen', function(targetId)
+    local src = source
+    local accepted, answer = exports.ef_lib:Request(targetId, {
+        title = 'Durchsuchung',
+        message = ('%s möchte dich durchsuchen.'):format(GetPlayerName(src)),
+        icon = 'magnifying-glass',
+        acceptLabel = 'Erlauben',
+        declineLabel = 'Ablehnen',
+    })
+
+    if accepted then
+        TriggerClientEvent('polizei:inventarZeigen', src, targetId)
+    elseif answer == 'timeout' then
+        exports.ef_lib:SendNotification(src, 'warning', 'Durchsuchung', 'Keine Antwort.')
+    else
+        exports.ef_lib:SendNotification(src, 'error', 'Durchsuchung', 'Abgelehnt.')
+    end
+end)
+```
+
+</TabItem>
+<TabItem label="Client">
+
+```lua title="client.lua"
+local accepted = exports.ef_lib:Request({
+    title = 'Einladung in die Feuerwache 3',
+    message = 'Max Becker lädt dich in die Fraktion Feuerwehr ein.',
+    icon = 'user-plus',
+    duration = 20000,
+    acceptLabel = 'Beitreten',
+})
+```
+
+</TabItem>
+</Tabs>
+
+Beide Exports geben zwei Werte zurück: `true` oder `false` und die Antwort als `'accept'`, `'decline'` oder `'timeout'`. Nur `title` ist Pflicht.
+
+Was du wissen musst:
+
+- Kommt eine Anfrage, während noch eine offen ist, wartet sie, bis die erste beantwortet ist. Die Zeit läuft erst, wenn sie zu sehen ist.
+- Verlässt der Spieler den Server, gibt der Server-Export sofort `false, 'timeout'` zurück.
+- Der Server-Export gibt spätestens `duration` plus 60 Sekunden auf und meldet dann `'timeout'`, auch wenn die Anfrage beim Spieler noch in der Warteschlange steht.
+
+Alle Felder der Dialog-Exports stehen in der [Referenz unter Dialoge](/referenz/ef-lib/#dialoge).

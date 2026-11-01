@@ -1,0 +1,150 @@
+---
+const realms = [
+	{ value: '', label: 'Alle' },
+	{ value: 'client', label: 'Client' },
+	{ value: 'server', label: 'Server' },
+	{ value: 'shared', label: 'Shared' },
+];
+const kinds = [
+	{ value: '', label: 'Alles' },
+	{ value: 'export', label: 'Exports' },
+	{ value: 'event', label: 'Events' },
+];
+---
+
+<ef-reference-filter class="not-content">
+	<input type="search" placeholder="Export oder Event suchen" aria-label="Export oder Event suchen" />
+	<div class="group" role="group" aria-label="Seite" data-filter="realm">
+		{realms.map((r, i) => <button type="button" data-value={r.value} aria-pressed={i === 0 ? 'true' : 'false'}>{r.label}</button>)}
+	</div>
+	<div class="group" role="group" aria-label="Art" data-filter="kind">
+		{kinds.map((k, i) => <button type="button" data-value={k.value} aria-pressed={i === 0 ? 'true' : 'false'}>{k.label}</button>)}
+	</div>
+	<span class="count" aria-live="polite"></span>
+</ef-reference-filter>
+
+<script>
+	class EfReferenceFilter extends HTMLElement {
+		state = { q: '', realm: '', kind: '' };
+
+		connectedCallback() {
+			this.querySelector('input')!.addEventListener('input', (e) => {
+				this.state.q = (e.target as HTMLInputElement).value.trim().toLowerCase();
+				this.update();
+			});
+			this.querySelectorAll<HTMLElement>('.group').forEach((group) => {
+				group.addEventListener('click', (e) => {
+					const button = (e.target as HTMLElement).closest('button');
+					if (!button) return;
+					group.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+					this.state[group.dataset.filter as 'realm' | 'kind'] = button.dataset.value ?? '';
+					this.update();
+				});
+			});
+			this.update();
+		}
+
+		update() {
+			const { q, realm, kind } = this.state;
+			let shown = 0;
+			document.querySelectorAll<HTMLElement>('.ref-list').forEach((list) => {
+				let visible = 0;
+				list.querySelectorAll<HTMLElement>('.ref-entry').forEach((entry) => {
+					const d = entry.dataset;
+					// Shared code runs on both sides, so it stays visible under Client and Server.
+					const realmOk = !realm || d.realm === realm || (d.realm === 'shared' && realm !== 'shared');
+					const ok = realmOk && (!kind || d.kind === kind) && (!q || d.search!.includes(q));
+					entry.hidden = !ok;
+					if (ok) visible++;
+				});
+				list.hidden = visible === 0;
+				// The category heading is the element right before the list.
+				const heading = list.previousElementSibling as HTMLElement | null;
+				if (heading) heading.hidden = visible === 0;
+				shown += visible;
+			});
+			this.querySelector('.count')!.textContent = `${shown} Einträge`;
+		}
+	}
+	customElements.define('ef-reference-filter', EfReferenceFilter);
+
+	// Opening an entry puts it in the URL so it can be shared; a link with a hash opens it.
+	function openFromHash() {
+		const el = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+		if (el instanceof HTMLDetailsElement) {
+			el.open = true;
+			el.scrollIntoView();
+		}
+	}
+	openFromHash();
+	addEventListener('hashchange', openFromHash);
+	document.querySelectorAll<HTMLDetailsElement>('.ref-entry').forEach((entry) => {
+		entry.addEventListener('toggle', () => {
+			if (entry.open) history.replaceState(null, '', `#${entry.id}`);
+		});
+	});
+</script>
+
+<style>
+	ef-reference-filter {
+		position: sticky;
+		top: var(--sl-nav-height);
+		z-index: 5;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 0.75rem;
+		margin-block: 1.5rem 0.5rem;
+		padding: 0.625rem 0;
+		background: var(--sl-color-bg);
+		border-bottom: 1px solid var(--sl-color-hairline);
+	}
+	input {
+		flex: 1 1 14rem;
+		min-width: 0;
+		height: 2.25rem;
+		padding: 0 0.75rem;
+		font: inherit;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-white);
+		background: var(--ef-surface);
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: var(--ef-radius);
+	}
+	input:focus {
+		outline: none;
+		border-color: var(--sl-color-accent);
+	}
+	.group {
+		display: inline-flex;
+		padding: 2px;
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: var(--ef-radius);
+	}
+	button {
+		padding: 0.25rem 0.625rem;
+		font: inherit;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		color: var(--sl-color-gray-3);
+		background: transparent;
+		border: 0;
+		border-radius: 6px;
+		cursor: pointer;
+	}
+	button:hover {
+		color: var(--sl-color-white);
+	}
+	button[aria-pressed='true'] {
+		color: var(--sl-color-white);
+		background: var(--ef-surface-2);
+	}
+	button:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+	}
+	.count {
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+		margin-inline-start: auto;
+	}
+</style>

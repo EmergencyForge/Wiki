@@ -1,0 +1,8 @@
+---
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+import SectionTabs from './SectionTabs.astro';
+---
+
+{/* The header tabs are hidden on small screens, so the mobile menu carries them. */}
+<SectionTabs placement="menu" />
+<Default />

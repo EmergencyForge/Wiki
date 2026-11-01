@@ -1,0 +1,48 @@
+---
+title: ef_lib
+description: ef_lib ist die UI-Bibliothek von EmergencyForge für FiveM. Menüs, Dialoge, Meldungen, Fortschrittsanzeigen, Minispiele und Hilfsfunktionen für eigene Scripts.
+sidebar:
+  label: Überblick
+  order: 1
+---
+
+## Was ef_lib ist
+
+ef_lib ist eine UI-Bibliothek für FiveM von EmergencyForge. Andere Scripts rufen ihre Exports auf und bekommen Menüs, Dialoge, Meldungen und Fortschrittsanzeigen in einem einheitlichen Aussehen. Sie ist als Alternative zu ox_lib gedacht. Wo es sich anbietet, folgen Aufrufe und Datenformate ox_lib, damit ein Umstieg wenig Arbeit macht.
+
+ef_lib ist kostenlos und Open Source. Der Code liegt auf [GitHub unter EmergencyForge/ef_lib](https://github.com/EmergencyForge/ef_lib). Die Oberfläche ist mit Vue 3 und TypeScript gebaut, die fertig gebauten Dateien liegen im Repo, du brauchst also kein Node, um sie zu benutzen.
+
+ef_lib braucht kein Framework. Es läuft mit QBCore, Qbox, ESX oder ganz ohne.
+
+:::caution
+ef_lib wird laufend weiterentwickelt. Exports und Verhalten können sich zwischen Versionen ändern. Lies vor einem Update die Commits auf GitHub.
+:::
+
+## Was drin ist
+
+| Bereich | Inhalt |
+|---|---|
+| [Installation und Konfiguration](/ef-lib/installation/) | `config.lua`, Akzentfarbe, Einstellungen der Spieler, Tasten |
+| [Callbacks](/ef-lib/callbacks/) | Client fragt den Server und wartet auf die Antwort |
+| [Menüs](/ef-lib/menues/) | Listenmenü mit Untermenüs, Checkboxen, Zahlenwählern, dazu das Radialmenü |
+| [Context-Menü](/ef-lib/context-menu/) | `RegisterContext` und `ShowContext` mit `onSelect` wie bei ox_lib |
+| [Dialoge](/ef-lib/dialoge/) | Eingabedialog mit neun Feldtypen, Bestätigungsdialog, Anfragen per Taste |
+| [Meldungen und Hinweise](/ef-lib/meldungen/) | Benachrichtigungen, Tastenhinweise, Ereignis-Banner |
+| [Fortschritt](/ef-lib/fortschritt/) | Fortschrittsleiste und Fortschrittskreis mit Animation und Prop |
+| [Minispiele](/ef-lib/minispiele/) | Schloss knacken, Tresor, Reaktionskette, Kabel, dazu der Skillcheck |
+| [Zonen](/ef-lib/zonen/) | Kugel- und Boxzonen mit `onEnter`, `onExit` und `inside` |
+| [Hilfsfunktionen](/ef-lib/hilfsfunktionen/) | Cache, Abklingzeiten, Modelle laden, Geo-Helfer, Fahrzeugeigenschaften, Versionscheck |
+
+Die Seiten hier erklären, wie du etwas baust. Jeden Export mit allen Parametern und Rückgabewerten findest du in der [Referenz](/referenz/ef-lib/).
+
+## So rufst du ef_lib auf
+
+Alle Funktionen sind Exports der Ressource `ef_lib`:
+
+```lua title="client.lua"
+exports.ef_lib:SendNotification('success', 'Einsatz übernommen', 'RTW 1/83-1 ist alarmiert.')
+```
+
+Manche Exports gibt es nur auf dem Client, manche nur auf dem Server, einige auf beiden Seiten mit unterschiedlichen Parametern, zum Beispiel `SendNotification`. Auf welcher Seite ein Export läuft, steht in der Referenz.
+
+Die eingebauten Texte von ef_lib, etwa Knöpfe und Steuerhinweise, gibt es auf Deutsch und Englisch. Was dein Script übergibt, erscheint unverändert.

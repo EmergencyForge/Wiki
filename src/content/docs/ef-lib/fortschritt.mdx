@@ -1,0 +1,96 @@
+---
+title: Fortschritt
+description: Fortschrittsleiste und Fortschrittskreis mit Animation, Prop und gesperrten Steuerungen, vom Client oder per Server-Event.
+sidebar:
+  order: 8
+---
+
+Eine Fortschrittsanzeige läuft, während der Spieler etwas tut, das Zeit braucht: einen Verband anlegen, einen Reifen wechseln, ein Fahrzeug durchsuchen. ef_lib spielt dazu eine Animation, hängt ein Prop an die Hand und sperrt auf Wunsch Steuerungen. Der Spieler behält die Kamera, einen Mauszeiger gibt es nicht.
+
+[ProgressBar](/referenz/ef-lib/#progressbar) zeigt eine Leiste, [ProgressCircle](/referenz/ef-lib/#progresscircle) einen kleinen Kreis mit Symbol in der Mitte. Beide nehmen dieselben Optionen und halten den Thread an, bis die Zeit um ist oder abgebrochen wurde. Sie geben `true` zurück, wenn die Aktion durchgelaufen ist, sonst `false`.
+
+## Beispiel: Patient versorgen
+
+```lua title="client.lua"
+RegisterCommand('verband', function()
+    local fertig = exports.ef_lib:ProgressBar({
+        label = 'Druckverband anlegen',
+        duration = 8000,
+        icon = 'bandage',
+        canCancel = true,
+        anim = { dict = 'amb@medic@standing@tendtodead@idle_a', clip = 'idle_a', flag = 1 },
+        disableControls = { move = true, car = true, combat = true },
+    })
+
+    if fertig then
+        TriggerServerEvent('rd:verbandAngelegt', zielSpieler)
+    else
+        exports.ef_lib:SendNotification('error', 'Abgebrochen', 'Verband nicht angelegt.')
+    end
+end, false)
+```
+
+Den Fortschrittskreis nimmst du für kurze Handgriffe, die keine große Leiste brauchen:
+
+```lua title="client.lua"
+local ok = exports.ef_lib:ProgressCircle({
+    label = 'Ladekabel anschließen',
+    duration = 4000,
+    icon = 'plug',
+})
+```
+
+## Optionen
+
+| Option | Standard | Bedeutung |
+|---|---|---|
+| `label` | `''` | Text zur Anzeige |
+| `duration` | Pflicht | Dauer in ms, muss größer als 0 sein |
+| `icon` | | Font-Awesome-Name |
+| `canCancel` | `false` | Spieler darf mit X abbrechen |
+| `anim` | | `{ dict, clip, flag = 49, blendIn = 3.0, blendOut = 1.0 }` |
+| `prop` | | `{ model, bone = 60309, pos, rot }`, Bone 60309 ist die rechte Hand |
+| `disableControls` | alles `false` | `{ move, car, combat, mouse }` |
+
+Was die Sperren abdecken:
+
+- `move`: Laufen, Sprinten, Ducken
+- `car`: Lenken, Gas, Bremse, Aussteigen
+- `combat`: Schießen, Zielen, Waffenwechsel, Nahkampf, Werfen
+- `mouse`: Kamera
+
+Das Animationsdictionary und das Prop-Modell lädt ef_lib selbst. Kann es eins nicht laden, läuft die Anzeige trotzdem, nur ohne Animation oder Prop. Am Ende stoppt ef_lib die Animation und löscht das Prop.
+
+Flag 49 spielt die Animation nur am Oberkörper und in Schleife, der Spieler kann dabei laufen. Soll er stehen bleiben, setz `disableControls.move` oder nimm ein anderes Flag.
+
+## Abbrechen
+
+Mit `canCancel = true` bricht der Spieler mit X ab. Die Anzeige zeigt die Taste mit an.
+
+:::caution
+`cancelKey` ändert nur die Taste, die in der Anzeige steht. Abgefragt wird immer X (Control 73). Setz `cancelKey` also nicht auf eine andere Taste, sonst steht dort etwas Falsches.
+:::
+
+Dein Script kann eine laufende Anzeige mit [CancelProgressBar](/referenz/ef-lib/#cancelprogressbar) abbrechen, etwa wenn der Patient wegläuft oder der Spieler verletzt wird. Der wartende Aufruf gibt dann `false` zurück. [IsProgressBarActive](/referenz/ef-lib/#isprogressbaractive) sagt, ob gerade eine läuft. Beide gelten auch für den Kreis.
+
+:::caution
+Beim Abbruch über `CancelProgressBar` räumt ef_lib anders auf als beim Abbruch mit X: Es stoppt alle Tasks des Peds mit `ClearPedTasks`, löscht das angehängte Prop aber nicht. Hast du ein Prop gesetzt, entfern es nach einem solchen Abbruch selbst.
+:::
+
+Es läuft immer nur eine Anzeige. Ein zweiter Aufruf, während eine läuft, gibt sofort `false` zurück. Prüf vorher mit `IsProgressBarActive`, wenn das passieren kann.
+
+## Vom Server starten
+
+Der Server kann eine Anzeige über Net-Events starten:
+
+```lua title="server.lua"
+TriggerClientEvent('ef_lib:progressBar', source, { label = 'Daten werden übertragen', duration = 3000 })
+TriggerClientEvent('ef_lib:progressCircle', source, { label = 'Funkgerät koppeln', duration = 2000, icon = 'walkie-talkie' })
+TriggerClientEvent('ef_lib:cancelProgressBar', source)
+```
+
+:::note
+Über die Events erfährt der Server nicht, ob die Anzeige durchlief oder abgebrochen wurde, und Funktionen lassen sich nicht mitschicken. Hängt etwas vom Ergebnis ab, starte die Anzeige im Client-Script und schick das Ergebnis mit `TriggerServerEvent` zurück. Prüf auf dem Server zusätzlich, ob genug Zeit vergangen ist.
+:::
+
+Alle Optionen stehen in der [Referenz unter Fortschritt](/referenz/ef-lib/#fortschritt).

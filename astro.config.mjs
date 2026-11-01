@@ -17,9 +17,18 @@ export default defineConfig({
 				{ icon: 'discord', label: 'Discord', href: 'https://emfor.ge/discord' },
 			],
 			editLink: { baseUrl: 'https://github.com/EmergencyForge/Wiki/edit/main/' },
+			components: {
+				Header: './src/components/Header.astro',
+				Sidebar: './src/components/Sidebar.astro',
+				ThemeSelect: './src/components/ThemeSelect.astro',
+			},
+			routeMiddleware: './src/routeData.ts',
+			// Each group is one header tab (src/sections.ts); the sidebar only shows the current one.
 			sidebar: [
 				{ label: 'ignis', items: [{ autogenerate: { directory: 'ignis' } }] },
 				{ label: 'ef_bridge', items: [{ autogenerate: { directory: 'ef-bridge' } }] },
+				{ label: 'ef_lib', items: [{ autogenerate: { directory: 'ef-lib' } }] },
+				{ label: 'Referenz', items: [{ autogenerate: { directory: 'referenz' } }] },
 				{ label: 'Mitmachen', items: [{ autogenerate: { directory: 'mitmachen' } }] },
 			],
 		}),

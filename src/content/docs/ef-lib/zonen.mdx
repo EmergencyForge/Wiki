@@ -1,0 +1,94 @@
+---
+title: Zonen
+description: Kugel- und Boxzonen mit onEnter, onExit und inside anlegen, etwa für Spinde, Fahrzeughallen oder Ausgabestellen.
+sidebar:
+  order: 10
+---
+
+Eine Zone ist ein Bereich um einen Punkt. Betritt der Spieler ihn, ruft ef_lib `onEnter` auf, verlässt er ihn, `onExit`. Solange er drin ist, läuft `inside`. So zeigst du an einem Spind einen [Tastenhinweis](/ef-lib/meldungen/#tastenhinweise) und fragst die Taste ab, ohne selbst eine Schleife über alle Orte zu bauen.
+
+## Beispiel: Spind auf der Wache
+
+```lua title="client.lua"
+local spind = exports.ef_lib:CreateSphereZone({
+    coords = vector3(1193.2, -1473.8, 34.9),
+    radius = 1.5,
+    onEnter = function(self)
+        exports.ef_lib:ShowHint('E', 'Spind öffnen', 'fw_spind')
+    end,
+    onExit = function(self)
+        exports.ef_lib:HideHint('fw_spind')
+    end,
+    inside = function(self)
+        if IsControlJustPressed(0, 38) then -- E
+            TriggerEvent('fw:spindOeffnen')
+        end
+    end,
+})
+
+-- Zone wieder entfernen, etwa beim Dienstende
+spind:remove()
+```
+
+[CreateSphereZone](/referenz/ef-lib/#createspherezone) gibt ein Zonen-Objekt zurück. Ohne `coords` gibt es `nil` und eine Fehlermeldung in der F8-Konsole. Ohne `radius` gilt 2.0.
+
+Das Objekt hat neben `remove` die Felder `isInside` (Spieler gerade drin), `distance` (Abstand beim letzten Prüfen) und `data`. Weitere eigene Felder, die du beim Anlegen mitgibst, landen ebenfalls im Objekt. Die Funktionen bekommen das Objekt als `self`:
+
+```lua title="client.lua"
+for _, wache in ipairs(Wachen) do
+    exports.ef_lib:CreateSphereZone({
+        coords = wache.coords,
+        radius = 3.0,
+        data = { name = wache.name },
+        onEnter = function(self)
+            exports.ef_lib:SendNotification('info', self.data.name, 'Du bist auf der Wache.')
+        end,
+    })
+end
+```
+
+Rufst du `remove` auf, während der Spieler drin ist, läuft vorher noch `onExit`. Der Hinweis aus dem Beispiel verschwindet also auch dann.
+
+## Boxzonen
+
+[CreateBoxZone](/referenz/ef-lib/#createboxzone) nimmt statt `radius` eine Größe `size` als `vector3`:
+
+```lua title="client.lua"
+exports.ef_lib:CreateBoxZone({
+    coords = vector3(1200.0, -1470.0, 34.9),
+    size = vector3(8.0, 14.0, 4.0),
+    onEnter = function() exports.ef_lib:ShowHint('E', 'Fahrzeug einparken', 'fw_halle') end,
+    onExit = function() exports.ef_lib:HideHint('fw_halle') end,
+})
+```
+
+:::caution
+Eine Boxzone ist intern eine Kugel. Ihr Radius ist die Hälfte der größten Kante, im Beispiel also 7 Meter um den Mittelpunkt. Die Box ist weder eckig noch gedreht, und eine Kugel mit 7 Metern Radius ragt auch 7 Meter nach oben und unten. Für eine Fahrzeughalle mit genauen Grenzen nimm eine Polyzone aus einer anderen Bibliothek oder prüf die Grenzen in `inside` selbst.
+:::
+
+## Wie oft geprüft wird
+
+ef_lib prüft alle Zonen alle 300 ms gegen die Position des Spielers, mit dem Abstand in allen drei Achsen. Daraus folgt:
+
+- `onEnter` und `onExit` kommen bis zu 300 ms verzögert. Für Hinweise und Menüs reicht das.
+- `inside` läuft ebenfalls nur alle 300 ms, nicht in jedem Frame. `IsControlJustPressed` ist nur in dem einen Frame wahr, in dem die Taste gedrückt wird. Im Beispiel oben kann ein Tastendruck deshalb verloren gehen.
+
+Brauchst du eine zuverlässige Taste, starte in `onEnter` einen eigenen Thread mit `Wait(0)`, der läuft, bis `self.isInside` falsch wird:
+
+```lua title="client.lua"
+onEnter = function(self)
+    exports.ef_lib:ShowHint('E', 'Spind öffnen', 'fw_spind')
+    CreateThread(function()
+        while self.isInside do
+            if IsControlJustPressed(0, 38) then
+                TriggerEvent('fw:spindOeffnen')
+            end
+            Wait(0)
+        end
+    end)
+end,
+```
+
+Ein Fehler in einer der Funktionen hält die Prüfung aller Zonen an. Halt die Funktionen kurz und lagere Arbeit in eigene Threads oder Events aus.
+
+Alle Felder stehen in der [Referenz unter Zonen](/referenz/ef-lib/#zonen).

@@ -1,0 +1,104 @@
+---
+title: Callbacks
+description: Vom Client eine Funktion auf dem Server aufrufen und auf das Ergebnis warten. Mit Umstieg von ox_lib.
+sidebar:
+  order: 3
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Ein Callback ist eine Funktion auf dem Server, die der Client mit einem Namen aufruft. Der Server antwortet mit beliebig vielen Rückgabewerten. So holst du Daten, die nur der Server kennt, etwa aus der Datenbank, oder lässt den Server prüfen, ob ein Spieler etwas darf.
+
+## Ablauf
+
+1. Der Server registriert einen Namen mit [RegisterCallback](/referenz/ef-lib/#registercallback). Der Handler bekommt als ersten Wert die `source` des Spielers, danach die Argumente vom Client.
+2. Der Client ruft den Namen mit [CallbackAwait](/referenz/ef-lib/#callbackawait) oder [CallbackAsync](/referenz/ef-lib/#callbackasync) auf.
+3. Was der Handler zurückgibt, kommt beim Client als Rückgabewerte an.
+
+## Beispiel
+
+Ein Rettungswagen soll nur ausparken, wenn der Spieler im Dienst ist und die Wache das Fahrzeug hat.
+
+<Tabs>
+<TabItem label="Server">
+
+```lua title="server.lua"
+exports.ef_lib:RegisterCallback('rd_garage:canSpawn', function(source, vehicleModel)
+    local player = GetPlayerData(source) -- dein Framework
+    if not player or not player.onDuty then
+        return false, 'Du bist nicht im Dienst.'
+    end
+    if not WacheHatFahrzeug(player.station, vehicleModel) then
+        return false, 'Die Wache hat dieses Fahrzeug nicht.'
+    end
+    return true
+end)
+```
+
+</TabItem>
+<TabItem label="Client">
+
+```lua title="client.lua"
+RegisterCommand('ausparken', function()
+    local ok, reason = exports.ef_lib:CallbackAwait('rd_garage:canSpawn', 'ambulance')
+    if not ok then
+        return exports.ef_lib:SendNotification('error', 'Ausparken', reason)
+    end
+    -- Fahrzeug spawnen
+end, false)
+```
+
+</TabItem>
+</Tabs>
+
+## Warten oder weiterlaufen
+
+`CallbackAwait` hält den aktuellen Thread an, bis die Antwort da ist. Das geht in Befehlen, Event-Handlern und in `CreateThread`, also überall, wo FiveM einen Thread bereitstellt.
+
+`CallbackAsync` kehrt sofort zurück und ruft deine Funktion auf, sobald die Antwort kommt. Die Funktion steht an zweiter Stelle, die Argumente für den Server danach:
+
+```lua title="client.lua"
+exports.ef_lib:CallbackAsync('rd_garage:getVehicles', function(vehicles)
+    print(('%d Fahrzeuge auf der Wache'):format(#vehicles))
+end, 'wache_1')
+```
+
+## Was schiefgehen kann
+
+| Fall | Was der Client bekommt |
+|---|---|
+| Kein Handler unter dem Namen registriert | `nil, 'Callback "<name>" not registered'` |
+| Handler wirft einen Fehler | `nil, 'Server callback error'`, der Fehler steht in der Serverkonsole |
+| Keine Antwort nach 30 Sekunden | bei `CallbackAwait` `nil, 'Callback "<name>" timed out'`, bei `CallbackAsync` wird deine Funktion nie aufgerufen |
+
+Prüf deshalb den ersten Rückgabewert, bevor du damit arbeitest.
+
+:::caution
+Ein Name gilt serverweit. Registriert ein zweites Script denselben Namen, überschreibt es den ersten Handler, die Konsole warnt dann. Stell deshalb den Namen deines Scripts voran, etwa `rd_garage:canSpawn`.
+:::
+
+Stoppt ein Script, entfernt ef_lib seine Callbacks von selbst. Einzeln entfernst du einen mit [UnregisterCallback](/referenz/ef-lib/#unregistercallback).
+
+:::tip
+Der Client kann jeden registrierten Namen mit beliebigen Argumenten aufrufen. Prüf im Handler alles, was vom Client kommt, und verlass dich nie auf Werte, die der Client selbst berechnet hat.
+:::
+
+## Umstieg von ox_lib
+
+Der größte Unterschied: ox_lib erwartet bei `lib.callback.await` als zweiten Wert eine Verzögerung oder `false`. Bei ef_lib fällt dieser Wert weg, die Argumente folgen direkt auf den Namen.
+
+```lua title="Vorher mit ox_lib"
+lib.callback.register('rd_garage:canSpawn', function(source, model) ... end)
+local ok, reason = lib.callback.await('rd_garage:canSpawn', false, 'ambulance')
+lib.callback('rd_garage:getVehicles', false, function(vehicles) ... end, 'wache_1')
+```
+
+```lua title="Nachher mit ef_lib"
+exports.ef_lib:RegisterCallback('rd_garage:canSpawn', function(source, model) ... end)
+local ok, reason = exports.ef_lib:CallbackAwait('rd_garage:canSpawn', 'ambulance')
+exports.ef_lib:CallbackAsync('rd_garage:getVehicles', function(vehicles) ... end, 'wache_1')
+```
+
+Callbacks in die andere Richtung, also der Server fragt den Client, gibt es in ef_lib nicht. Dafür nimmst du ein Net-Event oder für Ja-Nein-Fragen an den Spieler eine [Anfrage](/ef-lib/dialoge/#anfragen).
+
+Alle Parameter der Callback-Exports stehen in der [Referenz unter Callbacks](/referenz/ef-lib/#callbacks).

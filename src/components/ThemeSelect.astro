@@ -1,0 +1,93 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+
+const options = [
+	{ value: 'auto', label: 'System', icon: 'laptop' },
+	{ value: 'dark', label: 'Dunkel', icon: 'moon' },
+	{ value: 'light', label: 'Hell', icon: 'sun' },
+] as const;
+---
+
+<ef-theme-select role="radiogroup" aria-label="Farbschema">
+	{
+		options.map((o) => (
+			<button type="button" role="radio" data-value={o.value} aria-checked="false" title={o.label}>
+				<Icon name={o.icon} size="1rem" />
+				<span class="sr-only">{o.label}</span>
+			</button>
+		))
+	}
+</ef-theme-select>
+
+<script>
+	// Same storage key and values as Starlight's ThemeProvider, which applies the theme before paint.
+	type Theme = 'auto' | 'dark' | 'light';
+	const storageKey = 'starlight-theme';
+
+	const load = (): Theme => {
+		try {
+			const t = localStorage.getItem(storageKey);
+			return t === 'dark' || t === 'light' ? t : 'auto';
+		} catch {
+			return 'auto';
+		}
+	};
+
+	function apply(theme: Theme) {
+		const system = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+		document.documentElement.dataset.theme = theme === 'auto' ? system : theme;
+		try {
+			localStorage.setItem(storageKey, theme === 'auto' ? '' : theme);
+		} catch {}
+		document.querySelectorAll('ef-theme-select button').forEach((b) => {
+			b.setAttribute('aria-checked', String((b as HTMLElement).dataset.value === theme));
+		});
+	}
+
+	matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+		if (load() === 'auto') apply('auto');
+	});
+
+	class EfThemeSelect extends HTMLElement {
+		connectedCallback() {
+			apply(load());
+			this.addEventListener('click', (e) => {
+				const button = (e.target as HTMLElement).closest('button');
+				if (button?.dataset.value) apply(button.dataset.value as Theme);
+			});
+		}
+	}
+	customElements.define('ef-theme-select', EfThemeSelect);
+</script>
+
+<style>
+	ef-theme-select {
+		display: inline-flex;
+		gap: 2px;
+		padding: 2px;
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: 999px;
+	}
+	button {
+		display: grid;
+		place-items: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		border: 0;
+		border-radius: 999px;
+		background: transparent;
+		color: var(--sl-color-gray-3);
+		cursor: pointer;
+	}
+	button:hover {
+		color: var(--sl-color-white);
+	}
+	button[aria-checked='true'] {
+		background: var(--ef-surface-2);
+		color: var(--sl-color-white);
+	}
+	button:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+	}
+</style>

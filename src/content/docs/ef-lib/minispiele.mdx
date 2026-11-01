@@ -1,0 +1,153 @@
+---
+title: Minispiele
+description: Die vier Minispiele Schloss knacken, Tresor, Reaktionskette und Kabel einbauen, Schwierigkeit anpassen und den Skillcheck für schnelle Timing-Proben nutzen.
+sidebar:
+  order: 9
+---
+
+ef_lib hat vier Minispiele und den Skillcheck. Die Minispiele füllen den Bildschirm und brauchen die volle Aufmerksamkeit. Der Skillcheck ist ein kleiner Ring, bei dem der Spieler weiterlaufen kann.
+
+## Minispiele
+
+[Minigame](/referenz/ef-lib/#minigame) bekommt den Namen des Spiels und eine Schwierigkeit. Der Aufruf hält den Thread an und gibt zwei Werte zurück: `true` oder `false` und eine Tabelle mit `success`, `time` (Sekunden bis zum Ende) und `misses` (Fehlversuche).
+
+```lua title="client.lua"
+local success, result = exports.ef_lib:Minigame('wires', 'medium')
+
+if success then
+    -- je weniger Fehler, desto besser die Reparatur
+    TriggerServerEvent('fw:stromkastenRepariert', result.misses == 0 and 'sauber' or 'provisorisch')
+end
+```
+
+| Spiel | Name | So geht es |
+|---|---|---|
+| Schloss knacken | `lockpick` | Maustaste oder W halten erzeugt Spannung. Leertaste setzt den Pin, wenn er in der grünen Zone ist und die Spannung im markierten Bereich liegt. Zu viel Spannung lässt den Pick abrutschen, dann fällt der zuletzt gesetzte Pin zurück. |
+| Tresor öffnen | `safedial` | Mit A und D oder dem Mausrad drehen, mit Leertaste prüfen. Nahe der richtigen Zahl wird das Rad schwerer, leuchtet auf und klickt. Die Drehrichtung wechselt pro Zahl, begonnen wird rechts herum. |
+| Reaktionskette | `reactionchain` | Um ein Feld zieht sich ein Ring zusammen. Die Taste des Felds drücken, wenn der Ring den Rand trifft. |
+| Kabel verbinden | `wires` | Jedes Kabel links mit der Maus zum passenden Anschluss rechts ziehen. Ab `hard` zeigt die rechte Seite nur Symbole, keine Farben. |
+
+Ein Fehlversuch kostet einen Versuch, der Fortschritt bleibt. Sind alle Versuche weg oder ist die Zeit um, endet das Spiel mit `false`. ESC bricht ab, auch dann kommt `false`.
+
+### Schwierigkeit
+
+Es gibt die Stufen `'easy'`, `'medium'` (Standard), `'hard'` und `'extreme'`. Eine eigene Zahl von Versuchen gibst du als dritten Wert mit:
+
+```lua
+exports.ef_lib:Minigame('lockpick', 'hard', 4) -- hard, aber 4 statt 2 Versuche
+```
+
+Statt eines Strings geht auch eine Tabelle. Dann nimmt ef_lib die Werte der Stufe und überschreibt nur, was du angibst:
+
+```lua
+local success = exports.ef_lib:Minigame('lockpick', {
+    difficulty = 'hard',
+    time = 60,      -- Sekunden
+    retries = 5,
+    pins = 4,
+    sound = false,
+})
+```
+
+Für alle Spiele gibt es `difficulty`, `time` (Sekunden, mindestens 3), `retries` (mindestens 1) und `sound` (ab Werk `true`). Dazu kommen die Werte des jeweiligen Spiels. Die Tabellen zeigen, was jede Stufe setzt.
+
+**Schloss knacken:** `pins`, `zone` (Höhe der grünen Zone in px), `speed`, `tension` (Breite des Spannungsbereichs, 0 bis 1)
+
+| Stufe | `pins` | `zone` | `speed` | `tension` | `time` | `retries` |
+|---|---|---|---|---|---|---|
+| easy | 3 | 56 | 1.3 | 0.34 | 40 | 4 |
+| medium | 5 | 42 | 1.8 | 0.26 | 35 | 3 |
+| hard | 6 | 32 | 2.4 | 0.2 | 30 | 2 |
+| extreme | 7 | 24 | 3.0 | 0.15 | 25 | 1 |
+
+**Tresor:** `codes` (Anzahl Zahlen), `tolerance` (Abweichung, die noch zählt), `numbers` (Zahlen auf dem Rad), `code`
+
+| Stufe | `codes` | `tolerance` | `numbers` | `time` | `retries` |
+|---|---|---|---|---|---|
+| easy | 2 | ±1 | 20 | 45 | 4 |
+| medium | 3 | ±1 | 30 | 45 | 3 |
+| hard | 3 | 0 | 40 | 40 | 2 |
+| extreme | 4 | 0 | 50 | 40 | 1 |
+
+**Reaktionskette:** `notes` (nötige Treffer), `approach` (ms, bis der Ring schließt), `window` (± ms, die noch zählen), `interval` (ms zwischen zwei Ringen), `keys`
+
+| Stufe | `notes` | `approach` | `window` | `interval` | `keys` | `time` | `retries` |
+|---|---|---|---|---|---|---|---|
+| easy | 8 | 1400 | 220 | 900 | 1 2 3 | 40 | 4 |
+| medium | 12 | 1150 | 180 | 700 | 1 2 3 4 | 35 | 3 |
+| hard | 16 | 950 | 150 | 520 | 1 2 3 4 | 30 | 2 |
+| extreme | 20 | 800 | 120 | 420 | 1 2 3 4 | 28 | 1 |
+
+**Kabel:** `wires` (Anzahl Kabel), `symbolsOnly` (rechts nur Symbole)
+
+| Stufe | `wires` | `symbolsOnly` | `time` | `retries` |
+|---|---|---|---|---|
+| easy | 4 | `false` | 30 | 4 |
+| medium | 5 | `false` | 25 | 3 |
+| hard | 6 | `true` | 25 | 2 |
+| extreme | 8 | `true` | 25 | 1 |
+
+:::caution
+Unbekannte Schlüssel und Werte mit falschem Typ ignoriert ef_lib ohne Meldung. Schreibst du `pin = 4` statt `pins = 4` oder `time = '60'` als String, gilt der Wert der Stufe. Den dritten Parameter `retries` liest ef_lib nur, wenn die Schwierigkeit ein String ist. In der Tabelle gibst du `retries` mit hinein.
+:::
+
+### Tresor mit bekanntem Code
+
+Hat der Spieler die Kombination gefunden, etwa auf einem Zettel im Inventar, gib sie mit `code` mit. Sie steht dann als Notiz im Spiel, und die Anzahl der Zahlen richtet sich nach dem Code:
+
+```lua title="client.lua"
+local zettel = GetZettelAusInventar() -- dein Inventar
+exports.ef_lib:Minigame('safedial', { difficulty = 'hard', code = zettel.metadata.code }) -- z. B. { 12, 5, 27 }
+```
+
+### Eigene Tasten für die Reaktionskette
+
+Ab Werk fragt die Reaktionskette die Tasten 1 bis 4 ab, auf `easy` 1 bis 3. Mit `keys` legst du bis zu sechs eigene fest:
+
+```lua
+exports.ef_lib:Minigame('reactionchain', { difficulty = 'medium', keys = { 'W', 'A', 'S', 'D' } })
+```
+
+### Was du wissen musst
+
+- Es läuft immer nur ein Minispiel. Ein zweiter Aufruf gibt sofort `false` zurück.
+- Während des Spiels hat der Spieler keine Steuerung. Mit `Config.ScreenBlur` verwischt das Spielbild dahinter.
+- Das Ergebnis kommt vom Client. Entscheidet es über Beute oder Geld, prüf auf dem Server mindestens, ob der Spieler am richtigen Ort ist und ob seit dem Start genug Zeit vergangen ist.
+- Das Net-Event `ef_lib:minigame` startet ein Spiel vom Server aus, das Ergebnis erfährt der Server darüber aber nicht.
+
+## Skillcheck
+
+Beim [SkillCheck](/referenz/ef-lib/#skillcheck) läuft ein Punkt einmal um einen Ring. Der Spieler drückt die angezeigte Taste, solange der Punkt im hellen Bogen ist. Er kann dabei weiterlaufen. Ein falscher Druck oder eine Runde ohne Druck lässt den ganzen Check scheitern. Der Export gibt `true` oder `false` zurück.
+
+```lua title="client.lua"
+-- eine Stufe, Taste E
+local ok = exports.ef_lib:SkillCheck('medium')
+
+-- drei Stufen hintereinander, etwa beim Intubieren
+local ok = exports.ef_lib:SkillCheck({ 'easy', 'medium', 'hard' })
+
+-- jede Stufe fragt eine dieser Tasten ab
+local ok = exports.ef_lib:SkillCheck('hard', { 'W', 'A', 'S', 'D' })
+
+-- eigene Stufe: Bogen in Grad, Sekunden pro Runde
+local ok = exports.ef_lib:SkillCheck({ { zone = 50, speed = 2.0 } })
+```
+
+| Stufe | Bogen | Sekunden pro Runde |
+|---|---|---|
+| `easy` | 60° | 1,6 |
+| `medium` | 45° | 1,25 |
+| `hard` | 30° | 1,0 |
+| `extreme` | 20° | 0,8 |
+
+Eigene Stufen begrenzt ef_lib auf 5° bis 180° Bogen und mindestens 0,3 Sekunden pro Runde.
+
+Solange der Check läuft, sperrt ef_lib Schießen, Zielen, Nahkampf und die drei Steuerungen auf E. Laufen geht weiter. So löst E nicht nebenbei etwas anderes aus, etwa eine Tür.
+
+[IsSkillCheckActive](/referenz/ef-lib/#isskillcheckactive) sagt, ob gerade einer läuft. [CancelSkillCheck](/referenz/ef-lib/#cancelskillcheck) bricht ihn ab, der wartende Aufruf gibt dann `false` zurück.
+
+:::tip
+Der Skillcheck passt für Handgriffe während einer anderen Aktion, etwa mitten in einer [Fortschrittsanzeige](/ef-lib/fortschritt/). Ein Minispiel passt, wenn die Aufgabe selbst im Mittelpunkt steht.
+:::
+
+Alle Parameter stehen in der [Referenz unter Minispiele](/referenz/ef-lib/#minispiele).
