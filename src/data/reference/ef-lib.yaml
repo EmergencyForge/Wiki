@@ -809,7 +809,7 @@
     - name: position
       type: string
       optional: true
-      description: "`'bottom-left'`, `'bottom-center'`, `'bottom-right'`, `'top-left'`, `'top-center'` oder `'top-right'`. Ohne Wert `'bottom-center'`."
+      description: "`'bottom-left'`, `'bottom-center'`, `'bottom-right'`, `'top-left'`, `'top-center'` oder `'top-right'`. Ohne Wert `'bottom-left'`."
   example: |
     exports.ef_lib:SetHintPosition('bottom-center')
     exports.ef_lib:ShowHint('G', 'Schlauch kuppeln', 'fw_schlauch')
@@ -1136,7 +1136,7 @@
   category: progress
   description: >-
     Bricht den laufenden Fortschrittsbalken oder Fortschrittskreis ab. Der wartende Aufruf bekommt `false`,
-    die Animation des Spielers wird mit `ClearPedTasks` beendet.
+    die Animation des Spielers wird mit `ClearPedTasks` beendet und ein angehängtes Prop gelöscht.
   returns:
     - type: boolean
       name: cancelled

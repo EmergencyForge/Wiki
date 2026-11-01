@@ -73,8 +73,8 @@ Mit `canCancel = true` bricht der Spieler mit X ab. Die Anzeige zeigt die Taste 
 
 Dein Script kann eine laufende Anzeige mit [CancelProgressBar](/referenz/ef-lib/#cancelprogressbar) abbrechen, etwa wenn der Patient wegläuft oder der Spieler verletzt wird. Der wartende Aufruf gibt dann `false` zurück. [IsProgressBarActive](/referenz/ef-lib/#isprogressbaractive) sagt, ob gerade eine läuft. Beide gelten auch für den Kreis.
 
-:::caution
-Beim Abbruch über `CancelProgressBar` räumt ef_lib anders auf als beim Abbruch mit X: Es stoppt alle Tasks des Peds mit `ClearPedTasks`, löscht das angehängte Prop aber nicht. Hast du ein Prop gesetzt, entfern es nach einem solchen Abbruch selbst.
+:::note
+Beim Abbruch über `CancelProgressBar` stoppt ef_lib nicht nur die Animation, sondern mit `ClearPedTasks` alle Tasks des Peds. Das angehängte Prop löscht es wie bei jedem anderen Ende.
 :::
 
 Es läuft immer nur eine Anzeige. Ein zweiter Aufruf, während eine läuft, gibt sofort `false` zurück. Prüf vorher mit `IsProgressBarActive`, wenn das passieren kann.

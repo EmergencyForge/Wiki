@@ -77,7 +77,7 @@ exports.ef_lib:HideAllHints()
 Ab Werk stehen die Hinweise unten links. Andere Positionen setzt du mit [SetHintPosition](/referenz/ef-lib/#sethintposition) oder als fünften Wert von `ShowHint`: `'bottom-left'`, `'bottom-center'`, `'bottom-right'`, `'top-left'`, `'top-center'` und `'top-right'`.
 
 :::note
-Die Position gilt für alle Hinweise auf dem Bildschirm, auch die von anderen Scripts. `HideAllHints` setzt sie wieder auf unten links zurück. `SetHintPosition` ohne Wert setzt unten mittig, nicht unten links.
+Die Position gilt für alle Hinweise auf dem Bildschirm, auch die von anderen Scripts. `HideAllHints` und `SetHintPosition` ohne Wert setzen sie wieder auf unten links zurück.
 :::
 
 Ein Hinweis fragt die Taste nicht ab, er zeigt sie nur. Den Tastendruck prüfst du selbst, etwa mit `IsControlJustPressed` im `inside` deiner Zone oder mit `RegisterKeyMapping`.
