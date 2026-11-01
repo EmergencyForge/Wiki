@@ -1,0 +1,668 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+
+// Shown while the field is empty and when nothing matches.
+const tips = [
+	{ label: 'ef_lib installieren', href: '/ef-lib/installation/' },
+	{ label: 'Referenz ef_lib', href: '/referenz/ef-lib/' },
+	{ label: 'ignis installieren', href: '/ignis/installation/' },
+	{ label: 'ef_bridge einrichten', href: '/ef-bridge/installation/' },
+];
+---
+
+<ef-search data-tips={JSON.stringify(tips)}>
+	<button
+		type="button"
+		class="ef-search-trigger"
+		data-open-modal
+		aria-label="Suchen"
+		aria-haspopup="dialog"
+		aria-keyshortcuts="Control+K"
+	>
+		<Icon name="magnifier" size="1rem" />
+		<span class="ef-search-trigger-label">Suchen</span>
+		<span class="ef-search-trigger-keys" aria-hidden="true"><kbd data-mod>Strg</kbd><kbd>K</kbd></span>
+	</button>
+
+	<dialog class="ef-search-dialog" aria-label="Doku durchsuchen">
+		<div class="ef-search-bar">
+			<label class="ef-search-field">
+				<Icon name="magnifier" size="1.125rem" />
+				<input
+					type="text"
+					role="combobox"
+					aria-label="Suchbegriff"
+					aria-autocomplete="list"
+					aria-expanded="true"
+					aria-controls="ef-search-list"
+					placeholder="Doku durchsuchen"
+					autocomplete="off"
+					autocapitalize="off"
+					spellcheck="false"
+					enterkeyhint="go"
+				/>
+			</label>
+			<button type="button" class="ef-search-close" data-close>Abbrechen</button>
+		</div>
+		<div class="ef-search-suggest" hidden></div>
+		<div class="ef-search-body">
+			<p class="ef-search-status" role="status"></p>
+			<div id="ef-search-list" class="ef-search-list" role="listbox" aria-label="Suchergebnisse"></div>
+		</div>
+		<div class="ef-search-footer" aria-hidden="true">
+			<span><kbd>↑</kbd><kbd>↓</kbd> auswählen</span>
+			<span><kbd>Enter</kbd> öffnen</span>
+			<span><kbd>Esc</kbd> schließen</span>
+		</div>
+	</dialog>
+</ef-search>
+
+{/* Inline so Mac users never see "Strg" flash before the module script runs. */}
+<script is:inline>
+	(() => {
+		const platform = navigator.userAgentData?.platform || navigator.platform || '';
+		if (!/mac|iphone|ipad|ipod/i.test(platform)) return;
+		document.querySelectorAll('ef-search [data-mod]').forEach((k) => (k.textContent = '⌘'));
+		document.querySelectorAll('ef-search [data-open-modal]').forEach((b) => b.setAttribute('aria-keyshortcuts', 'Meta+K'));
+	})();
+</script>
+
+<script>
+	import { createIndex, search, indexTokens, fold, type Index, type Hit } from '../search';
+
+	const RECENT_KEY = 'ef-search-recent';
+	const MAX_REFS = 6;
+	const MAX_PAGES = 8;
+	const realmLabel: Record<string, string> = { client: 'Client', server: 'Server', shared: 'Shared' };
+
+	const esc = (s: string) =>
+		s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+	function readRecent(): string[] {
+		try {
+			const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
+			return Array.isArray(v) ? v.filter((x) => typeof x === 'string').slice(0, 5) : [];
+		} catch {
+			return [];
+		}
+	}
+
+	function saveRecent(q: string) {
+		try {
+			localStorage.setItem(RECENT_KEY, JSON.stringify([q, ...readRecent().filter((r) => r !== q)].slice(0, 5)));
+		} catch {}
+	}
+
+	const isHit = (word: string, terms: Set<string>) => indexTokens(word).some((t) => terms.has(fold(t)));
+
+	// Wraps every word whose index tokens matched, the same way the index split it.
+	const mark = (text: string, terms: Set<string>) =>
+		text.replace(/[\p{L}\p{N}_]+|[^\p{L}\p{N}_]+/gu, (w) =>
+			/[\p{L}\p{N}]/u.test(w) && isHit(w, terms) ? `<mark>${esc(w)}</mark>` : esc(w),
+		);
+
+	// Cuts the text around the first matched word; null when nothing in it matched.
+	function snippet(text: string, terms: Set<string>, size = 170) {
+		const re = /[\p{L}\p{N}_]+/gu;
+		let m: RegExpExecArray | null;
+		while ((m = re.exec(text))) {
+			if (!isHit(m[0], terms)) continue;
+			let start = Math.max(0, m.index - 50);
+			if (start > 0) start = text.indexOf(' ', start) + 1 || m.index;
+			let out = text.slice(start, start + size);
+			if (start + size < text.length) out = out.replace(/\s\S*$/, '') + ' …';
+			return (start > 0 ? '… ' : '') + mark(out, terms);
+		}
+		return null;
+	}
+
+	class EfSearch extends HTMLElement {
+		dialog = this.querySelector('dialog')!;
+		input = this.querySelector('input')!;
+		list = this.querySelector<HTMLElement>('.ef-search-list')!;
+		status = this.querySelector<HTMLElement>('.ef-search-status')!;
+		suggest = this.querySelector<HTMLElement>('.ef-search-suggest')!;
+		tips: { label: string; href: string }[] = JSON.parse(this.dataset.tips ?? '[]');
+		index: Index | null = null;
+		loading: Promise<void> | null = null;
+		active = -1;
+		uid = 0;
+
+		connectedCallback() {
+			this.querySelector('[data-open-modal]')!.addEventListener('click', () => this.open());
+			this.querySelector('[data-close]')!.addEventListener('click', () => this.dialog.close());
+			// A click on the dialog element itself lands on the backdrop.
+			this.dialog.addEventListener('click', (e) => e.target === this.dialog && this.dialog.close());
+			this.input.addEventListener('input', () => this.render());
+			this.input.addEventListener('keydown', (e) => this.onKey(e));
+			this.list.addEventListener('click', (e) => this.onPick(e));
+			this.list.addEventListener('pointermove', (e) => {
+				const opt = (e.target as Element).closest('[role="option"]');
+				if (opt) this.setActive(this.options().indexOf(opt as HTMLElement), false);
+			});
+			this.suggest.addEventListener('click', (e) => {
+				const q = (e.target as Element).closest<HTMLElement>('[data-query]')?.dataset.query;
+				if (q) this.setQuery(q);
+			});
+
+			addEventListener('keydown', (e) => {
+				if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+					e.preventDefault();
+					this.dialog.open ? this.dialog.close() : this.open();
+				} else if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey && !this.dialog.open && !isEditable(e.target)) {
+					e.preventDefault();
+					this.open();
+				}
+			});
+		}
+
+		open() {
+			this.dialog.showModal();
+			this.input.focus();
+			this.input.select();
+			this.render();
+			this.load();
+		}
+
+		load() {
+			this.loading ??= fetch(`${import.meta.env.BASE_URL.replace(/\/$/, '')}/search-index.json`)
+				.then((r) => {
+					if (!r.ok) throw new Error(String(r.status));
+					return r.json();
+				})
+				.then((docs) => {
+					this.index = createIndex(docs);
+					this.render();
+				})
+				.catch(() => {
+					// Allows a retry on the next open.
+					this.loading = null;
+					this.status.textContent = 'Der Suchindex konnte nicht geladen werden. Bitte später noch einmal versuchen.';
+				});
+		}
+
+		setQuery(q: string) {
+			this.input.value = q;
+			this.input.focus();
+			this.render();
+		}
+
+		options() {
+			return [...this.list.querySelectorAll<HTMLElement>('[role="option"]')];
+		}
+
+		setActive(i: number, scroll = true) {
+			const opts = this.options();
+			opts[this.active]?.setAttribute('aria-selected', 'false');
+			this.active = opts.length ? (i + opts.length) % opts.length : -1;
+			const el = opts[this.active];
+			if (!el) return this.input.removeAttribute('aria-activedescendant');
+			el.setAttribute('aria-selected', 'true');
+			this.input.setAttribute('aria-activedescendant', el.id);
+			if (scroll) el.scrollIntoView({ block: 'nearest' });
+		}
+
+		onKey(e: KeyboardEvent) {
+			if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+				e.preventDefault();
+				this.setActive(this.active + (e.key === 'ArrowDown' ? 1 : -1));
+			} else if (e.key === 'Enter' && !e.isComposing) {
+				e.preventDefault();
+				this.options()[this.active]?.click();
+			}
+		}
+
+		onPick(e: MouseEvent) {
+			const opt = (e.target as Element).closest<HTMLElement>('[role="option"]');
+			if (!opt) return;
+			if (opt.dataset.query) {
+				e.preventDefault();
+				return this.setQuery(opt.dataset.query);
+			}
+			const q = this.input.value.trim();
+			if (q) saveRecent(q);
+			// New tab clicks keep the search open.
+			if (!e.ctrlKey && !e.metaKey && !e.shiftKey) this.dialog.close();
+		}
+
+		option(inner: string, attrs: string, cls: string) {
+			return `<a role="option" id="ef-search-opt-${this.uid++}" aria-selected="false" class="ef-search-row ${cls}" ${attrs}>${inner}</a>`;
+		}
+
+		group(label: string, rows: string[]) {
+			const id = `ef-search-group-${this.uid++}`;
+			return `<div role="group" aria-labelledby="${id}"><div class="ef-search-group" id="${id}" role="presentation">${esc(label)}</div>${rows.join('')}</div>`;
+		}
+
+		tipRows() {
+			return this.tips.map((t) =>
+				this.option(`<span class="ef-search-line"><span class="ef-search-title">${esc(t.label)}</span></span>`, `href="${esc(t.href)}"`, 'tip'),
+			);
+		}
+
+		refRow({ doc: d, result }: Hit) {
+			const terms = new Set(result.terms);
+			const badges =
+				(d.kind === 'event' ? '<span class="ef-search-badge event">Event</span>' : '') +
+				`<span class="ef-search-badge ${d.realm}">${realmLabel[d.realm!] ?? ''}</span>`;
+			return this.option(
+				`<span class="ef-search-line"><code class="ef-search-name">${mark(d.title, terms)}</code>` +
+					`<span class="ef-search-args">(${mark(d.params ?? '', terms)})</span>` +
+					`<span class="ef-search-meta">${esc(d.category ?? '')}</span>${badges}</span>` +
+					`<span class="ef-search-desc">${mark(d.description ?? '', terms)}</span>`,
+				`href="${esc(d.url)}"`,
+				'ref',
+			);
+		}
+
+		pageRow({ doc: d, result }: Hit) {
+			const terms = new Set(result.terms);
+			const fromText = snippet(d.text ?? '', terms);
+			const fromCode = fromText || d.description ? null : snippet(d.code ?? '', terms);
+			const excerpt = fromText ?? fromCode ?? (d.description ? mark(d.description, terms) : esc((d.text ?? '').slice(0, 170)));
+			return this.option(
+				`<span class="ef-search-line"><span class="ef-search-title">${mark(d.page ?? d.title, terms)}</span>` +
+					`<span class="ef-search-meta">${esc(d.section)}</span></span>` +
+					(d.heading ? `<span class="ef-search-heading">${mark(d.heading, terms)}</span>` : '') +
+					(excerpt ? `<span class="ef-search-desc clamp${fromCode ? ' code' : ''}">${excerpt}</span>` : ''),
+				`href="${esc(d.url)}"`,
+				'page',
+			);
+		}
+
+		render() {
+			const q = this.input.value.trim();
+			this.uid = 0;
+			this.active = -1;
+			this.suggest.hidden = true;
+			this.status.textContent = '';
+			let html = '';
+
+			if (!q) {
+				const recent = readRecent();
+				if (recent.length) {
+					html += this.group(
+						'Zuletzt gesucht',
+						recent.map((r) =>
+							this.option(`<span class="ef-search-line"><span class="ef-search-title">${esc(r)}</span></span>`, `data-query="${esc(r)}" href="#"`, 'recent'),
+						),
+					);
+				}
+				html += this.group('Vorschläge', this.tipRows());
+			} else if (!this.index) {
+				this.status.textContent = 'Suchindex wird geladen …';
+			} else {
+				const { hits, suggestions } = search(this.index, q);
+				const refs = hits.filter((h) => h.doc.type === 'ref').slice(0, MAX_REFS);
+				const pages = hits.filter((h) => h.doc.type === 'page').slice(0, MAX_PAGES);
+				if (suggestions.length) {
+					this.suggest.innerHTML =
+						'Meintest du ' +
+						suggestions.map((s) => `<button type="button" data-query="${esc(s)}">${esc(s)}</button>`).join(', ') +
+						'?';
+					this.suggest.hidden = false;
+				}
+				if (refs.length) html += this.group('Referenz', refs.map((h) => this.refRow(h)));
+				if (pages.length) html += this.group('Anleitungen', pages.map((h) => this.pageRow(h)));
+				if (!refs.length && !pages.length) {
+					this.status.textContent = `Keine Treffer für „${q}“. Vielleicht hilft einer dieser Einstiege:`;
+					html += this.group('Vorschläge', this.tipRows());
+				}
+			}
+
+			this.list.innerHTML = html;
+			this.list.scrollTop = 0;
+			if (q) this.setActive(0);
+			else this.input.removeAttribute('aria-activedescendant');
+		}
+	}
+
+	const isEditable = (t: EventTarget | null) =>
+		t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+
+	if (!customElements.get('ef-search')) customElements.define('ef-search', EfSearch);
+</script>
+
+<style is:global>
+	ef-search {
+		display: contents;
+	}
+
+	/* Locks page scroll behind the open dialog. */
+	html:has(.ef-search-dialog[open]) {
+		overflow: hidden;
+	}
+
+	.ef-search-dialog kbd,
+	.ef-search-trigger kbd {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.25rem;
+		height: 1.25rem;
+		padding: 0 0.3rem;
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: var(--ef-r-md, 4px);
+		background: var(--ef-surface-2);
+		color: var(--sl-color-gray-2);
+		font: 500 0.6875rem/1 var(--sl-font);
+	}
+
+	.ef-search-trigger {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		height: 2.25rem;
+		padding: 0 0.375rem 0 0.75rem;
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: var(--ef-r-lg, 6px);
+		background: var(--sl-color-bg);
+		color: var(--sl-color-gray-3);
+		font: inherit;
+		font-size: var(--sl-text-sm);
+		cursor: pointer;
+	}
+	.ef-search-trigger:hover {
+		border-color: var(--sl-color-gray-4);
+		color: var(--sl-color-gray-2);
+	}
+	.ef-search-trigger:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+	.ef-search-trigger-label {
+		flex: 1;
+		text-align: start;
+	}
+	.ef-search-trigger-keys {
+		display: flex;
+		gap: 0.2rem;
+	}
+	@media (max-width: 49.99rem) {
+		.ef-search-trigger {
+			width: 2.5rem;
+			height: 2.5rem;
+			justify-content: center;
+			padding: 0;
+			border-color: transparent;
+			background: transparent;
+			color: var(--sl-color-gray-1);
+		}
+		.ef-search-trigger svg {
+			width: 1.25rem;
+			height: 1.25rem;
+		}
+		.ef-search-trigger-label,
+		.ef-search-trigger-keys {
+			display: none;
+		}
+	}
+
+	.ef-search-dialog {
+		--ef-search-active: var(--sl-color-gray-5);
+		width: min(42rem, calc(100vw - 2rem));
+		max-width: none;
+		max-height: min(38rem, calc(100dvh - 8rem));
+		margin: 5.5rem auto auto;
+		padding: 0;
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: var(--ef-r-3xl, 14px);
+		background: var(--ef-surface);
+		color: var(--sl-color-gray-2);
+		box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 0.5);
+		overflow: hidden;
+	}
+	.ef-search-dialog[open] {
+		display: flex;
+		flex-direction: column;
+	}
+	.ef-search-dialog::backdrop {
+		background: rgb(12 10 9 / 0.6);
+		backdrop-filter: blur(4px);
+	}
+	:root[data-theme='light'] .ef-search-dialog {
+		--ef-search-active: var(--sl-color-gray-6);
+		background: var(--sl-color-bg);
+		box-shadow: 0 1.5rem 4rem rgb(28 25 23 / 0.18);
+	}
+	:root[data-theme='light'] .ef-search-dialog::backdrop {
+		background: rgb(28 25 23 / 0.25);
+	}
+
+	.ef-search-bar {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+		padding: 0.75rem;
+		border-bottom: 1px solid var(--sl-color-hairline);
+	}
+	.ef-search-field {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		min-width: 0;
+		height: 2.75rem;
+		padding: 0 0.75rem;
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: var(--ef-r-lg, 6px);
+		background: var(--sl-color-bg);
+		color: var(--sl-color-gray-3);
+	}
+	:root[data-theme='light'] .ef-search-field {
+		background: var(--ef-surface);
+	}
+	.ef-search-field:focus-within {
+		border-color: var(--sl-color-accent);
+		box-shadow: 0 0 0 1px var(--sl-color-accent);
+	}
+	.ef-search-field input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		outline: 0;
+		background: transparent;
+		color: var(--sl-color-white);
+		font: inherit;
+		font-size: 1rem;
+	}
+	.ef-search-field input::placeholder {
+		color: var(--sl-color-gray-3);
+	}
+	.ef-search-close {
+		display: none;
+		border: 0;
+		background: none;
+		padding: 0.5rem 0.25rem;
+		color: var(--sl-color-text-accent);
+		font: inherit;
+		font-weight: 500;
+		cursor: pointer;
+	}
+
+	.ef-search-suggest {
+		padding: 0.625rem 1rem 0;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+	.ef-search-suggest button {
+		border: 0;
+		padding: 0;
+		background: none;
+		color: var(--sl-color-text-accent);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.ef-search-suggest button:hover,
+	.ef-search-suggest button:focus-visible {
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+
+	.ef-search-body {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding: 0.25rem 0.5rem 0.5rem;
+	}
+	.ef-search-status:empty {
+		display: none;
+	}
+	.ef-search-status {
+		margin: 0;
+		padding: 0.75rem 0.5rem 0.25rem;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+	.ef-search-group {
+		padding: 0.75rem 0.75rem 0.375rem;
+		font-size: 0.6875rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--sl-color-gray-3);
+	}
+
+	.ef-search-row {
+		display: grid;
+		gap: 0.125rem;
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--ef-r-lg, 6px);
+		box-shadow: inset 2px 0 0 transparent;
+		color: var(--sl-color-gray-3);
+		text-decoration: none;
+		font-size: var(--sl-text-sm);
+		scroll-margin: 0.5rem;
+	}
+	.ef-search-row[aria-selected='true'] {
+		background: var(--ef-search-active);
+		box-shadow: inset 2px 0 0 var(--sl-color-accent);
+	}
+	.ef-search-line {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+	}
+	.ef-search-title,
+	.ef-search-name {
+		color: var(--sl-color-white);
+		font-weight: 600;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.ef-search-name {
+		font-family: var(--sl-font-mono);
+		font-size: 0.875rem;
+		background: none;
+		border: 0;
+		padding: 0;
+	}
+	.ef-search-args {
+		min-width: 0;
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-family: var(--sl-font-mono);
+		font-size: 0.8125rem;
+		color: var(--sl-color-gray-3);
+	}
+	.ef-search-meta {
+		margin-inline-start: auto;
+		flex-shrink: 0;
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-3);
+	}
+	.ef-search-heading {
+		color: var(--sl-color-gray-1);
+		font-weight: 500;
+	}
+	.ef-search-desc {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.ef-search-desc.clamp {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		white-space: normal;
+	}
+	.ef-search-desc.code {
+		font-family: var(--sl-font-mono);
+		font-size: 0.8125rem;
+	}
+	.ef-search-row[aria-selected='true'] :is(.ef-search-title, .ef-search-name) {
+		color: var(--sl-color-text-accent);
+	}
+	.ef-search-row mark {
+		padding: 0 1px;
+		border-radius: 2px;
+		background: var(--sl-color-accent-low);
+		color: var(--sl-color-white);
+	}
+
+	.ef-search-badge {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		height: 20px;
+		padding: 0 6px;
+		border-radius: var(--ef-r-md, 4px);
+		font-family: var(--sl-font);
+		font-size: 11px;
+		font-weight: 500;
+		line-height: 1;
+	}
+	.ef-search-badge.client {
+		background: var(--ef-badge-client-bg);
+		color: var(--ef-badge-client-fg);
+	}
+	.ef-search-badge.server {
+		background: var(--ef-badge-server-bg);
+		color: var(--ef-badge-server-fg);
+	}
+	.ef-search-badge.shared {
+		background: var(--ef-badge-shared-bg);
+		color: var(--ef-badge-shared-fg);
+	}
+	.ef-search-badge.event {
+		background: var(--ef-badge-event-bg);
+		color: var(--ef-badge-event-fg);
+	}
+
+	.ef-search-footer {
+		display: flex;
+		gap: 1.25rem;
+		padding: 0.625rem 1rem;
+		border-top: 1px solid var(--sl-color-hairline);
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-3);
+	}
+	.ef-search-footer span {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	@media (max-width: 49.99rem) {
+		.ef-search-dialog {
+			width: 100%;
+			height: 100dvh;
+			max-height: none;
+			margin: 0;
+			border: 0;
+			border-radius: 0;
+		}
+		.ef-search-close {
+			display: block;
+		}
+		.ef-search-footer {
+			display: none;
+		}
+	}
+</style>

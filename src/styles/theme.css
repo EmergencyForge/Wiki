@@ -54,11 +54,25 @@
 
 	--ef-surface: #13110f;
 	--ef-surface-2: #1b1815;
-	--ef-radius: 8px;
-	--ef-client: #60a5fa;
-	--ef-server: #4ade80;
-	--ef-shared: #c4b5fd;
-	--ef-event: #fbbf24;
+
+	/* Radius scale of emergencyforge.de (base 3px): small chips 3 to 4, controls 6, cards and panels 10, dialogs 14. */
+	--ef-r-sm: 3px;
+	--ef-r-md: 4px;
+	--ef-r-lg: 6px;
+	--ef-r-2xl: 10px;
+	--ef-r-3xl: 14px;
+
+	/* Badges tinted like ForgeBoard labels: the colour at 18 % as ground, a lighter version of it as text. */
+	--ef-badge-client-bg: rgb(59 130 246 / 0.18);
+	--ef-badge-client-fg: #93bafa;
+	--ef-badge-server-bg: rgb(34 197 94 / 0.18);
+	--ef-badge-server-fg: #85dfa6;
+	--ef-badge-shared-bg: rgb(139 92 246 / 0.18);
+	--ef-badge-shared-fg: #bfa5fa;
+	--ef-badge-event-bg: rgb(245 158 11 / 0.18);
+	--ef-badge-event-fg: #faca79;
+	--ef-badge-neutral-bg: rgb(161 150 140 / 0.16);
+	--ef-badge-neutral-fg: #c4bab1;
 }
 
 /* The orange darkens in light mode so links keep AA contrast on white. */
@@ -83,15 +97,28 @@
 
 	--ef-surface: #f6f3f0;
 	--ef-surface-2: #efeae5;
-	--ef-client: #1d4ed8;
-	--ef-server: #15803d;
-	--ef-shared: #6d28d9;
-	--ef-event: #a16207;
+
+	--ef-badge-client-bg: rgb(59 130 246 / 0.14);
+	--ef-badge-client-fg: #1e4f9c;
+	--ef-badge-server-bg: rgb(34 197 94 / 0.16);
+	--ef-badge-server-fg: #146c35;
+	--ef-badge-shared-bg: rgb(139 92 246 / 0.14);
+	--ef-badge-shared-fg: #553596;
+	--ef-badge-event-bg: rgb(245 158 11 / 0.18);
+	--ef-badge-event-fg: #85540a;
+	--ef-badge-neutral-bg: rgb(120 110 100 / 0.12);
+	--ef-badge-neutral-fg: #45403b;
 }
 
 /* The logo file is white only. */
 :root[data-theme='light'] .site-title img {
 	filter: invert(1);
+}
+
+/* Code frames follow the radius scale and use the house mono. */
+:root .expressive-code {
+	--ec-brdRad: var(--ef-r-2xl);
+	--ec-codeFontFam: var(--sl-font-mono);
 }
 
 header.header {
@@ -120,9 +147,9 @@ h1#_top {
 	text-underline-offset: 0.2em;
 }
 
-.sl-markdown-content :not(pre) > code {
+.sl-markdown-content :not(pre) > code:not(:where(.not-content *)) {
 	padding: 0.1em 0.35em;
-	border-radius: 4px;
+	border-radius: var(--ef-r-sm);
 	border: 1px solid var(--sl-color-hairline-light);
 	font-size: 0.875em;
 }
@@ -131,7 +158,7 @@ h1#_top {
 	white-space: nowrap;
 }
 .sl-markdown-content table {
-	border-radius: var(--ef-radius);
+	border-radius: var(--ef-r-2xl);
 }
 
 /* Sidebar like the Cfx docs: small caps group labels, the current page as orange text with a bar. */
@@ -148,7 +175,7 @@ nav.sidebar ul ul li {
 	padding-inline-start: 0;
 }
 nav.sidebar a {
-	border-radius: 6px;
+	border-radius: var(--ef-r-lg);
 	border-inline-start: 2px solid transparent;
 	color: var(--sl-color-gray-2);
 }
@@ -167,38 +194,41 @@ nav.sidebar a[aria-current='page']:focus {
 	border-end-start-radius: 0;
 }
 
-/* Search button styled as a field, like the Cfx header. */
-site-search > button[data-open-modal] {
-	background: var(--sl-color-bg);
-	border: 1px solid var(--sl-color-hairline-light);
-	border-radius: var(--ef-radius);
-	min-height: 2.5rem;
-}
-site-search > button[data-open-modal]:hover {
-	border-color: var(--sl-color-gray-4);
-}
-
-.ref-badge-inline {
+.ef-badge {
+	display: inline-flex;
+	align-items: center;
+	height: 1.25rem;
+	padding: 0 0.5rem;
+	border-radius: var(--ef-r-md);
+	font-family: var(--sl-font);
 	font-size: 0.6875rem;
-	font-weight: 700;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-	padding: 0.125rem 0.5rem;
-	border-radius: 999px;
-	border: 1px solid currentColor;
+	font-weight: 500;
+	line-height: 1;
 	white-space: nowrap;
+	background: var(--ef-badge-neutral-bg);
+	color: var(--ef-badge-neutral-fg);
 }
-.ref-badge-inline.client {
-	color: var(--ef-client);
+.ef-badge.client {
+	background: var(--ef-badge-client-bg);
+	color: var(--ef-badge-client-fg);
 }
-.ref-badge-inline.server {
-	color: var(--ef-server);
+.ef-badge.server {
+	background: var(--ef-badge-server-bg);
+	color: var(--ef-badge-server-fg);
 }
-.ref-badge-inline.shared {
-	color: var(--ef-shared);
+.ef-badge.shared {
+	background: var(--ef-badge-shared-bg);
+	color: var(--ef-badge-shared-fg);
 }
-.ref-badge-inline.event {
-	color: var(--ef-event);
+.ef-badge.event {
+	background: var(--ef-badge-event-bg);
+	color: var(--ef-badge-event-fg);
+}
+/* Starlight's own badges (sidebar, <Badge>) in the same tinted style. */
+.sl-badge {
+	border: 0;
+	border-radius: var(--ef-r-md);
+	font-weight: 500;
 }
 
 /* The reference filter hides entries and headings with the hidden attribute; flex and grid would override it. */
@@ -207,8 +237,13 @@ site-search > button[data-open-modal]:hover {
 }
 
 .sl-markdown-content .starlight-aside {
-	border-radius: var(--ef-radius);
+	border-radius: var(--ef-r-2xl);
 }
-.card {
-	border-radius: var(--ef-radius);
+.card,
+.sl-link-card {
+	border-radius: var(--ef-r-2xl);
+}
+.sl-markdown-content .sl-link-button,
+.hero .sl-link-button {
+	border-radius: var(--ef-r-lg);
 }

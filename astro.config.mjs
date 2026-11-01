@@ -12,6 +12,7 @@ export default defineConfig({
 			logo: { src: './src/assets/logo.webp', replacesTitle: true },
 			favicon: '/favicon.png',
 			customCss: ['./src/styles/theme.css'],
+			pagefind: false,
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/EmergencyForge' },
 				{ icon: 'discord', label: 'Discord', href: 'https://emfor.ge/discord' },
@@ -19,8 +20,11 @@ export default defineConfig({
 			editLink: { baseUrl: 'https://github.com/EmergencyForge/Wiki/edit/main/' },
 			components: {
 				Header: './src/components/Header.astro',
+				Hero: './src/components/Hero.astro',
 				Sidebar: './src/components/Sidebar.astro',
+				TableOfContents: './src/components/TableOfContents.astro',
 				ThemeSelect: './src/components/ThemeSelect.astro',
+				Search: './src/components/Search.astro',
 			},
 			routeMiddleware: './src/routeData.ts',
 			// Each group is one header tab (src/sections.ts); the sidebar only shows the current one.

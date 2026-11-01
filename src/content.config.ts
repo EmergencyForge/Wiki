@@ -26,13 +26,35 @@ const reference = z.object({
 });
 
 // One YAML file per resource in src/data/reference/, one entry per export or event.
-// `id` doubles as the URL anchor on /referenz/<resource>/.
-export const referenceResources = ['ef-lib'] as const;
+// `id` doubles as the URL anchor on /referenz/<resource>/. Categories are listed in page order;
+// their labels become the headings and the table of contents of the reference page.
+export const referenceResources: Record<string, { categories: Record<string, string> }> = {
+	'ef-lib': {
+		categories: {
+			callbacks: 'Callbacks',
+			menu: 'Menü',
+			context: 'Context Menu',
+			dialog: 'Dialoge',
+			notify: 'Meldungen und Hinweise',
+			progress: 'Fortschritt',
+			minigame: 'Minispiele',
+			zone: 'Zonen',
+			util: 'Hilfsfunktionen',
+		},
+	},
+};
+
+// Same result as Starlight's heading slugs for these labels, so links like #menü keep working.
+export const categorySlug = (label: string) => label.toLowerCase().replace(/\s+/g, '-');
+
+// getCollection returns entries sorted by id; the page and its table of contents list exports first, then events.
+export const byKindAndName = (a: any, b: any) =>
+	a.data.kind.localeCompare(b.data.kind) || a.data.name.localeCompare(b.data.name);
 
 export const collections = {
 	docs: defineCollection({ loader: docsLoader(), schema: docsSchema() }),
 	...Object.fromEntries(
-		referenceResources.map((r) => [
+		Object.keys(referenceResources).map((r) => [
 			`reference-${r}`,
 			defineCollection({ loader: file(`src/data/reference/${r}.yaml`), schema: reference }),
 		]),

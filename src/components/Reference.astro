@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { Code } from '@astrojs/starlight/components';
+import { byKindAndName } from '../content.config';
 
 interface Props {
 	/** File name in src/data/reference/ without extension, e.g. `ef-lib`. */
@@ -10,9 +11,9 @@ interface Props {
 
 const { resource, category } = Astro.props;
 const resourceName = resource.replaceAll('-', '_');
-const entries = (await getCollection(`reference-${resource}` as any)).filter(
-	(e: any) => e.data.category === category,
-) as any[];
+const entries = (await getCollection(`reference-${resource}` as any))
+	.filter((e: any) => e.data.category === category)
+	.sort(byKindAndName) as any[];
 
 const realmLabel = { client: 'Client', server: 'Server', shared: 'Shared' } as const;
 
@@ -56,8 +57,8 @@ function signature(d: any) {
 					<span class="ref-name">{d.name}</span>
 					<span class="ref-args">({d.params.map((p: any) => p.name).join(', ')})</span>
 					<span class="ref-badges">
-						{d.kind === 'event' && <span class="ref-badge event">Event</span>}
-						<span class:list={['ref-badge', d.realm]}>{realmLabel[d.realm as keyof typeof realmLabel]}</span>
+						{d.kind === 'event' && <span class="ef-badge event">Event</span>}
+						<span class:list={['ef-badge', d.realm]}>{realmLabel[d.realm as keyof typeof realmLabel]}</span>
 					</span>
 				</summary>
 				<div class="ref-body">
@@ -131,7 +132,7 @@ function signature(d: any) {
 	}
 	.ref-entry {
 		border: 1px solid var(--sl-color-hairline-light);
-		border-radius: var(--ef-radius);
+		border-radius: var(--ef-r-2xl);
 		background: var(--ef-surface);
 		scroll-margin-top: calc(var(--sl-nav-height) + 4.5rem);
 	}
@@ -173,28 +174,6 @@ function signature(d: any) {
 		display: flex;
 		gap: 0.375rem;
 		flex-shrink: 0;
-	}
-	.ref-badge {
-		font-family: var(--sl-font);
-		font-size: 0.6875rem;
-		font-weight: 700;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		padding: 0.125rem 0.5rem;
-		border-radius: 999px;
-		border: 1px solid currentColor;
-	}
-	.ref-badge.client {
-		color: var(--ef-client);
-	}
-	.ref-badge.server {
-		color: var(--ef-server);
-	}
-	.ref-badge.shared {
-		color: var(--ef-shared);
-	}
-	.ref-badge.event {
-		color: var(--ef-event);
 	}
 	.ref-body {
 		padding: 0.25rem 0.875rem 0.875rem;
@@ -239,7 +218,7 @@ function signature(d: any) {
 		font-family: var(--sl-font-mono);
 		font-size: 0.875em;
 		padding: 0.05em 0.35em;
-		border-radius: 4px;
+		border-radius: var(--ef-r-sm);
 		background: var(--sl-color-bg-inline-code);
 		color: var(--sl-color-white);
 	}

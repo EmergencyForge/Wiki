@@ -1,41 +1,19 @@
 ---
 title: Start
-description: Anleitungen für ignis, ef_bridge und ef_lib von EmergencyForge.
+description: Anleitungen und Referenz für ignis, ef_bridge und ef_lib von EmergencyForge.
 template: splash
 hero:
   title: EmergencyForge Docs
-  tagline: Anleitungen zum Installieren, Einrichten und Betreiben von ignis, ef_bridge und ef_lib.
+  tagline: Installieren, einrichten, eigene Scripts bauen. Anleitungen und die Referenz aller Exports für ignis, ef_bridge und ef_lib.
   actions:
-    - text: ignis installieren
-      link: /ignis/installation/
+    - text: Referenz öffnen
+      link: /referenz/
       icon: right-arrow
-    - text: ef_bridge einrichten
-      link: /ef-bridge/installation/
+    - text: ef_lib einbinden
+      link: /ef-lib/installation/
       variant: minimal
 ---
 
-import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import Home from '../../components/Home.astro';
 
-<CardGrid>
-	<LinkCard
-		title="ignis"
-		description="Selbst gehostete Verwaltung für Feuerwehr und Rettungsdienst im Rollenspiel. Läuft per Docker oder auf einem Webspace mit PHP."
-		href="/ignis/"
-	/>
-	<LinkCard
-		title="ef_bridge"
-		description="FiveM-Ressource, die deinen Server mit ignis und Lex verbindet: Tablets für Rettungsdienst und Feuerwehr, EMD-Sync, Abrechnung und Lex-Abgleich. Vormals ignisTab."
-		href="/ef-bridge/"
-	/>
-	<LinkCard
-		title="ef_lib"
-		description="UI-Bibliothek für FiveM-Scripts: Menüs, Dialoge, Meldungen, Fortschrittsanzeigen, Minispiele und Zonen. Kostenlose Alternative zu ox_lib."
-		href="/ef-lib/"
-	/>
-</CardGrid>
-
-## Hilfe
-
-Fragen beantwortet die Community im [Forum](https://emfor.ge/forum) und im [Discord](https://emfor.ge/discord). Fehler in ignis meldest du als [Issue auf GitHub](https://github.com/EmergencyForge/ignis/issues).
-
-Steht in dieser Doku etwas Falsches, kannst du es selbst korrigieren: Unter jeder Seite gibt es den Link **Seite bearbeiten**. Wie das geht, steht unter [Mitmachen](/mitmachen/beitragen/).
+<Home />

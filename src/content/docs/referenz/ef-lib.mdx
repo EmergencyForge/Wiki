@@ -3,49 +3,13 @@ title: ef_lib
 description: Alle Exports und Events von ef_lib mit Parametern, Rückgabewerten und Beispielen.
 sidebar:
   order: 2
-tableOfContents:
-  maxHeadingLevel: 2
 ---
 
-import Reference from '../../../components/Reference.astro';
 import ReferenceFilter from '../../../components/ReferenceFilter.astro';
+import ReferencePage from '../../../components/ReferencePage.astro';
 
 Jeder Eintrag zeigt den Aufruf, die Parameter, was zurückkommt, und ein Beispiel. Wie man die Teile zusammen einsetzt, steht in den [Anleitungen zu ef_lib](/ef-lib/). Exports rufst du aus Lua mit `exports.ef_lib:Name(...)` auf, dein Script braucht dafür `dependency 'ef_lib'` in der `fxmanifest.lua`.
 
 <ReferenceFilter />
 
-## Callbacks
-
-<Reference resource="ef-lib" category="callbacks" />
-
-## Menü
-
-<Reference resource="ef-lib" category="menu" />
-
-## Context Menu
-
-<Reference resource="ef-lib" category="context" />
-
-## Dialoge
-
-<Reference resource="ef-lib" category="dialog" />
-
-## Meldungen und Hinweise
-
-<Reference resource="ef-lib" category="notify" />
-
-## Fortschritt
-
-<Reference resource="ef-lib" category="progress" />
-
-## Minispiele
-
-<Reference resource="ef-lib" category="minigame" />
-
-## Zonen
-
-<Reference resource="ef-lib" category="zone" />
-
-## Hilfsfunktionen
-
-<Reference resource="ef-lib" category="util" />
+<ReferencePage resource="ef-lib" />

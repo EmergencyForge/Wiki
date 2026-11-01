@@ -1,0 +1,126 @@
+---
+import Default from '@astrojs/starlight/components/TableOfContents.astro';
+---
+
+<details class="ef-toc" open>
+	<summary>
+		<span>Auf dieser Seite</span>
+		<svg class="ef-caret" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+			<path fill="currentColor" d="M8.6 7.4 10 6l6 6-6 6-1.4-1.4 4.6-4.6z"></path>
+		</svg>
+	</summary>
+	<Default />
+</details>
+
+<script is:inline>
+	// Before paint, so a collapsed panel does not flash open on every page.
+	try {
+		if (localStorage.getItem('ef-toc-collapsed') === '1') document.currentScript.previousElementSibling.open = false;
+	} catch {}
+</script>
+
+<script>
+	document.querySelectorAll<HTMLDetailsElement>('details.ef-toc').forEach((panel) => {
+		panel.addEventListener('toggle', () => {
+			try {
+				localStorage.setItem('ef-toc-collapsed', panel.open ? '' : '1');
+			} catch {}
+		});
+	});
+
+	// Sub-items (h3 headings, or the exports of a reference category) start collapsed behind a toggle.
+	// The mobile dropdown gets the same treatment.
+	const caret =
+		'<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M8.6 7.4 10 6l6 6-6 6-1.4-1.4 4.6-4.6z"/></svg>';
+	document.querySelectorAll('starlight-toc li, mobile-starlight-toc li').forEach((li) => {
+		const sub = li.querySelector<HTMLElement>(':scope > ul');
+		const link = li.querySelector(':scope > a');
+		if (!sub || !link) return;
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.className = 'ef-toc-twisty';
+		button.innerHTML = caret;
+		button.setAttribute('aria-label', `${link.textContent?.trim()} aufklappen`);
+		const set = (open: boolean) => {
+			sub.hidden = !open;
+			button.setAttribute('aria-expanded', String(open));
+		};
+		const hasTarget = [...sub.querySelectorAll('a')].some((a) => a.hash && a.hash === location.hash);
+		set(hasTarget);
+		button.addEventListener('click', () => set(sub.hidden));
+		li.classList.add('ef-toc-group');
+		link.after(button);
+	});
+</script>
+
+<style is:global>
+	.ef-toc > summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		list-style: none;
+		cursor: pointer;
+		font-size: var(--sl-text-h5);
+		font-weight: 600;
+		color: var(--sl-color-white);
+		margin-bottom: 0.5rem;
+	}
+	.ef-toc > summary::-webkit-details-marker {
+		display: none;
+	}
+	.ef-toc > summary:hover .ef-caret {
+		color: var(--sl-color-white);
+	}
+	.ef-toc .ef-caret {
+		color: var(--sl-color-gray-3);
+		transition: transform 0.15s ease;
+	}
+	.ef-toc[open] > summary .ef-caret {
+		transform: rotate(90deg);
+	}
+	/* The summary already names the panel; the heading stays for screen readers. */
+	.ef-toc #starlight__on-this-page {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+	}
+
+	.ef-toc-group {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+	}
+	.ef-toc-group > ul {
+		grid-column: 1 / -1;
+	}
+	.ef-toc-twisty {
+		display: grid;
+		place-items: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		border: 0;
+		border-radius: var(--ef-r-md);
+		background: transparent;
+		color: var(--sl-color-gray-3);
+		cursor: pointer;
+	}
+	.ef-toc-twisty:hover {
+		color: var(--sl-color-white);
+		background: var(--ef-surface-2);
+	}
+	.ef-toc-twisty svg {
+		transition: transform 0.15s ease;
+	}
+	.ef-toc-twisty[aria-expanded='true'] svg {
+		transform: rotate(90deg);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.ef-toc .ef-caret,
+		.ef-toc-twisty svg {
+			transition: none;
+		}
+	}
+</style>

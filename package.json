@@ -5,11 +5,13 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "check:search": "node scripts/search-check.mts"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.5",
     "astro": "^7.3.5",
+    "minisearch": "7.2.0",
     "sharp": "^0.35.5"
   }
 }

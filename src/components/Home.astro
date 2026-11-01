@@ -1,0 +1,299 @@
+---
+const products = [
+	{
+		name: 'ignis',
+		stack: 'docker · php · mysql',
+		text: 'Selbst gehostete Verwaltung für Feuerwehr und Rettungsdienst im Rollenspiel. Läuft per Docker oder auf einem Webspace mit PHP.',
+		href: '/ignis/',
+		links: [
+			['Installieren', '/ignis/installation/'],
+			['Einrichten', '/ignis/einrichtung/'],
+			['Update', '/ignis/update/'],
+		],
+	},
+	{
+		name: 'ef_bridge',
+		stack: 'fivem · lua · server',
+		text: 'Verbindet deinen FiveM-Server mit ignis und Lex: Tablets für Rettungsdienst und Feuerwehr, EMD-Sync, Abrechnung und Lex-Abgleich.',
+		href: '/ef-bridge/',
+		links: [
+			['Installieren', '/ef-bridge/installation/'],
+			['Befehle und Rechte', '/ef-bridge/befehle/'],
+			['Tablets im Spiel', '/ef-bridge/tablets/'],
+		],
+	},
+	{
+		name: 'ef_lib',
+		stack: 'fivem · lua · nui',
+		text: 'UI-Bibliothek für eigene Scripts: Menüs, Dialoge, Meldungen, Fortschritt, Minispiele, Callbacks und Zonen. Kostenlos und offen.',
+		href: '/ef-lib/',
+		links: [
+			['Installieren', '/ef-lib/installation/'],
+			['Menüs bauen', '/ef-lib/menues/'],
+			['Referenz', '/referenz/ef-lib/'],
+		],
+	},
+];
+
+const quick = [
+	['ef_lib in eigenem Script nutzen', '/ef-lib/installation/'],
+	['Alle Exports von ef_lib', '/referenz/ef-lib/'],
+	['ignis per Docker aufsetzen', '/ignis/installation/'],
+	['ef_bridge per Konsole einstellen', '/ef-bridge/befehle/'],
+	['Fortschrittsbalken mit Animation', '/ef-lib/fortschritt/'],
+	['Fehler in ef_bridge finden', '/ef-bridge/fehlerbehebung/'],
+];
+
+const help = [
+	['Forum', 'Fragen stellen und Lösungen finden', 'https://emfor.ge/forum'],
+	['Discord', 'Schnelle Hilfe aus der Community', 'https://emfor.ge/discord'],
+	['GitHub', 'Fehler melden, Code ansehen', 'https://github.com/EmergencyForge'],
+];
+
+const arrow =
+	'<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M13.2 5.3 19.9 12l-6.7 6.7-1.4-1.4 4.3-4.3H4v-2h12.1l-4.3-4.3z"/></svg>';
+---
+
+<div class="ef-home not-content">
+	<section>
+		<h2 class="ef-label">Produkte</h2>
+		<div class="products">
+			{
+				products.map((p) => (
+					<article class="product">
+						<p class="stack">{p.stack}</p>
+						<h3>
+							<a href={p.href}>{p.name}</a>
+						</h3>
+						<p class="text">{p.text}</p>
+						<ul>
+							{p.links.map(([label, href]) => (
+								<li>
+									<a href={href}>
+										<Fragment set:html={arrow} />
+										{label}
+									</a>
+								</li>
+							))}
+						</ul>
+					</article>
+				))
+			}
+		</div>
+	</section>
+
+	<section>
+		<h2 class="ef-label">Häufig gebraucht</h2>
+		<ul class="quick">
+			{
+				quick.map(([label, href]) => (
+					<li>
+						<a href={href}>
+							<span class="label">{label}</span>
+							<code>{href}</code>
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</section>
+
+	<section>
+		<h2 class="ef-label">Hilfe</h2>
+		<div class="help">
+			{
+				help.map(([name, text, href]) => (
+					<a class="help-card" href={href}>
+						<span class="name">{name}</span>
+						<span class="text">{text}</span>
+					</a>
+				))
+			}
+		</div>
+		<p class="edit">
+			Steht hier etwas Falsches? Unter jeder Seite gibt es den Link <strong>Seite bearbeiten</strong>. Wie das
+			geht, steht unter <a href="/mitmachen/beitragen/">Mitmachen</a>.
+		</p>
+	</section>
+</div>
+
+<style>
+	.ef-home {
+		display: flex;
+		flex-direction: column;
+		gap: 3rem;
+		padding-bottom: 2rem;
+	}
+	.ef-label {
+		margin: 0 0 1rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--sl-color-gray-3);
+	}
+	a {
+		text-decoration: none;
+	}
+
+	.products {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+		gap: 1rem;
+	}
+	.product {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 1.25rem;
+		background: var(--ef-surface);
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: var(--ef-r-2xl);
+		transition: border-color 0.15s ease;
+	}
+	.product:hover {
+		border-color: var(--sl-color-gray-4);
+	}
+	.stack {
+		margin: 0;
+		font-family: var(--sl-font-mono);
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-text-accent);
+	}
+	.product h3 {
+		margin: 0;
+		font-family: var(--sl-font-mono);
+		font-size: 1.25rem;
+		font-weight: 600;
+	}
+	.product h3 a {
+		color: var(--sl-color-white);
+	}
+	.product h3 a:hover {
+		color: var(--sl-color-text-accent);
+	}
+	.text {
+		margin: 0;
+		font-size: var(--sl-text-sm);
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+		flex: 1;
+	}
+	.product ul {
+		list-style: none;
+		margin: 0.5rem 0 0;
+		padding: 0.75rem 0 0;
+		border-top: 1px solid var(--sl-color-hairline);
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+	.product li a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-2);
+	}
+	.product li a :global(svg) {
+		color: var(--sl-color-gray-4);
+		transition: transform 0.15s ease, color 0.15s ease;
+	}
+	.product li a:hover {
+		color: var(--sl-color-white);
+	}
+	.product li a:hover :global(svg) {
+		color: var(--sl-color-text-accent);
+		transform: translateX(2px);
+	}
+
+	/* The 1px gap shows the list's background as cell borders, whatever the column count. */
+	.quick {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 1px;
+		background: var(--sl-color-hairline-light);
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: var(--ef-r-2xl);
+		overflow: hidden;
+	}
+	.quick li {
+		background: var(--sl-color-bg);
+	}
+	.quick a {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		height: 100%;
+		padding: 0.875rem 1rem;
+		color: var(--sl-color-gray-1);
+	}
+	.quick a:hover {
+		background: var(--ef-surface);
+		color: var(--sl-color-text-accent);
+	}
+	@media (max-width: 60rem) {
+		.quick {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+	@media (max-width: 36rem) {
+		.quick {
+			grid-template-columns: 1fr;
+		}
+	}
+	.quick code {
+		padding: 0;
+		border: 0;
+		background: none;
+		font-family: var(--sl-font-mono);
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+		white-space: nowrap;
+	}
+
+	.help {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+		gap: 1rem;
+	}
+	.help-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 1rem 1.25rem;
+		background: var(--ef-surface);
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: var(--ef-r-2xl);
+	}
+	.help-card:hover {
+		border-color: var(--sl-color-gray-4);
+	}
+	.help-card .name {
+		font-weight: 600;
+		color: var(--sl-color-white);
+	}
+	.help-card .text {
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+	.edit {
+		margin: 1rem 0 0;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+	.edit a {
+		color: var(--sl-color-text-accent);
+	}
+	.edit a:hover {
+		text-decoration: underline;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.product li a :global(svg) {
+			transition: none;
+		}
+	}
+</style>

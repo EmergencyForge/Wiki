@@ -1,0 +1,34 @@
+                                          :local ok = exports.ef_lib:ProgressBar({ label = 'Patient versorgen', duration
+                                        : = 5000 }) if ok then exports.ef_lib:SendNotification('success', 'Rettungsdiens
+:::::::::::::::::::::::::::::::::::::::t', 'Patient stabil') end local data = exports.ef_lib:InputDialog('Einsatz', { {
+.type = 'input', label = 'Stichwort' } }) exports.ef_lib:OpenMenu({ title = 'RTW 1/83-1', items = items }) local success
+ . = exports.ef_lib:Minigame('lockpick', 'hard') exports.ef:.................................................:_lib:ShowH
+  .int('E', 'Trage ausladen') exports.ef_lib:RegisterCall:.                                                  .back('ef:u
+   .nits', function(source) return units end) local unit.                                                    .s = export
+     :s.ef_lib:CallbackAwait...........................                                                     .:('ef:units
+      :') exports.ef_lib:Crea.                                                                            .teSphereZone(
+       .{ coords = vec3(298.6, .                                                                       .:-584.5, 43.3),
+         :radius = 3.0 }) local :.                                        .free = exp:              .:orts.ef_lib:Cool:.
+          .down('alarm', 30000) ex:.                                      .ports.ef_l:            .:ib:Banner({ titl:
+            :e = 'Einsatz beendet', :.                       .t:.         .ext = 'Gut:         .:e Arbeit' }) loc:.
+             .al ok = exports.ef_lib:Pr.                   .:ogres:.      .sBar({ lab:       :el = 'Patient ve:.
+               .rsorgen', duration = 5000:.               : }) if ok :    .then expor:    .:ts.ef_lib:SendNo:.
+                 :tification('success', 'Ret:.          .tungsdienst', :. .'Patient s: .:tabil') end loca:.
+                   .l data = exports.ef_lib:Inp::.      .:utDialog('Einsat:z', { { typ:e = 'input', lab.
+                     .:el = 'Stichwort' } }) exports:.     ..ef_lib:OpenMenu({ title = 'RTW 1/83-1',:.
+                       .: items = items }) local succe.      .:ss = exports.ef_lib:Minigame('lock:.
+                          .:pick', 'hard') exports.ef_          .:lib:ShowHint('E', 'Trage ausl:
+                             .:aden') exports.ef_lib:.            .:RegisterCallback('ef:uni:.
+                                .:ts', function(sour:                .:ce) return units e:.
+                                   .nd) local units                  .:= exports.ef_lib:Ca.
+                                   :llbackAwait('ef.              .::units') exports.ef_lib::.
+                                 .CreateSphereZone.             .({ coords = vec3(298.6, -584.5:.
+                               .:, 43.3), radius:            .: = 3.0 }) local free = exports.ef_:.
+                             .:lib:Cooldown('al.          .:arm', 30000) exports.ef_lib:Banner({ tit:.
+                         .::le = 'Einsatz bee:          .ndet', text = 'Gu:te Arbeit' :}) local ok = ex:
+                     .:ports.ef_lib:ProgressB:.         .ar({ label = ':. .Patient ve: .:rsorgen', dura.
+                     :tion = 5000 }) if ok then:.         . exports.:.    .ef_lib:Sen:    .:dNotifica:
+                     :tion('success', 'Rettungsdi:          :enst':.      ., 'Patient:       .: stab.
+                     :il') end local data = exports.         ..:.         .ef_lib:Inp:         .:u:
+                     :tDialog('Einsatz', { { type = '.                    .input', la:
+                     .................................                    .bel = 'Sti:
