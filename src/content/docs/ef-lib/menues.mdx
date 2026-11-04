@@ -21,6 +21,7 @@ Ein Menü ist eine Liste von Einträgen, die du als Tabelle an [OpenMenu](/refer
 local function openVehicleMenu()
     exports.ef_lib:OpenMenu({
         title = 'RTW 1/83-1',
+        subtitle = 'Rettungswache Mitte',
         items = {
             { id = 'rtw:status', label = 'Status setzen', icon = 'tower-broadcast', type = 'select',
               value = '2', options = {
@@ -68,6 +69,8 @@ end)
 `ef_lib:menuAction` ist ein normales Client-Event. Jedes Script, das darauf hört, bekommt die Aktionen aller Menüs, auch die von fremden Scripts. Gib deinen IDs deshalb ein eigenes Präfix wie `rtw:` und reagier nur auf deine eigenen.
 :::
 
+`subtitle` ist optional und steht als kleine Zeile unter dem Titel. Das geht auch bei Untermenüs.
+
 ## Item-Typen
 
 Jeder Eintrag braucht `id` und `label`. Ohne `type` ist er ein Button. Für alle Typen gelten außerdem `description` (zweite Zeile), `icon`, `iconColor`, `disabled` (ausgegraut) und `readonly` (sichtbar, aber nicht auslösbar). Mit `data` hängst du eigene Werte an, die im Event unverändert zurückkommen.
@@ -79,7 +82,7 @@ Jeder Eintrag braucht `id` und `label`. Ohne `type` ist er ein Button. Für alle
 | `input` | `value`, `placeholder` | wenn der Spieler im Feld Enter drückt | `value` mit dem Text |
 | `select` | `value`, `options` | bei jedem Weiterschalten | `value` der neuen Option |
 | `number` | `current`, `min`, `max`, `step` | bei jeder Änderung mit links und rechts | `value` mit der Zahl |
-| Untermenü | `submenu = { title, items }` | kein Event, das Untermenü geht auf | |
+| Untermenü | `submenu = { title, subtitle, items }` | kein Event, das Untermenü geht auf | |
 
 `options` bei `select` sind einfache Strings oder Tabellen `{ value, label }`, wenn im Menü ein anderer Text stehen soll als der Wert, der zurückkommt. Ein Klick oder Enter schaltet zur nächsten Option.
 

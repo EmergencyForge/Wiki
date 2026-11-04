@@ -122,7 +122,7 @@
   params:
     - name: menuData
       type: table
-      description: "Felder `title`, `items` (Liste der Einträge), `showCursor` (Standard `Config.ShowCursor`, in der mitgelieferten config.lua `false`) und `allowMove` (Standard `Config.AllowMove`, `true`). Ein Eintrag hat `id`, `label` und optional `description`, `icon` (Font-Awesome-Name), `iconColor`, `disabled`, `readonly`, `data`, `submenu = { title, items }` und `confirm` (`true` oder `{ title, message, confirmLabel, cancelLabel }`). Mit `type` wird er zu `'checkbox'` (`checked`), `'input'` (`value`, `placeholder`), `'select'` (`value`, `options`) oder `'number'` (`min`, `max`, `step`, `current`). Standard ist `'button'`."
+      description: "Felder `title`, `subtitle` (optional, kleine Zeile unter dem Titel), `items` (Liste der Einträge), `showCursor` (Standard `Config.ShowCursor`, in der mitgelieferten config.lua `false`) und `allowMove` (Standard `Config.AllowMove`, `true`). Ein Eintrag hat `id`, `label` und optional `description`, `icon` (Font-Awesome-Name), `iconColor`, `disabled`, `readonly`, `data`, `submenu = { title, subtitle, items }` und `confirm` (`true` oder `{ title, message, confirmLabel, cancelLabel }`). Mit `type` wird er zu `'checkbox'` (`checked`), `'input'` (`value`, `placeholder`), `'select'` (`value`, `options`) oder `'number'` (`min`, `max`, `step`, `current`). Standard ist `'button'`."
   example: |
     exports.ef_lib:OpenMenu({
         title = 'Fahrzeughalle',
