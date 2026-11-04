@@ -20,8 +20,8 @@
 	src: url('/fonts/esse-mono-variable.woff2') format('woff2');
 }
 
-/* Dark is Starlight's base theme. Surfaces and orange follow emergencyforge.de:
-   warm near-black, the header one step lighter, #ff6a2b where orange is text. */
+/* Dark is Starlight's base theme. The orange follows emergencyforge.de, #ff6a2b where it is text.
+   Header, sidebar and content share one neutral grey surface, so whitespace separates them instead of lines. */
 :root {
 	--sl-font: 'Esse', system-ui, sans-serif;
 	--sl-font-mono: 'Esse Mono', ui-monospace, monospace;
@@ -32,28 +32,33 @@
 	--sl-color-white: #f3ebe4;
 	--sl-color-gray-1: #e6ddd5;
 	--sl-color-gray-2: #c4bab1;
-	--sl-color-gray-3: #8f857c;
+	--sl-color-gray-3: #a0978f;
 	--sl-color-gray-4: #5a524b;
-	--sl-color-gray-5: #2a2622;
-	--sl-color-gray-6: #181512;
-	--sl-color-black: #0c0a09;
+	--sl-color-gray-5: #3d3838;
+	--sl-color-gray-6: #252525;
+	--sl-color-black: #1d1d1d;
 
-	--sl-color-bg-nav: #13110f;
+	--sl-color-text: var(--sl-color-gray-1);
+	--sl-color-bg-nav: var(--sl-color-bg);
 	--sl-color-bg-sidebar: var(--sl-color-bg);
-	--sl-color-hairline: #221e1b;
-	--sl-color-hairline-light: #2a2622;
-	--sl-color-hairline-shade: #000;
+	--sl-color-bg-inline-code: var(--ef-surface-2);
+	--sl-color-hairline: #2c2c2c;
+	--sl-color-hairline-light: #3d3838;
+	--sl-color-hairline-shade: #141414;
 
-	--sl-nav-height: 3.75rem;
-	--sl-content-width: 50rem;
+	/* Above 88rem the whole layout stays centred; the sidebar grows by the free space and keeps its content inset. */
+	--ef-gutter: max(0px, (100vw - 88rem) / 2);
+	--sl-sidebar-width: calc(17.5rem + var(--ef-gutter));
+	--sl-nav-height: 4rem;
+	--sl-content-width: 48rem;
 	--sl-line-height: 1.65;
-	--sl-text-h1: 2.125rem;
-	--sl-text-h2: 1.5rem;
+	--sl-text-h1: 2.25rem;
+	--sl-text-h2: 1.75rem;
 	--sl-text-h3: 1.25rem;
 	--sl-text-h4: 1.0625rem;
 
-	--ef-surface: #13110f;
-	--ef-surface-2: #1b1815;
+	--ef-surface: #2c2c2c;
+	--ef-surface-2: #353535;
 
 	/* Radius scale of emergencyforge.de (base 3px): small chips 3 to 4, controls 6, cards and panels 10, dialogs 14. */
 	--ef-r-sm: 3px;
@@ -90,7 +95,6 @@
 	--sl-color-gray-7: #f6f3f0;
 	--sl-color-black: #fdfcfb;
 
-	--sl-color-bg-nav: #f6f3f0;
 	--sl-color-hairline: #e7e1db;
 	--sl-color-hairline-light: #ddd6cf;
 	--sl-color-hairline-shade: #c9c0b8;
@@ -120,20 +124,79 @@
 	--ec-brdRad: var(--ef-r-2xl);
 	--ec-codeFontFam: var(--sl-font-mono);
 }
-
-header.header {
-	border-bottom-color: var(--sl-color-hairline);
+/* Frames with a bar on top carry the copy button there, so it never covers code. */
+.expressive-code .frame:is(.is-terminal, .has-title) .copy {
+	inset-block-start: 0.1875rem;
+}
+.expressive-code .frame:is(.is-terminal, .has-title) .copy button {
+	width: 1.75rem;
+	height: 1.75rem;
+	background: transparent;
+	opacity: 0.75;
+}
+.expressive-code .frame:is(.is-terminal, .has-title) .copy button:is(:hover, :focus-visible) {
+	opacity: 1;
+}
+.expressive-code .frame:is(.is-terminal, .has-title) .copy button::before {
+	border: 0;
+}
+.expressive-code .frame:is(.is-terminal, .has-title) .copy button::after {
+	margin: 0.3125rem;
+	mask-size: contain;
 }
 
-/* Headings: tighter and bolder, closer to the Cfx docs than Starlight's large defaults. */
+header.header {
+	padding-inline: calc(var(--sl-nav-pad-x) + var(--ef-gutter));
+	border-bottom-color: var(--sl-color-hairline);
+}
+.sidebar-content {
+	padding-inline-start: calc(var(--sl-sidebar-pad-x) + var(--ef-gutter));
+}
+@media (min-width: 50rem) {
+	.sidebar-pane {
+		border-inline-end: 0;
+		scrollbar-width: thin;
+		scrollbar-color: transparent transparent;
+	}
+	/* A permanent scrollbar would read as the divider line the one-surface layout avoids. */
+	.sidebar-pane:hover {
+		scrollbar-color: var(--sl-color-gray-5) transparent;
+	}
+}
+@media (min-width: 72rem) {
+	.right-sidebar {
+		border-inline-start: 0;
+	}
+	.right-sidebar-panel .sl-container {
+		width: 16.5rem;
+	}
+}
+.content-panel + .content-panel {
+	border-top: 0;
+	padding-top: 0;
+}
+
+/* Headings: large with room above, so a page can be scanned by them alone. */
 .sl-markdown-content :is(h1, h2, h3, h4) {
 	font-weight: 700;
 	letter-spacing: -0.01em;
+	text-wrap: balance;
+}
+.sl-markdown-content h2:not(:where(.not-content *)) {
+	margin-top: 3rem;
+	letter-spacing: -0.02em;
+}
+.sl-markdown-content h3:not(:where(.not-content *)) {
+	margin-top: 2rem;
 }
 h1#_top {
 	font-size: var(--sl-text-h1);
 	font-weight: 700;
-	letter-spacing: -0.02em;
+	letter-spacing: -0.025em;
+	text-wrap: balance;
+}
+.ef-eyebrow + h1#_top {
+	margin-top: 0.375rem;
 }
 
 /* Links read as text until hovered, the underline then confirms. */
@@ -161,26 +224,62 @@ h1#_top {
 	border-radius: var(--ef-r-2xl);
 }
 
-/* Sidebar like the Cfx docs: small caps group labels, the current page as orange text with a bar. */
+/* Sidebar: one list of all areas. Group labels carry an icon, pages line up with the label text. */
+nav.sidebar .top-level > li + li {
+	margin-top: 1.5rem;
+}
 nav.sidebar .group-label .large {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
 	font-size: 0.75rem;
 	font-weight: 700;
-	letter-spacing: 0.06em;
+	letter-spacing: 0.04em;
 	text-transform: uppercase;
-	color: var(--sl-color-gray-3);
+	color: var(--sl-color-white);
+}
+nav.sidebar .group-label .large::before {
+	content: '';
+	flex: none;
+	width: 1rem;
+	height: 1rem;
+	background: var(--sl-color-text-accent);
+	mask: var(--ef-group-icon) center / contain no-repeat;
+}
+nav.sidebar summary .caret {
+	color: var(--sl-color-gray-4);
+}
+/* Lucide icons (ISC), selected by the folder a group links to. */
+nav.sidebar details:has(a[href^='/ignis/']) {
+	--ef-group-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4'/%3E%3C/svg%3E");
+}
+nav.sidebar details:has(a[href^='/ef-bridge/']) {
+	--ef-group-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 19a1 1 0 0 1-1-1v-2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a1 1 0 0 1-1 1z'/%3E%3Cpath d='M17 21v-2'/%3E%3Cpath d='M19 14V6.5a1 1 0 0 0-7 0v11a1 1 0 0 1-7 0V10'/%3E%3Cpath d='M21 21v-2'/%3E%3Cpath d='M3 5V3'/%3E%3Cpath d='M4 10a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a2 2 0 0 1-2 2z'/%3E%3Cpath d='M7 5V3'/%3E%3C/svg%3E");
+}
+nav.sidebar details:has(a[href^='/ef-lib/']) {
+	--ef-group-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2'/%3E%3Crect x='14' y='2' width='8' height='8' rx='1'/%3E%3C/svg%3E");
+}
+nav.sidebar details:has(a[href^='/referenz/']) {
+	--ef-group-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1'/%3E%3Cpath d='M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1'/%3E%3C/svg%3E");
+}
+nav.sidebar details:has(a[href^='/mitmachen/']) {
+	--ef-group-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='18' cy='18' r='3'/%3E%3Ccircle cx='6' cy='6' r='3'/%3E%3Cpath d='M13 6h3a2 2 0 0 1 2 2v7'/%3E%3Cline x1='6' x2='6' y1='9' y2='21'/%3E%3C/svg%3E");
 }
 nav.sidebar ul ul li {
 	margin-inline-start: 0;
 	border-inline-start: 0;
 	padding-inline-start: 0;
 }
+nav.sidebar ul ul a {
+	padding-inline-start: calc(var(--sl-sidebar-item-padding-inline) + 1.5rem);
+}
 nav.sidebar a {
 	border-radius: var(--ef-r-lg);
-	border-inline-start: 2px solid transparent;
 	color: var(--sl-color-gray-2);
+	scroll-margin-block: 6rem;
 }
 nav.sidebar a:hover {
-	background: var(--ef-surface-2);
+	background: var(--ef-surface);
 	color: var(--sl-color-white);
 }
 nav.sidebar a[aria-current='page'],
@@ -189,9 +288,6 @@ nav.sidebar a[aria-current='page']:focus {
 	font-weight: 600;
 	color: var(--sl-color-text-accent);
 	background: transparent;
-	border-inline-start-color: var(--sl-color-accent);
-	border-start-start-radius: 0;
-	border-end-start-radius: 0;
 }
 
 .ef-badge {
@@ -236,8 +332,11 @@ nav.sidebar a[aria-current='page']:focus {
 	display: none !important;
 }
 
+/* Callouts as a flat panel; the coloured icon and title say which kind it is. */
 .sl-markdown-content .starlight-aside {
+	border: 0;
 	border-radius: var(--ef-r-2xl);
+	background: var(--ef-surface);
 }
 .card,
 .sl-link-card {

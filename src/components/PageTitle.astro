@@ -1,0 +1,19 @@
+---
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+import { currentSection } from '../sections';
+
+const section = currentSection(Astro.url.pathname)?.label;
+const { title } = Astro.locals.starlightRoute.entry.data;
+---
+
+{section && section !== title && <p class="ef-eyebrow">{section}</p>}
+<Default />
+
+<style>
+	.ef-eyebrow {
+		font-size: 0.8125rem;
+		font-weight: 600;
+		line-height: 1.2;
+		color: var(--sl-color-text-accent);
+	}
+</style>

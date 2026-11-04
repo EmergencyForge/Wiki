@@ -1,8 +1,15 @@
 ---
 import Default from '@astrojs/starlight/components/Sidebar.astro';
-import SectionTabs from './SectionTabs.astro';
 ---
 
-{/* The header tabs are hidden on small screens, so the mobile menu carries them. */}
-<SectionTabs placement="menu" />
 <Default />
+
+<script>
+	// All areas share one long list, so a page opened from a link or the search can sit below the fold.
+	// After a click in the sidebar the link is already visible and this does nothing.
+	const reveal = () =>
+		document.querySelector('nav.sidebar a[aria-current="page"]')?.scrollIntoView({ block: 'nearest' });
+	reveal();
+	// On small screens the sidebar is a closed popover at load, so it has to wait for the menu to open.
+	document.getElementById('starlight__sidebar')?.addEventListener('toggle', reveal);
+</script>

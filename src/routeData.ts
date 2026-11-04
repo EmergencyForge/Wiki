@@ -1,21 +1,9 @@
 import { getCollection } from 'astro:content';
 import { defineRouteMiddleware } from '@astrojs/starlight/route-data';
-import type { StarlightRouteData } from '@astrojs/starlight/route-data';
 import { byKindAndName, categorySlug, referenceResources } from './content.config';
-import { currentSection } from './sections';
-
-type Entry = StarlightRouteData['sidebar'][number];
 
 export const onRequest = defineRouteMiddleware(async (context) => {
 	const route = context.locals.starlightRoute;
-
-	// The sidebar only lists the area the page belongs to; the header tabs switch areas.
-	const section = currentSection(context.url.pathname);
-	if (section) {
-		const inSection = (e: Entry): boolean =>
-			e.type === 'link' ? e.href.startsWith(section.prefix) : e.entries.some(inSection);
-		route.sidebar = route.sidebar.filter(inSection);
-	}
 
 	// Reference headings are rendered by a component, so the table of contents is built from the data:
 	// one item per category, its exports and events as collapsed children.

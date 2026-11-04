@@ -1,10 +1,10 @@
-// Top-level areas shown as tabs in the header. Each one maps to a folder in src/content/docs.
+// Top-level areas, one per sidebar group. The label heads a page and its search results.
 export const sections = [
-	{ label: 'ignis', href: '/ignis/', prefix: '/ignis/' },
-	{ label: 'ef_bridge', href: '/ef-bridge/', prefix: '/ef-bridge/' },
-	{ label: 'ef_lib', href: '/ef-lib/', prefix: '/ef-lib/' },
-	{ label: 'Referenz', href: '/referenz/', prefix: '/referenz/' },
-	{ label: 'Mitmachen', href: '/mitmachen/beitragen/', prefix: '/mitmachen/' },
+	{ label: 'ignis', prefix: '/ignis/' },
+	{ label: 'ef_bridge', prefix: '/ef-bridge/' },
+	{ label: 'ef_lib', prefix: '/ef-lib/' },
+	{ label: 'Referenz', prefix: '/referenz/' },
+	{ label: 'Mitmachen', prefix: '/mitmachen/' },
 ];
 
 export const currentSection = (pathname: string) => sections.find((s) => pathname.startsWith(s.prefix));

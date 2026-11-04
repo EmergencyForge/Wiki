@@ -22,12 +22,13 @@ export default defineConfig({
 				Header: './src/components/Header.astro',
 				Hero: './src/components/Hero.astro',
 				Sidebar: './src/components/Sidebar.astro',
+				PageTitle: './src/components/PageTitle.astro',
 				TableOfContents: './src/components/TableOfContents.astro',
 				ThemeSelect: './src/components/ThemeSelect.astro',
 				Search: './src/components/Search.astro',
 			},
 			routeMiddleware: './src/routeData.ts',
-			// Each group is one header tab (src/sections.ts); the sidebar only shows the current one.
+			// A group's folder also picks its icon in theme.css and its label in src/sections.ts.
 			sidebar: [
 				{ label: 'ignis', items: [{ autogenerate: { directory: 'ignis' } }] },
 				{ label: 'ef_bridge', items: [{ autogenerate: { directory: 'ef-bridge' } }] },
