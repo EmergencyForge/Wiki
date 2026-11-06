@@ -21,7 +21,7 @@ Ab Werk ist er aus. Ob die Tablets überhaupt eine Anmeldung brauchen, legst du 
 
 Der API-Schlüssel bleibt dabei auf dem Server, und den Link schreibt ef_bridge nirgends hin. Neue Konten legt der Tablet-Login nicht an. Ein Login gilt für beide Tablets, sie teilen sich die ignis-Sitzung. Das gilt auch für ein Tablet in der Hand.
 
-Läuft ignis hinter der EmergencyForge-Konsole, kommt die Discord-ID mit jeder Anmeldung von dort. Dafür muss Discord im Konto verknüpft sein, und der Spieler muss sich nach dem Update einmal im Browser anmelden.
+Läuft ignis hinter der EmergencyForge-Konsole, braucht der Tablet-Login ignis ab 2026.1.17-beta, das ist eine Beta. Die Discord-ID kommt dann mit jeder Anmeldung von dort. Dafür muss Discord im Konto verknüpft sein, und der Spieler muss sich nach dem Update einmal im Browser anmelden.
 
 ## Einrichten
 
@@ -79,7 +79,7 @@ Der FiveM-Server nimmt pro Spieler höchstens eine Anfrage alle 15 Sekunden an. 
 
 ## Lex-Tablet
 
-Das Lex-Tablet meldet genauso an, gegen Lex und mit dem Lex-Schlüssel. Dort schaltet `Lex.TabletLogin` den Login ein, in Lex die Option „Anmeldung über das Tablet im Spiel zulassen“ unter Einstellungen › FiveM-Abgleich. Dieselbe Anmeldung stellt Lex auf die Tablet-Ansicht um.
+Das Lex-Tablet meldet genauso an, gegen Lex und mit dem Lex-Schlüssel. Es braucht ef_bridge ab v2026.5.0-beta und Lex ab v2026.0.46. Dort schaltet `Lex.TabletLogin` den Login ein, in Lex die Option „Anmeldung über das Tablet im Spiel zulassen“ unter Einstellungen › FiveM-Abgleich. Dieselbe Anmeldung stellt Lex auf die Tablet-Ansicht um.
 
 ignis und Lex zählen getrennt: Jedes hat seine eigene Sitzung, und ein fehlgeschlagener Login bei Lex hält den bei ignis nicht auf. Einrichten und Hinweise stehen unter [Lex-Tablet](/ef-bridge/lex-tablet/).
 
