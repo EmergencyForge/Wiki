@@ -18,6 +18,7 @@ Jeder Teil lässt sich einzeln einschalten, ab Werk ist alles aus:
 | FireTab | ignis | Tablet für die Feuerwehr, öffnet die Einsatzliste |
 | EMD-Sync | ignis | gleicht Fahrzeuge, Status, Einsatzdaten und Lagemeldungen zwischen `emergencydispatch` und ignis ab |
 | eNOTF-Abrechnung | ignis | holt freigegebene eNOTF-Protokolle, damit ein Skript auf deinem Server Rechnungen stellen kann |
+| Lex-Tablet | Lex | öffnet Lex im Spiel in der Tablet-Ansicht von Lex |
 | Lex-Abgleich | Lex | meldet Charaktere als Personen und ihre Fahrzeuge samt Halter an Lex |
 
 Wer nur Lex nutzt, braucht kein ignis, und umgekehrt.
@@ -26,9 +27,9 @@ Config-Dateien gibt es nicht. Eingestellt wird alles im Spiel im [Admin-Panel](/
 
 ## So hängt es zusammen
 
-Die Tablets laden die ignis-Seiten direkt im Spielbrowser des Spielers. Der Spieler muss ignis also selbst erreichen können, über HTTPS.
+Die Tablets laden ihre Seiten direkt im Spielbrowser des Spielers, das eNOTF-Tablet und das FireTab von ignis, das Lex-Tablet von Lex. Der Spieler muss die Adresse also selbst erreichen können, über HTTPS.
 
-Der FiveM-Server spricht zusätzlich mit ignis, und zwar mit dem API-Schlüssel aus ignis. Darüber laufen die Zuordnung von Charakter und ignis-Sitzung, der [Tablet-Login](/ef-bridge/tablet-login/), EMD-Sync und die Abrechnung. Für Lex gibt es einen eigenen Schlüssel. Beide Schlüssel bleiben auf dem Server, kein Spieler bekommt sie zu sehen, auch kein Admin im Panel.
+Der FiveM-Server spricht zusätzlich mit ignis, und zwar mit dem API-Schlüssel aus ignis. Darüber laufen die Zuordnung von Charakter und ignis-Sitzung, der [Tablet-Login](/ef-bridge/tablet-login/), EMD-Sync und die Abrechnung. Für Lex gibt es einen eigenen Schlüssel, darüber laufen der Lex-Abgleich und der Login am Lex-Tablet. Beide Schlüssel bleiben auf dem Server, kein Spieler bekommt sie zu sehen, auch kein Admin im Panel.
 
 ## Voraussetzungen
 
@@ -47,7 +48,7 @@ Bei ignis:
 - die Plugins eNOTF und fireTab eingeschaltet
 - der API-Schlüssel aus ignis
 
-Bei Lex: der FiveM-Abgleich unter Einstellungen › FiveM-Abgleich, erreichbar über HTTPS vom FiveM-Server aus.
+Bei Lex: der FiveM-Abgleich unter Einstellungen › FiveM-Abgleich, erreichbar über HTTPS vom FiveM-Server aus. Für das [Lex-Tablet](/ef-bridge/lex-tablet/) müssen auch die Spieler Lex über HTTPS erreichen.
 
 Wie du ignis selbst aufsetzt, steht unter [ignis installieren](/ignis/installation/).
 

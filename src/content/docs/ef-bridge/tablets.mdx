@@ -1,17 +1,17 @@
 ---
 title: Tablets im Spiel
-description: eNOTF-Tablet und FireTab öffnen, als Fenster oder in der Hand zeigen, und was die Hinweise im Spiel bedeuten.
+description: eNOTF-Tablet, FireTab und Lex-Tablet öffnen, als Fenster oder in der Hand zeigen, und was die Hinweise im Spiel bedeuten.
 sidebar:
   order: 5
 ---
 
 ## Öffnen und schließen
 
-Das eNOTF-Tablet öffnest du mit `/enotf` oder F9, das FireTab mit `/firetab`. Für das FireTab ist ab Werk keine Taste vorbelegt.
+Das eNOTF-Tablet öffnest du mit `/enotf` oder F9, das FireTab mit `/firetab`, das [Lex-Tablet](/ef-bridge/lex-tablet/) mit `/lex`. Für FireTab und Lex-Tablet ist ab Werk keine Taste vorbelegt.
 
-Jeder Spieler kann die Tasten selbst ändern, in FiveM unter Einstellungen › Tastenbelegung › FiveM. Die Einträge heißen „eNOTF Tablet öffnen/schließen“ und „FireTab Tablet öffnen/schließen“. Befehl und Standardtaste stellst du im Panel ein, sie gelten nach `restart ef_bridge`.
+Jeder Spieler kann die Tasten selbst ändern, in FiveM unter Einstellungen › Tastenbelegung › FiveM. Die Einträge heißen „eNOTF Tablet öffnen/schließen“, „FireTab Tablet öffnen/schließen“ und „Lex Tablet öffnen/schließen“. Befehl und Standardtaste stellst du im Panel ein, sie gelten nach `restart ef_bridge`.
 
-Geschlossen wird das Tablet mit ESC. Im Fenster gibt es dazu in der Kopfleiste das ×, Home lädt die Startseite des Tablets neu, und beim eNOTF gibt es einen Zurück-Knopf.
+Geschlossen wird das Tablet mit ESC. Im Fenster gibt es dazu in der Kopfleiste das ×, Home lädt die Startseite des Tablets neu, und beim eNOTF gibt es einen Zurück-Knopf. Das Lex-Tablet hat keine Kopfleiste, nur das ×.
 
 Nach dem Schließen bleibt die Seite eine Weile geladen, ab Werk 15 Minuten (`KeepMinutes`, 5 bis 45). Wer in der Zeit wieder öffnet, macht dort weiter, wo er aufgehört hat. Danach lädt die Seite neu.
 
@@ -24,6 +24,7 @@ Ein Spieler kann ein Tablet nur öffnen, wenn es eingeschaltet ist, sein Job in 
 | „Die Einstellungen werden noch geladen, versuch es gleich noch mal.“ | Der Client hat vom Server noch keine Einstellungen bekommen, meist direkt nach dem Verbinden oder einem Neustart von ef_bridge |
 | „Dieses Tablet ist nicht aktiviert!“ | „Tablet aktiv“ ist für dieses Tablet aus |
 | „Für das Tablet fehlt die Adresse von ignis (/efbridge).“ | Die Adresse von ignis ist leer |
+| „Für das Tablet fehlt die Adresse von Lex (/efbridge).“ | Die Adresse von Lex ist leer, das betrifft nur das Lex-Tablet |
 | „Fehler beim Abrufen deiner Daten!“ | ef_bridge findet kein QBCore, Qbox oder ESX, oder der Charakter ist noch nicht geladen |
 | „Du darfst dieses Tablet nicht nutzen!“ | Der Job steht nicht in `AllowedJobs` |
 | „Du besitzt kein tablet!“ | Der Gegenstand fehlt, der Name kommt aus `RequiredItem` |
@@ -32,14 +33,14 @@ Ein Spieler kann ein Tablet nur öffnen, wenn es eingeschaltet ist, sein Job in 
 
 Pro Tablet wählst du im Panel unter „Darstellung“ (`Display`), wie es erscheint:
 
-- **Fenster** (`window`, Standard): Die ignis-Seite liegt als Fenster über dem Spiel.
+- **Fenster** (`window`, Standard): Die Seite liegt als Fenster über dem Spiel.
 - **In der Hand** (`hand`): Die Seite erscheint auf dem Bildschirm des Tablet-Modells, und die Kamera fährt in eine Nahansicht.
 
 Befehle, Tasten, Berechtigungen, Tablet-Login und die Zuordnung zum Charakter sind in beiden Fällen gleich.
 
 In der Hand gilt außerdem:
 
-- Tippen braucht ignis 2026.1.2 oder neuer. Mit älteren Versionen geht nur Klicken.
+- Tippen braucht ignis 2026.1.2 oder neuer. Mit älteren Versionen geht nur Klicken, im Lex-Tablet ebenso.
 - Bildschirmdaten gibt es nur für die mitgelieferten Modelle `notfpad` und `firetab`. Mit einem anderen Modell in `Prop.model` öffnet das Tablet als Fenster, in der F8-Konsole steht dann ein Hinweis.
 - Lässt sich das Tablet nicht in der Hand öffnen, erscheint es als Fenster mit dem Hinweis „Das Tablet ließ sich nicht in der Hand öffnen und erscheint als Fenster.“
 - Stirbt der Charakter, schließt das Tablet.

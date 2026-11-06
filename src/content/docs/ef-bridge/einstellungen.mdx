@@ -12,7 +12,7 @@ sidebar:
 Links stehen die Bereiche:
 
 - **Status** zeigt Version, Framework, Datenbank, welche Schlüssel gesetzt sind und was der letzte Lex-Abgleich ergeben hat. Hier liegen auch die Knöpfe „Verbindung testen“ für ignis und Lex, „EMD jetzt abgleichen“ und „Jetzt vollständig abgleichen“ für Lex.
-- **Allgemein**, **ignis**, **eNOTF-Tablet**, **FireTab**, **EMD-Sync**, **eNOTF-Abrechnung** und **Lex** enthalten die Einstellungen aus den Tabellen unten.
+- **Allgemein**, **ignis**, **eNOTF-Tablet**, **FireTab**, **EMD-Sync**, **eNOTF-Abrechnung**, **Lex** und **Lex-Tablet** enthalten die Einstellungen aus den Tabellen unten.
 - **Import** übernimmt alte config-Dateien von ignisTab oder einen Export, siehe [Umstieg von ignisTab](/ef-bridge/umstieg/).
 
 Änderungen sammelt das Panel, bis du auf Speichern drückst. Schließt du es mit ungespeicherten Änderungen, fragt es nach. Mit ESC schließt du das Panel, mit `[` klappst du die Navigation ein und aus.
@@ -53,29 +53,29 @@ Die Adresse muss mit `https://` beginnen, den `/` am Ende ergänzt ef_bridge sel
 
 ## Tablets
 
-`Tablets.eNOTF.*` (Bereich eNOTF-Tablet) und `Tablets.FireTab.*` (Bereich FireTab) sind gleich aufgebaut:
+`Tablets.eNOTF.*` (Bereich eNOTF-Tablet), `Tablets.FireTab.*` (Bereich FireTab) und `Tablets.Lex.*` (Bereich Lex-Tablet) sind gleich aufgebaut. `Tablets.Lex.*` gibt es [ab dem Release nach v2026.4.0](/ef-bridge/lex-tablet/).
 
-| Einstellung | Im Panel | eNOTF | FireTab |
-|---|---|---|---|
-| `Enabled` | Tablet aktiv | aus | aus |
-| `AllowedJobs` | Erlaubte Jobs | `ambulance`, `admin` | `fire`, `admin` |
-| `RequireItem` | Nur mit Gegenstand im Inventar | aus | aus |
-| `RequiredItem` | Gegenstand | `tablet` | `tablet` |
-| `UseProp` | Tablet in der Hand zeigen | an | an |
-| `Display` | Darstellung | `window` (Fenster) | `window` (Fenster) |
-| `KeepMinutes` | Seite im Hintergrund halten (Minuten) | `15` | `15` |
-| `Path` | Seite in ignis | `enotf/overview.php` | `einsatz/list.php` |
-| `Command` | Chatbefehl (nach Neustart) | `enotf` | `firetab` |
-| `OpenKey` | Standardtaste (nach Neustart) | `F9` | leer |
+| Einstellung | Im Panel | eNOTF | FireTab | Lex |
+|---|---|---|---|---|
+| `Enabled` | Tablet aktiv | aus | aus | aus |
+| `AllowedJobs` | Erlaubte Jobs | `ambulance`, `admin` | `fire`, `admin` | `police`, `admin` |
+| `RequireItem` | Nur mit Gegenstand im Inventar | aus | aus | aus |
+| `RequiredItem` | Gegenstand | `tablet` | `tablet` | `tablet` |
+| `UseProp` | Tablet in der Hand zeigen | an | an | an |
+| `Display` | Darstellung | `window` (Fenster) | `window` (Fenster) | `window` (Fenster) |
+| `KeepMinutes` | Seite im Hintergrund halten (Minuten) | `15` | `15` | `15` |
+| `Path` | Seite in ignis, beim Lex-Tablet Seite in Lex | `enotf/overview.php` | `einsatz/list.php` | leer |
+| `Command` | Chatbefehl (nach Neustart) | `enotf` | `firetab` | `lex` |
+| `OpenKey` | Standardtaste (nach Neustart) | `F9` | leer | leer |
 
 Unter „Erweitert“ steht die Lage des Tablets an der Hand:
 
-| Einstellung | Im Panel | eNOTF | FireTab |
-|---|---|---|---|
-| `Prop.model` | Modell in der Hand | `notfpad` | `firetab` |
-| `Prop.bone` | Knochen (Bone-ID) | `18905` | `18905` |
-| `Prop.offset.x`, `.y`, `.z` | Versatz X, Y, Z | `0.124`, `0.055`, `0.155` | `0.1188`, `0.0535`, `0.1545` |
-| `Prop.offset.xRot`, `.yRot`, `.zRot` | Drehung X, Y, Z | `-76`, `-186`, `58.3` | `18`, `-186`, `58.3` |
+| Einstellung | Im Panel | eNOTF | FireTab | Lex |
+|---|---|---|---|---|
+| `Prop.model` | Modell in der Hand | `notfpad` | `firetab` | `firetab` |
+| `Prop.bone` | Knochen (Bone-ID) | `18905` | `18905` | `18905` |
+| `Prop.offset.x`, `.y`, `.z` | Versatz X, Y, Z | `0.124`, `0.055`, `0.155` | `0.1188`, `0.0535`, `0.1545` | `0.1188`, `0.0535`, `0.1545` |
+| `Prop.offset.xRot`, `.yRot`, `.zRot` | Drehung X, Y, Z | `-76`, `-186`, `58.3` | `18`, `-186`, `58.3` | `18`, `-186`, `58.3` |
 
 Der Versatz geht von -2 bis 2, die Drehung von -360 bis 360. Die Modelle `notfpad` und `firetab` liegen im Ordner `stream`.
 
@@ -87,7 +87,7 @@ Was man leicht übersieht:
 - Für `RequireItem` legst du den Gegenstand selbst in deinem Inventar an, ef_bridge bringt keinen mit. Läuft `ox_inventory`, prüft ef_bridge dort, sonst im Inventar von QBCore oder ESX. Ohne Framework geht es nur mit `ox_inventory`.
 - `Display` ist `window` für das Fenster oder `hand` für das Tablet-Modell in der Hand mit Nahansicht, siehe [Tablets im Spiel](/ef-bridge/tablets/#fenster-oder-in-der-hand).
 - `KeepMinutes` geht von 5 bis 45. So lange bleibt die Seite nach dem Schließen geladen, wer in der Zeit wieder öffnet, macht genau dort weiter. Danach lädt sie neu.
-- `Path` ist der Pfad hinter der Adresse von ignis.
+- `Path` ist der Pfad hinter der Adresse von ignis, beim Lex-Tablet hinter der Adresse von Lex. Leer öffnet das Lex-Tablet die Startseite von Lex.
 
 ## EMD-Sync
 
@@ -123,7 +123,7 @@ Der Abstand geht von 60000 (eine Minute) bis 86400000 (ein Tag). Wie die Abrechn
 
 ## Lex
 
-Alle Einträge sind „nur Server“.
+Alle Einträge außer `Lex.BaseURL` und `Lex.TabletLogin` sind „nur Server“. Die beiden bekommen auch die Spieler, weil das Tablet sie braucht.
 
 | Einstellung | Im Panel | Standard |
 |---|---|---|
@@ -137,8 +137,9 @@ Alle Einträge sind „nur Server“.
 | `Lex.FullSync.OnStart` | Vollständiger Abgleich beim Start | an |
 | `Lex.FullSync.RetireMissingVehicles` | Verschwundene Fahrzeuge abmelden | an |
 | `Lex.BatchSize` | Datensätze pro Anfrage | `100` |
+| `Lex.TabletLogin` | Tablet-Login über Discord-ID | aus |
 
-Das Intervall geht von 0 bis 10080 Minuten, 0 heißt nur beim Start und von Hand. Pro Anfrage gehen 10 bis 200 Datensätze raus. Den Schlüssel setzt du mit `efbridge key lex <Schlüssel>`. Was der Abgleich macht, steht unter [Lex-Abgleich](/ef-bridge/lex/).
+Das Intervall geht von 0 bis 10080 Minuten, 0 heißt nur beim Start und von Hand. Pro Anfrage gehen 10 bis 200 Datensätze raus. Den Schlüssel setzt du mit `efbridge key lex <Schlüssel>`. Was der Abgleich macht, steht unter [Lex-Abgleich](/ef-bridge/lex/), wofür `Lex.TabletLogin` da ist, unter [Lex-Tablet](/ef-bridge/lex-tablet/).
 
 ## Fest eingebaut
 

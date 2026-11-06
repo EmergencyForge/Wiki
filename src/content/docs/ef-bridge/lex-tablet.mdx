@@ -1,0 +1,71 @@
+---
+title: Lex-Tablet
+description: Lex im Spiel öffnen, mit eigenem Tablet und Anmeldung über die Discord-ID.
+sidebar:
+  order: 8
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+Das Lex-Tablet öffnet Lex im Spiel in der Tablet-Ansicht von Lex, mit `/lex` oder einer selbst belegten Taste. Eine eigene Anmeldung hat es nicht, es nutzt den Tablet-Login und damit Discord. ignis brauchst du dafür nicht, und der [Lex-Abgleich](/ef-bridge/lex/) muss nicht aktiv sein.
+
+:::note[Neu nach v2026.4.0]
+Das Lex-Tablet kommt mit dem ersten ef_bridge-Release nach v2026.4.0. Lex muss dafür neuer sein als v2026.0.45.
+:::
+
+Die Spieler laden Lex direkt in ihrem Spielbrowser, sie müssen die Adresse also selbst über HTTPS erreichen können.
+
+## Einrichten
+
+<Steps>
+
+1. In Lex unter Einstellungen › FiveM-Abgleich „Anmeldung über das Tablet im Spiel zulassen“ anhaken und speichern.
+
+2. Dort „Schlüssel erzeugen“. Lex zeigt den Schlüssel genau einmal, kopier ihn gleich. Läuft schon der Abgleich, nimmst du seinen Schlüssel, ef_bridge kennt nur einen für Lex.
+
+3. Die Adresse unter „Adresse für ef_bridge“ abschreiben.
+
+4. Im Panel von ef_bridge unter Lex Adresse und Schlüssel eintragen und „Tablet-Login über Discord-ID“ einschalten. Unter Lex-Tablet „Tablet aktiv“ einschalten und die erlaubten Jobs prüfen, ab Werk `police` und `admin`. Oder in der Konsole:
+
+   ```sh title="Serverkonsole"
+   efbridge set Lex.BaseURL https://lex.example.de/
+   efbridge key lex dein-schluessel-aus-lex
+   efbridge set Lex.TabletLogin on
+   efbridge set Tablets.Lex.Enabled on
+   ```
+
+5. Geh mit einem Charakter im Job `police` ins Spiel und öffne das Tablet mit `/lex`.
+
+</Steps>
+
+`efbridge test` prüft Adresse und Schlüssel über den Abgleich. Ist er in Lex aus, meldet der Test „Der FiveM-Abgleich ist in Lex ausgeschaltet“, das Tablet funktioniert trotzdem.
+
+## Anmeldung
+
+Das Lex-Tablet meldet an wie die [Tablets von ignis](/ef-bridge/tablet-login/), nur gegen Lex und mit dem Lex-Schlüssel:
+
+- Lex sucht das aktive Konto mit der Discord-ID des Spielers und stellt die Sitzung auf die Tablet-Ansicht um. Neue Konten legt der Login nicht an.
+- Läuft Lex hinter der EmergencyForge-Konsole, kommt die Discord-ID mit jeder Anmeldung von dort. Dafür muss Discord im Konto verknüpft sein, und der Spieler muss sich nach dem Update einmal im Browser anmelden.
+- Eine ältere Lex-Version zeigt die normale Seite ohne Tablet-Ansicht, der Spieler bekommt einen Hinweis.
+
+:::caution[Der Schlüssel meldet Konten an]
+Mit eingeschalteter Anmeldung kann der Schlüssel jedes Konto mit Discord-ID anmelden, auch Admins. Er gehört nur auf den Spielserver. Jede Anmeldung steht im Audit-Log von Lex.
+:::
+
+## Einstellungen
+
+Das Tablet hat dieselben Einstellungen wie die beiden anderen, sie heißen `Tablets.Lex.*` und stehen unter [Admin-Panel und Einstellungen](/ef-bridge/einstellungen/#tablets). Ab Werk ist keine Taste vorbelegt, jeder Spieler kann sich selbst eine legen. Wie du zwischen Fenster und Hand wechselst, steht unter [Tablets im Spiel](/ef-bridge/tablets/#fenster-oder-in-der-hand). In der Hand geht bei Lex nur Klicken, zum Tippen bleib beim Fenster.
+
+## Wenn es nicht klappt
+
+Klappt die Anmeldung nicht, zeigt das Tablet die Anmeldeseite von Lex, und der Spieler bekommt einen Hinweis:
+
+| Hinweis im Spiel | Lösung |
+|---|---|
+| „Für das Tablet fehlt die Adresse von Lex (/efbridge).“ | Adresse im Panel unter Lex eintragen |
+| „Tablet-Login nicht möglich: Zu deiner Discord-ID gibt es kein aktives Lex-Konto.“ | Dem Konto fehlt die Discord-ID. Der Spieler meldet sich einmal im Browser bei Lex an, in der EmergencyForge-Konsole muss dafür Discord verknüpft sein. |
+| „Tablet-Login ist in Lex nicht aktiviert.“ | in Lex „Anmeldung über das Tablet im Spiel zulassen“ anhaken |
+| „Diese Lex-Version kennt das Tablet noch nicht.“ | Lex aktualisieren |
+| „Tablet-Login ist gerade nicht verfügbar.“ | Lex ist nicht erreichbar, oder es lehnt den Schlüssel ab. Dann steht `check the Lex API key` in der Serverkonsole. |
+
+Die übrigen Hinweise sind dieselben wie unter [Tablet-Login](/ef-bridge/tablet-login/#wenn-es-nicht-klappt), mit Lex statt ignis.

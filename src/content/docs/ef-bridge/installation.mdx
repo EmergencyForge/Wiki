@@ -9,9 +9,9 @@ import { Steps, FileTree } from '@astrojs/starlight/components';
 
 ## Bevor du anfängst
 
-Für die Tablets, EMD-Sync und die Abrechnung brauchst du eine laufende ignis-Installation mit HTTPS. Falls die noch fehlt, fang bei [ignis installieren](/ignis/installation/) an. Aus ignis brauchst du den API-Schlüssel, er steht unter Einstellungen › System-Konfiguration › Technik › API-Schlüssel. Mehr dazu unter [ef_bridge anbinden](/ignis/einrichtung/#ef_bridge-anbinden).
+Für das eNOTF-Tablet, das FireTab, EMD-Sync und die Abrechnung brauchst du eine laufende ignis-Installation mit HTTPS. Falls die noch fehlt, fang bei [ignis installieren](/ignis/installation/) an. Aus ignis brauchst du den API-Schlüssel, er steht unter Einstellungen › System-Konfiguration › Technik › API-Schlüssel. Mehr dazu unter [ef_bridge anbinden](/ignis/einrichtung/#ef_bridge-anbinden).
 
-Für den Lex-Abgleich brauchst du Adresse und Schlüssel aus Lex, siehe [Lex-Abgleich](/ef-bridge/lex/).
+Für das Lex-Tablet und den Lex-Abgleich brauchst du Adresse und Schlüssel aus Lex, siehe [Lex-Tablet](/ef-bridge/lex-tablet/) und [Lex-Abgleich](/ef-bridge/lex/).
 
 Kommst du von ignisTab, lies zuerst [Umstieg von ignisTab](/ef-bridge/umstieg/). Deine alten config-Dateien übernimmt ef_bridge selbst.
 
@@ -55,7 +55,7 @@ Kommst du von ignisTab, lies zuerst [Umstieg von ignisTab](/ef-bridge/umstieg/).
 
    - unter **ignis** die Adresse, mit `https://` und `/` am Ende, und den API-Schlüssel. Liegt ignis in einem Unterordner, gehört er zur Adresse, zum Beispiel `https://example.de/ignis/`.
    - unter **eNOTF-Tablet** und **FireTab** den Schalter „Tablet aktiv“, dazu die erlaubten Jobs prüfen
-   - EMD-Sync, eNOTF-Abrechnung und Lex nur, wenn du sie nutzt
+   - EMD-Sync, eNOTF-Abrechnung, Lex und Lex-Tablet nur, wenn du sie nutzt
 
    Speichern. Die Änderungen gelten sofort, außer bei Einträgen mit „nach Neustart“.
 

@@ -2,7 +2,7 @@
 title: Hilfe bei Problemen
 description: Häufige Fehler mit ef_bridge und wie du sie behebst.
 sidebar:
-  order: 10
+  order: 11
 ---
 
 ## Erst prüfen
@@ -19,6 +19,8 @@ sidebar:
 - Läuft ignis über HTTPS mit gültigem Zertifikat? Öffne die Adresse zum Test im normalen Browser.
 - Bei nginx: Sind die `map`-Blöcke für FiveM aus der `nginx.conf.example` von ignis eingebunden? Ohne sie verbietet nginx, die Seite im Tablet einzubetten.
 
+Beim Lex-Tablet gelten die ersten beiden Fragen für Lex, die Adresse zeigt `efbridge get Lex.BaseURL`.
+
 ## Hinweise im Spiel
 
 „Fehler beim Abrufen deiner Daten!“: ef_bridge hat kein QBCore, Qbox oder ESX gefunden, oder der Charakter ist noch nicht geladen. Prüf, ob das Framework vor ef_bridge startet, oder setz es fest mit `efbridge set Framework qbcore` (oder `esx`) und `restart ef_bridge`. Läuft der Server ohne Framework, nimm `standalone`. Mit `/efbridgetest` siehst du, ob ef_bridge den Charakter lesen kann.
@@ -28,6 +30,8 @@ sidebar:
 „Dieses Tablet ist nicht aktiviert!“: Im Panel ist für dieses Tablet „Tablet aktiv“ aus.
 
 „Für das Tablet fehlt die Adresse von ignis (/efbridge).“: Unter ignis im Panel die Adresse eintragen.
+
+„Für das Tablet fehlt die Adresse von Lex (/efbridge).“: Unter Lex im Panel die Adresse eintragen.
 
 „Die Einstellungen werden noch geladen, versuch es gleich noch mal.“: Der Client hat vom Server noch keine Einstellungen bekommen, meist direkt nach dem Verbinden oder einem Neustart von ef_bridge. Ein paar Sekunden warten.
 
@@ -45,6 +49,7 @@ Alle Hinweise der Tablets stehen unter [Tablets im Spiel](/ef-bridge/tablets/#we
 | `the ignis address is set but no API key` | Die Adresse von ignis steht, der Schlüssel fehlt. `efbridge key ignis <Schlüssel>` |
 | `Lex sync is on but has no API key` | `efbridge key lex <Schlüssel>` |
 | `API key rejected` oder Fehler `403` | Der Schlüssel in ef_bridge passt nicht zu dem in ignis. Kopier ihn neu und trag ihn ein. |
+| `check the Lex API key` | Lex lehnt den Schlüssel beim Tablet-Login ab. Erzeug in Lex einen neuen und trag ihn mit `efbridge key lex <Schlüssel>` ein. |
 | Fehler `503` | In ignis ist noch kein API-Schlüssel gesetzt. |
 | `still in the folder but no longer read` | Alte config-Dateien liegen noch im Ordner. Übernehmen mit `efbridge import`, sonst löschen. |
 | `admin panel denied for source …` | Jemand ohne `ef_bridge.admin` hat das Panel aufgerufen. |
@@ -59,6 +64,14 @@ Alle Hinweise der Tablets stehen unter [Tablets im Spiel](/ef-bridge/tablets/#we
 - Ist die System-URL in ignis dieselbe Adresse wie `Ignis.BaseURL`?
 
 Welcher Hinweis im Spiel was bedeutet, steht unter [Tablet-Login](/ef-bridge/tablet-login/#wenn-es-nicht-klappt).
+
+## Lex-Tablet zeigt die Anmeldeseite
+
+- „kein aktives Lex-Konto“: Dem Konto fehlt die Discord-ID. Der Spieler meldet sich einmal im Browser bei Lex an, in der EmergencyForge-Konsole muss dafür Discord verknüpft sein.
+- „in Lex nicht aktiviert“: in Lex unter Einstellungen › FiveM-Abgleich „Anmeldung über das Tablet im Spiel zulassen“ anhaken.
+- „Diese Lex-Version kennt das Tablet noch nicht“: Lex aktualisieren.
+
+Ist in ef_bridge „Tablet-Login über Discord-ID“ aus, kommt gar kein Hinweis. Prüf das mit `efbridge get Lex.TabletLogin`. Alle Hinweise stehen unter [Lex-Tablet](/ef-bridge/lex-tablet/#wenn-es-nicht-klappt).
 
 ## Abrechnung liefert keine Protokolle
 
