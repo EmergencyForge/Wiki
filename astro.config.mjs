@@ -33,6 +33,8 @@ export default defineConfig({
 				{ label: 'ignis', items: [{ autogenerate: { directory: 'ignis' } }] },
 				{ label: 'ef_bridge', items: [{ autogenerate: { directory: 'ef-bridge' } }] },
 				{ label: 'ef_lib', items: [{ autogenerate: { directory: 'ef-lib' } }] },
+				{ label: 'ef_target', items: [{ autogenerate: { directory: 'ef-target' } }] },
+				{ label: 'ef_fraktionsgarage', items: [{ autogenerate: { directory: 'ef-fraktionsgarage' } }] },
 				{ label: 'Referenz', items: [{ autogenerate: { directory: 'referenz' } }] },
 				{ label: 'Mitmachen', items: [{ autogenerate: { directory: 'mitmachen' } }] },
 			],

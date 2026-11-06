@@ -1,0 +1,212 @@
+# Referenzdaten für die Exports und Events von ef_fraktionsgarage.
+# Quelle ist der Code (client/main.lua, server/main.lua). Schema: src/content.config.ts.
+
+# --- server ---
+
+- id: returnvehicle
+  name: ReturnVehicle
+  kind: export
+  realm: server
+  category: server
+  description: >-
+    Nimmt ein ausgeparktes Fahrzeug von der Karte und stellt es zurück in seine Garage. Für Abschleppscripts.
+  params:
+    - name: plate
+      type: string
+      description: "Kennzeichen. Groß- und Kleinschreibung und Leerzeichen am Rand spielen keine Rolle."
+    - name: reason
+      type: string
+      optional: true
+      description: "Grund für den Verlauf, höchstens 100 Zeichen."
+  returns:
+    - type: boolean
+      name: returned
+      description: "`false`, wenn zu dem Kennzeichen kein ausgeparktes Fahrzeug gehört."
+  example: |
+    exports.ef_fraktionsgarage:ReturnVehicle(plate, 'Abgeschleppt')
+  guide: /ef-fraktionsgarage/anbindung/#abschleppscripts
+
+- id: registertrunkinventory
+  name: RegisterTrunkInventory
+  kind: export
+  realm: server
+  category: server
+  description: >-
+    Bindet ein eigenes Inventar an den Kofferraum an. Es hat dann Vorrang vor `ox_inventory`.
+  params:
+    - name: read
+      type: function
+      description: "`read(plate)` gibt eine Liste aus `{name, count, slot, metadata}` zurück, oder `nil`, wenn es nichts lesen konnte."
+    - name: write
+      type: function
+      description: "`write(plate, entity, items)` darf die Namen der Items zurückgeben, die nicht gepasst haben."
+    - name: drop
+      type: function
+      optional: true
+      description: "`drop(plate)` räumt den Kofferraum nach dem Einparken weg."
+  example: |
+    exports.ef_fraktionsgarage:RegisterTrunkInventory(
+        function(plate)
+            return meinInventar.lesen(plate)
+        end,
+        function(plate, entity, items)
+            return meinInventar.schreiben(plate, items)
+        end
+    )
+  guide: /ef-fraktionsgarage/anbindung/#kofferraum
+
+- id: isvehiclefromgarage
+  name: IsVehicleFromGarage
+  kind: export
+  realm: server
+  category: server
+  description: >-
+    Sagt, ob ein Kennzeichen zu einem ausgeparkten Fahrzeug der Garage gehört.
+  params:
+    - name: plate
+      type: string
+      description: "Kennzeichen, genau wie das Fahrzeug es trägt."
+  returns:
+    - type: boolean
+      name: fromGarage
+      description: "`true`, wenn das Fahrzeug gerade aus einer Garage stammt."
+  example: |
+    if exports.ef_fraktionsgarage:IsVehicleFromGarage(plate) then
+        print('Fraktionsfahrzeug')
+    end
+
+- id: getgarages
+  name: GetGarages
+  kind: export
+  realm: server
+  category: server
+  description: >-
+    Gibt die geladenen Garagen zurück.
+  returns:
+    - type: table
+      name: garages
+      description: "Die Garagen des Servers."
+  example: |
+    local garages = exports.ef_fraktionsgarage:GetGarages()
+
+- id: getspawnedvehicles-server
+  name: GetSpawnedVehicles
+  kind: export
+  realm: server
+  category: server
+  description: >-
+    Gibt alle ausgeparkten Fahrzeuge zurück.
+  returns:
+    - type: table
+      name: vehicles
+      description: "Schlüssel ist das Kennzeichen. Jeder Eintrag hat unter anderem `vehicleId`, `garageId`, `spawnedBy`, `source` und `spot`."
+  example: |
+    for plate, vehicle in pairs(exports.ef_fraktionsgarage:GetSpawnedVehicles()) do
+        print(plate, vehicle.garageId)
+    end
+
+# --- client ---
+
+- id: getcurrentgarage
+  name: GetCurrentGarage
+  kind: export
+  realm: client
+  category: client
+  description: >-
+    Gibt die Garage zurück, in deren Bereich der Spieler gerade steht.
+  returns:
+    - type: table
+      name: garage
+      description: "Die Garage, sonst `nil`."
+  example: |
+    local garage = exports.ef_fraktionsgarage:GetCurrentGarage()
+
+- id: isingaragezone
+  name: IsInGarageZone
+  kind: export
+  realm: client
+  category: client
+  description: >-
+    Sagt, ob der Spieler gerade im Bereich einer Garage steht.
+  returns:
+    - type: boolean
+      name: inside
+      description: "`true` im Bereich einer Garage."
+  example: |
+    if exports.ef_fraktionsgarage:IsInGarageZone() then
+        print('An der Garage')
+    end
+
+- id: getspawnedvehicle
+  name: GetSpawnedVehicle
+  kind: export
+  realm: client
+  category: client
+  description: >-
+    Gibt das zuletzt ausgeparkte Fahrzeug dieses Spielers zurück.
+  returns:
+    - type: table
+      name: vehicle
+      description: "Felder `entity`, `plate`, `vehicleId` und `garageId`, sonst `nil`."
+  example: |
+    local vehicle = exports.ef_fraktionsgarage:GetSpawnedVehicle()
+    if vehicle then
+        print(vehicle.plate)
+    end
+
+- id: getspawnedvehicles
+  name: GetSpawnedVehicles
+  kind: export
+  realm: client
+  category: client
+  description: >-
+    Gibt alle Fahrzeuge zurück, die dieser Spieler ausgeparkt hat.
+  returns:
+    - type: table
+      name: vehicles
+      description: "Schlüssel ist das Kennzeichen, jeder Eintrag hat `entity`, `plate`, `vehicleId` und `garageId`."
+  example: |
+    for plate, vehicle in pairs(exports.ef_fraktionsgarage:GetSpawnedVehicles()) do
+        print(plate, vehicle.entity)
+    end
+
+# --- events ---
+
+- id: event-vehiclespawned
+  name: faction_garages:vehicleSpawned
+  kind: event
+  usage: listen
+  realm: server
+  category: events
+  description: >-
+    Lokales Server-Event, wenn ein Fahrzeug ausgeparkt wird. Lausche mit `AddEventHandler`, `RegisterNetEvent`
+    würde es für jeden Client öffnen. Bei einer Menge über 1 ist `vehicleId` das ausgeparkte Exemplar.
+  params:
+    - name: data
+      type: table
+      description: "Felder `plate`, `vehicleId`, `garageId`, `model`, `source`, `identifier` und `netId`. `source` fehlt, wenn kein Spieler es ausgelöst hat."
+  example: |
+    AddEventHandler('faction_garages:vehicleSpawned', function(data)
+        print(data.plate, data.garageId)
+    end)
+  guide: /ef-fraktionsgarage/anbindung/#events-für-andere-scripts
+
+- id: event-vehiclestored
+  name: faction_garages:vehicleStored
+  kind: event
+  usage: listen
+  realm: server
+  category: events
+  description: >-
+    Lokales Server-Event, wenn ein Fahrzeug zurück in die Garage geht. Lausche mit `AddEventHandler`.
+  params:
+    - name: data
+      type: table
+      description: "Felder `plate`, `vehicleId`, `garageId`, `reason`, `source` und `details`. `reason` ist `stored`, `destroyed`, `reset` (efrepaircar), `removed` (im Editor gelöscht) oder `returned` (von der Karte genommen). `details` enthält `km` und `total`, beim Einparken durch einen Spieler auch `body`, `engine` und `fuel`. Ohne gefahrene Strecke und bei `removed` fehlt es."
+  example: |
+    AddEventHandler('faction_garages:vehicleStored', function(data)
+        if data.reason == 'destroyed' then
+            print(data.plate .. ' wurde zerstört')
+        end
+    end)
+  guide: /ef-fraktionsgarage/anbindung/#events-für-andere-scripts

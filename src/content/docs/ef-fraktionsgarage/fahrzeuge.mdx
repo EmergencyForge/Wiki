@@ -1,0 +1,73 @@
+---
+title: Fahrzeuge
+description: Fahrzeuge im Editor anlegen und pflegen, mit Menge, Kennzeichen, Extras, Farbe, Livery, Kategorien, Fahrzeugbildern und Blaulicht-Vorschau.
+sidebar:
+  order: 4
+---
+
+Die Reihenfolge der Fahrzeuge im Editor gilt auch im Garagenmenü. Fahrzeuge haben eine optionale Beschreibung, die dort steht.
+
+Beim Eingeben prüft der Editor, ob das Modell auf dem Server vorhanden ist. Ein unbekanntes Modell lässt sich trotzdem speichern, die Ressource dazu kann gerade nur gestoppt sein. So ein Fahrzeug steht im Garagenmenü mit „Modell fehlt“ und lässt sich nicht ausparken.
+
+Ein Dreieck neben dem Fahrzeugnamen zeigt, dass etwas nicht stimmt: rot bei einem fehlenden Modell, gelb bei leerem Namen, leerem Modell oder einem gesperrten Fahrzeug. Was genau los ist, steht oben im geöffneten Fahrzeug.
+
+## Menge
+
+Die Menge legt fest, wie viele Exemplare eines Fahrzeugs gleichzeitig unterwegs sein dürfen. Standard ist 1, 0 heißt unbegrenzt.
+
+| Menge | Verhalten |
+|---|---|
+| 1 | Zustand, Kofferraum und Kilometerstand bleiben beim Einparken erhalten |
+| alles andere | jedes Exemplar startet repariert, vollgetankt und mit leerem Kofferraum. Das erste trägt das feste Kennzeichen, jedes weitere ein eigenes zufälliges. |
+
+Das Garagenmenü zeigt, wie viele noch frei sind. `Config.MaxVehiclesPerPlayer` zählt jedes Exemplar einzeln.
+
+## Kennzeichen
+
+Das Kennzeichen-Muster gilt für neue Fahrzeuge ohne eigenes Kennzeichen und für die Exemplare einer Menge. Es hat höchstens 8 Zeichen und mindestens ein `#` (Ziffer) oder `?` (Buchstabe). `FW ###` ergibt zum Beispiel `FW 472`.
+
+Vorhandene Fahrzeuge und Exemplare behalten ihr Kennzeichen. Jedes Fahrzeug kann im Editor ein eigenes Muster setzen, leer nimmt das aus den Einstellungen. Ein kurzes Muster hat nur wenige freie Kennzeichen: `FW#` reicht für zehn Fahrzeuge.
+
+## Extras, Farbe und Livery
+
+„Extras übernehmen“ speichert Mods, Extras und Livery des Fahrzeugs, in dem du sitzt. Es muss dasselbe Modell sein, bei einem neuen Fahrzeug werden sie beim Speichern mit angelegt. Farben, Turbo und Xenon gehören nicht dazu. Ist gerade ein anderes Exemplar ausgeparkt, schreibt dessen Einparken den alten Stand zurück.
+
+„Farbe“ steht auf dem Standard des Modells. Erst mit dem Schalter lassen sich Haupt- und Zweitfarbe wählen, aus den Vorgaben oder als Farbwert wie `#a72920`. Das Bild entsteht beim Speichern neu, ändern lässt sich die Farbe nur bei eingeparkten Fahrzeugen.
+
+„Livery“ zeigt, was das Modell mitbringt, die Namen kommen aus dem Spiel. Die Auswahl gilt sofort und nur für eingeparkte Fahrzeuge, das Bild entsteht danach neu. Modelle mit Liveries über die Mod-Liste (Mod 48) zeigen diese, alle anderen die normale Livery-Liste. Ein neues Fahrzeug muss dafür einmal gespeichert sein.
+
+## Kategorien
+
+Im Tab Kategorien lassen sich Kategorien sortieren, umbenennen und löschen, so stehen sie dann im Garagenmenü. Fahrzeuge aus einer gelöschten Kategorie landen in „Sonstige“, zwei Kategorien mit gleichem Namen werden eine. Eine Kategorie ohne Fahrzeug wird nicht gespeichert. Der Knopf in der Zeile begrenzt eine Kategorie auf Jobs, Ränge und einzelne Spieler, siehe [Rechte](/ef-fraktionsgarage/rechte/#kategorien).
+
+## Duplizieren und Verschieben
+
+„Duplizieren“ legt ein neues Fahrzeug mit gleichem Modell, gleichen Rechten und gleichen Extras an. Name und Kennzeichen bleiben frei, ein leeres Kennzeichen vergibt der Server beim Speichern.
+
+„Verschieben“ setzt ein Fahrzeug in eine andere Garage. Das geht nur, wenn alle Exemplare eingeparkt sind. Zugewiesene Stellplätze entfallen, ebenso Rechte für Jobs, die in der neuen Garage keinen Zugriff haben.
+
+## Fahrzeugbilder
+
+Das Bild für die Fahrzeugkarte entsteht beim Speichern eines neuen Fahrzeugs oder eines neuen Modells. „Bild neu erstellen“ macht es erneut, zum Beispiel nach einer neuen Lackierung.
+
+Ein FiveM-Server hat kein Spiel zum Rendern, deshalb macht das der Client, der speichert: Er stellt das Fahrzeug kurz lokal über die Karte vor eine einfarbige Wand, die Seite stellt es frei. Mittag, klarer Himmel und drei eigene Lampen halten das Bild bei jeder Tageszeit gleich. Die Bilder liegen in der Tabelle `faction_vehicle_images`.
+
+Fehlt das Fahrzeug im ersten Bild, etwa bei einem Modell, das der Client zum ersten Mal zeichnet, nimmt die Seite drei Sekunden lang neue Bilder auf.
+
+:::caution
+Mit DLSS in der Enhanced-Version kommt nur ein schwarzes Bild an, dann erscheint danach eine Meldung. Schalte DLSS für den Bilderlauf aus.
+:::
+
+„Alle Bilder neu erstellen“ in der linken Spalte geht alle Fahrzeuge aller Garagen nacheinander durch. Nach Abbruch, Absturz oder bei DLSS erscheint „Fortsetzen“, auch bei einem anderen Admin. Fahrzeuge, deren Modell fehlt, werden übersprungen und am Ende gezählt. Währenddessen läuft leise Aufzugsmusik, `Config.ImageRunMusic = false` ganz unten in der `config.lua` schaltet sie ab.
+
+## Blaulicht-Vorschau
+
+Der Knopf „Blaulicht“ in der Vorschau lässt den Motor laufen und schaltet die Lichter ohne Ton ein. ELS-Skripte steuern nur Fahrzeuge mit Fahrer, deshalb spielt die Vorschau selbst ab, was die VCF-Datei des Fahrzeugs für Stufe 3 vorgibt.
+
+Die VCF findet die Garage in jeder gestarteten Ressource, die `<modell>.xml` in der `fxmanifest.lua` unter `files` führt, sonst in den `vcf`-Ordnern aus `Config.ElsResources`. Das ELS-Skript ist dafür egal.
+
+Die Muster zu den Nummern in der VCF kommen aus den Musterdateien des laufenden Skripts (`patterns` in `Config.ElsResources`, EZELS und ELS-FiveM sind eingetragen), die Muster von MISS-ELS stehen direkt in der VCF. Fehlt der Eintrag oder ist die Datei verschlüsselt, blinkt die Lichtgruppe mit einem einfachen Doppelblitz. Ein neues Skript braucht nur eine Zeile in `Config.ElsResources`, wenn seine Musterdateien offen liegen und dasselbe Format haben.
+
+hm_ELSPlus hat keine VCF, die Garage liest dort `config/fahrzeuge/<modell>.json`. In der Vorschau laufen Blaulicht, Frontblitzer, 3. Kennleuchte und Heckwarner, Matrix und Umfeldlicht bleiben aus. Die Muster kommen mit ihrem Tempo aus `config/patterns.lua`. Fehlt ein Muster dort, leuchtet `steady` durchgehend, Muster mit `_b` laufen gegen die übrigen und alle anderen blinken als Doppelblitz.
+
+Das Feld „Blaulicht-Extras“ am Fahrzeug geht vor und lässt die genannten Extras mit dem Doppelblitz blinken. Ohne VCF und ohne Feld läuft die GTA-Sirene des Fahrzeugs.

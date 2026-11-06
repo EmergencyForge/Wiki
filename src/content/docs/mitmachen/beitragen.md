@@ -19,6 +19,8 @@ Melde Fehler dort, wo sie entstehen:
 | --- | --- |
 | ignis | [EmergencyForge/ignis](https://github.com/EmergencyForge/ignis/issues) |
 | ef_bridge | [EmergencyForge/ef_bridge](https://github.com/EmergencyForge/ef_bridge/issues) |
+| ef_target | [EmergencyForge/ef_target](https://github.com/EmergencyForge/ef_target/issues) |
+| ef_fraktionsgarage | Ticket auf unserem [Discord](https://emfor.ge/discord) |
 | Diese Doku | [EmergencyForge/Wiki](https://github.com/EmergencyForge/Wiki/issues) |
 
 Schreib dazu, welche Version du nutzt, was du gemacht hast und was passiert ist. Zeigt ignis eine Fehler-ID an, gib sie mit an.

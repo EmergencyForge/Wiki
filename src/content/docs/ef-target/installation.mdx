@@ -1,0 +1,80 @@
+---
+title: Installation und Konfiguration
+description: ef_target installieren, in der server.cfg eintragen und über config.lua einstellen.
+sidebar:
+  order: 2
+---
+
+import { Steps, FileTree } from '@astrojs/starlight/components';
+
+## Installieren
+
+<Steps>
+
+1. Lade ef_target aus deinem [Cfx-Keymaster](https://portal.cfx.re/assets/granted-assets) herunter oder den Quellcode von [GitHub](https://github.com/EmergencyForge/ef_target). Leg den Ordner in den `resources`-Ordner deines Servers:
+
+   <FileTree>
+   - resources/
+     - ef_lib/
+     - ef_target/
+       - client/
+       - server/
+       - shared/
+       - web/
+         - dist/
+       - config.lua
+       - fxmanifest.lua
+   </FileTree>
+
+   Der Ordner muss `ef_target` heißen. Endet er beim Entpacken auf `-main`, benenn ihn um. Die Oberfläche in `web/dist` ist fertig gebaut, du brauchst kein Node.
+
+2. Stopp eine vorhandene ox_target, qb-target oder qtarget und nimm sie aus der `server.cfg`. Liegt sie noch im `resources`-Ordner, verschieb sie aus dem Ordner heraus, sonst startet ein `ensure [ox]` sie wieder.
+
+3. Trag ef_target nach ef_lib ein:
+
+   ```sh title="server.cfg"
+   ensure ef_lib
+   ensure ef_target
+   ```
+
+   Scripts, die ein Target nutzen, gehören dahinter.
+
+4. Pass `config.lua` an, siehe [Konfiguration](#konfiguration), und starte den Server.
+
+</Steps>
+
+Das Manifest enthält `provide 'ox_target'`, `provide 'qb-target'` und `provide 'qtarget'`. Ein Script, das `GetResourceState('ox_target')` prüft, sieht also ef_target.
+
+## In eigenen Scripts nutzen
+
+Trag ef_target in der `fxmanifest.lua` deines Scripts als Dependency ein:
+
+```lua title="fxmanifest.lua"
+dependency 'ef_target'
+```
+
+Danach rufst du die Exports im Client-Script auf, zum Beispiel [AddPoint](/referenz/ef-target/#addpoint). Serverseitige Exports gibt es nicht.
+
+## Konfiguration
+
+Alle Einstellungen stehen in `config.lua` im Ordner von ef_target und gelten für den ganzen Server. Sie liegt auch in der Keymaster-Fassung offen. Änderungen gelten nach `restart ef_target`.
+
+| Schlüssel | Standard | Wirkung |
+|---|---|---|
+| `Key` | `'LMENU'` | Taste zum Öffnen, ab Werk Alt |
+| `UseKey` | `'E'` | löst wie Linksklick die markierte Option aus, auch an `near`-Punkten |
+| `Toggle` | `false` | `true`: einmal drücken öffnet, noch einmal schließt |
+| `Reticle.Thickness` | `2.0` | Strichstärke der Marke in Pixeln bei 1080p, von 1.0 bis 3.5 |
+| `Reticle.CenterDot` | `false` | Punkt in der Mitte der Marke |
+| `SnapRadius` | `0.035` | Anteil der Bildhöhe, in dem die Marke auf einen Punkt springt |
+| `MaxPoints` | `24` | so viele Punkte erscheinen gleichzeitig, die nächsten gewinnen |
+| `DefaultPoints` | `true` | [eingebaute Fahrzeugpunkte](/ef-target/bedienung/#eingebaute-fahrzeugpunkte) |
+| `DefaultDistance` | `7.0` | Reichweite einer Option ohne eigenes `distance`, in Metern |
+| `RayLength` | `20.0` | Länge des Zielstrahls in Metern |
+| `Locale` | `'de'` | Sprache der eingebauten Texte, `'de'` oder `'en'` |
+
+`Key` und `UseKey` sind nur die Voreinstellung. Spieler ändern beide Tasten in den FiveM-Einstellungen unter **Tastenbelegung › FiveM**. Eine neue Voreinstellung in der `config.lua` erreicht deshalb nur Spieler, die die Taste noch nie gebunden haben.
+
+## Akzentfarbe
+
+Die Farbe der Marke und des Panels kommt aus ef_lib. Stellt ein Spieler dort eine eigene Farbe ein, folgt ef_target ihr sofort. Wie du sie setzt, steht unter [Akzentfarbe in ef_lib](/ef-lib/installation/#akzentfarbe). Eine ef_lib ohne den Export `GetAccentColor` zeigt das Standard-Orange `#f0500a`.

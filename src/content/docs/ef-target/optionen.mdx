@@ -1,0 +1,115 @@
+---
+title: Optionen
+description: Alle Felder einer Option in ef_target, dazu Rechte, Untermenüs, Halten und was dein Script beim Auslösen bekommt.
+sidebar:
+  order: 5
+---
+
+Eine Option ist eine Zeile im Panel. Überall, wo `options` steht, nimmt ef_target eine einzelne Option oder eine Liste davon.
+
+## Felder
+
+| Feld | Bedeutung |
+|---|---|
+| `label` | Text der Zeile |
+| `icon` | Font-Awesome-Klasse, zum Beispiel `'fa-solid fa-lock'` |
+| `iconColor` | Farbe des Icons |
+| `name` | Name der Option. Fügst du eine Option mit gleichem Namen hinzu, ersetzt sie die alte. |
+| `distance` | Reichweite in Metern, sonst `Config.DefaultDistance` oder das `distance` des Punkts |
+| `groups` | Job oder Gruppe, siehe [Rechte](#rechte) |
+| `items` | Item oder Liste von Items, siehe [Rechte](#rechte) |
+| `anyItem` | `true`: ein Item aus der Liste reicht |
+| `canInteract` | eigene Prüfung, siehe [Rechte](#rechte) |
+| `menuName` | Menü, in dem die Option steht. Ohne Wert steht sie im Hauptmenü. |
+| `openMenu` | Menü, das beim Auswählen aufgeht. `'home'` geht zurück. |
+| `hold` | Millisekunden, die die Taste gedrückt bleiben muss. Ohne Wert löst der Druck sofort aus. |
+| `bones`, `offset`, `absoluteOffset` | für Scripts aus ox_target, siehe [Umstieg](/ef-target/umstieg/) |
+
+## Was beim Auslösen passiert
+
+Eine Option braucht genau ein Ziel:
+
+| Feld | Was läuft |
+|---|---|
+| `onSelect` | deine Funktion |
+| `export` | `exports[resource][export]`. `resource` ist die hinzufügende Ressource oder das Feld `resource` der Option. |
+| `event` | ein Client-Event |
+| `serverEvent` | ein Server-Event |
+| `command` | ein Befehl |
+
+`onSelect`, `export` und `event` bekommen eine Tabelle mit den übrigen Feldern der Option und diesen Werten:
+
+| Feld | Inhalt |
+|---|---|
+| `entity` | Entity-Handle |
+| `coords` | bei einem Punkt die Position des Punkts, sonst der Treffer |
+| `distance` | Abstand zum Punkt oder Treffer |
+| `zone` | ID der Zone, nur bei Zonen |
+| `point` | Tabelle mit `key` und `coords`, nur bei Punkten |
+
+`serverEvent` bekommt dieselbe Tabelle. Dort ist `entity` die Net-ID, `0` wenn die Entity nicht vernetzt ist.
+
+```lua title="client.lua"
+exports.ef_target:AddGlobal('vehicle', {
+    {
+        label = 'Reifen prüfen',
+        icon = 'fa-solid fa-circle-dot',
+        distance = 2.5,
+        onSelect = function(data)
+            print(data.entity, data.distance)
+        end,
+    },
+})
+```
+
+:::caution
+`serverEvent` kommt vom Client. Prüf auf dem Server selbst, ob der Spieler das darf. `groups`, `items` und `canInteract` laufen nur auf dem Client.
+:::
+
+## Rechte
+
+`groups` bindet eine Option an einen Job oder eine Gruppe:
+
+```lua
+groups = 'police'                    -- ein Job
+groups = { 'police', 'sheriff' }     -- einer von beiden
+groups = { police = 2 }              -- ab Rang 2
+```
+
+`items` verlangt einen Gegenstand im Inventar:
+
+```lua
+items = 'bread'                      -- ein Item
+items = { 'bread', 'water' }         -- beide, mit anyItem = true reicht eines
+items = { bread = 2 }                -- mit Menge
+```
+
+ef_target erkennt ESX, QBCore, Qbox oder ox_core und ox_inventory selbst. Ohne Framework gelten `groups` und `items` als erfüllt, wie bei ox_target.
+
+`canInteract` ist deine eigene Prüfung und läuft für das aktuelle Ziel höchstens alle 250 ms je Option:
+
+```lua
+canInteract = function(entity, distance, coords, name, bone)
+    return GetVehicleDoorLockStatus(entity) == 1
+end
+```
+
+## Untermenüs
+
+Eine Option mit `openMenu` öffnet ein Menü, Optionen mit dem passenden `menuName` stehen darin. Der Pfad steht oben im Panel, Rechtsklick geht zurück.
+
+```lua title="client.lua"
+exports.ef_target:AddGlobal('player', {
+    { label = 'Ausweis', icon = 'fa-solid fa-id-card', openMenu = 'ausweis' },
+    { label = 'Zeigen', menuName = 'ausweis', onSelect = zeigen },
+    { label = 'Verlangen', menuName = 'ausweis', onSelect = verlangen },
+})
+```
+
+## Halten
+
+Mit `hold` muss der Spieler die Taste gedrückt lassen, die Zeile füllt sich dabei. Das passt zu allem, was nicht aus Versehen passieren soll:
+
+```lua
+{ label = 'Reanimieren', icon = 'fa-solid fa-heart-pulse', hold = 1500, onSelect = reanimieren }
+```

@@ -1,0 +1,47 @@
+---
+title: Bedienung
+description: Wie Spieler ef_target bedienen, was die Marke zeigt und welche Punkte an Fahrzeugen eingebaut sind.
+sidebar:
+  order: 3
+---
+
+## Alt halten
+
+Hält der Spieler Alt, dreht sich in der Bildmitte eine Raute aus vier Ecken ein. Punkte in Reichweite erscheinen als kleine Rauten, nahe groß und deutlich, ferne kleiner und blasser. Trifft der Strahl eine Entity oder Zone, oder liegt ein Punkt nahe der Bildmitte, schließt sich die Raute und füllt sich in der Akzentfarbe. Das Panel zeigt dann die Optionen.
+
+| Eingabe | Wirkung |
+|---|---|
+| Alt halten | Target öffnen, Loslassen bricht ab |
+| Mausrad | Option wählen |
+| Linksklick oder E | markierte Option auslösen |
+| Rechtsklick | im Untermenü eine Ebene zurück, die Auswahl landet auf der Zeile, von der es kam |
+
+Einen Mauszeiger gibt es nicht. Kamera und Laufen bleiben frei, weil das Panel keinen Fokus nimmt. Solange Alt aktiv ist, sind Schießen, Zielen und Nahkampf gesperrt, und das Mausrad schaltet keine Waffe um.
+
+Optionen mit `hold` zeigen im Panel „halten“. Der Spieler lässt die Taste gedrückt, die Zeile füllt sich. Loslassen oder eine andere Zeile wählen bricht ab.
+
+Beim Auslösen leuchtet die Zeile kurz auf, dann schließt sich das Panel. Hat eine Liste mehr Einträge, als ins Panel passen, zeigt der Kopf den Stand wie „13 / 30“, und am Rand läuft eine schmale Leiste mit.
+
+## Wann Alt von selbst endet
+
+Das Target schließt sich beim Pausenmenü, beim Tod, wenn eine andere Ressource den NUI-Fokus nimmt (etwa ein offenes Menü), bei einem laufenden Fortschrittsbalken von ef_lib oder ox_lib und bei [`DisableTargeting(true)`](/referenz/ef-target/#disabletargeting).
+
+## Punkte und allgemeine Optionen
+
+Rastet die Marke auf einem Punkt ein, stehen dessen Optionen oben und sind vorausgewählt. Nach einer Trennlinie folgen die allgemeinen Optionen der Entity. Ein Punkt erscheint nur, wenn mindestens eine seiner Optionen für den Spieler erlaubt ist.
+
+Zonen bekommen eine kleine Raute am Mittelpunkt, die nicht einrastet. Mit `drawSprite = false` an der Zone fällt sie weg.
+
+## Punkte ohne Alt
+
+Punkte mit `show = 'near'` erscheinen ohne Taste, sobald der Spieler nah genug ist. Am nächsten Punkt steht eine Tastenanzeige mit `E` und dem Text der ersten erlaubten Option, `E` löst sie aus. Hat der Punkt mehrere Optionen, wählt der Spieler sie bei gehaltenem Alt im Panel. Im Fahrzeug erscheinen diese Punkte nicht. Mehr dazu unter [Punkte und Zonen](/ef-target/punkte/#show).
+
+## Eingebaute Fahrzeugpunkte
+
+ef_target bringt Punkte an allen Fahrzeugen mit:
+
+- an den vier Türgriffen, ohne Griff-Bone an der Tür selbst
+- an der Motorhaube
+- am Kofferraum
+
+`Config.DefaultPoints = false` schaltet sie ab.

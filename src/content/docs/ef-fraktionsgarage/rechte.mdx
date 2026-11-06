@@ -1,0 +1,55 @@
+---
+title: Rechte
+description: Rollen in ef_fraktionsgarage, Boss-Ränge pro Job und Rechte an Fahrzeugen und Kategorien.
+sidebar:
+  order: 5
+---
+
+## Rollen
+
+| Rolle | Was sie darf |
+|---|---|
+| Mitarbeiter | Fahrzeuge ein- und ausparken, orten |
+| Boss | zusätzlich sperren, Logs ansehen, umbenennen, Rechte ändern |
+| Admin | zusätzlich den Garagen-Editor |
+
+Admin ist, wer das ACE-Recht aus `Config.AdminPermission` hat, siehe [Installation](/ef-fraktionsgarage/installation/#installieren).
+
+Ein Boss kann ein Fahrzeug sperren, auf Wunsch mit Grund. Ein gesperrtes Fahrzeug lässt sich nicht ausparken.
+
+## Boss-Ränge
+
+Welche Ränge Boss-Rechte haben, steht im Editor unter Einstellungen bei „Leitung“, je Job mit einem Standard für alle anderen. Die Schreibweise:
+
+| Angabe | Bedeutung |
+|---|---|
+| `4` | ab Rang 4 |
+| `2-4` | Rang 2 bis 4 |
+| `2,5,7` | genau diese Ränge |
+| `1-2,5` | beides gemischt |
+
+Ein Rang mit Leitungs-Markierung zählt immer. Unter Qbox bedeutet eine Rangnummer in jedem Job etwas anderes, deshalb zählen dort neben der Markierung nur Bereiche und Listen. Ein einzelner Rang ist dort `4-4`.
+
+`Config.BossGrades` liefert die Startwerte:
+
+```lua title="config.lua"
+Config.BossGrades = {
+    ['ambulance'] = 4,
+    ['police'] = '5-7',
+    ['mechanic'] = '3,6',
+}
+```
+
+## Rechte an Fahrzeugen
+
+Ränge und einzelne Spieler stehen im Editor am Fahrzeug. Boss und Admin ändern sie auch im Garagenmenü unter „Rechte“.
+
+Jeder Job hat eine Rangleiste: Ein Klick gibt diesen Rang und alle höheren frei, der Schalter nimmt den Job für das Fahrzeug heraus. Mit dem Schalter „Einzeln“ statt „Ab Rang“ wählst du einzelne Ränge. Spieler trägst du mit ihrer Server-ID oder ihrer Kennung ein.
+
+## Kategorien
+
+Eine Kategorie lässt sich im Tab Kategorien genauso begrenzen. Ihre Fahrzeuge folgen dann der Kategorie, auch wenn sie vorher eigene Rechte hatten.
+
+„Überschreiben“ am Fahrzeug, im Editor oder unter „Rechte“, gibt einem Fahrzeug wieder eigene Rechte und beginnt mit denen der Kategorie. In einer Kategorie ohne Begrenzung und ohne Kategorie zählen die Rechte des Fahrzeugs.
+
+Ein Export nimmt die Rechte einer Kategorie mit, einzelne Spieler bleiben wie bei Fahrzeugen draußen.

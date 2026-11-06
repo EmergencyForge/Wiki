@@ -1,0 +1,49 @@
+---
+title: ef_fraktionsgarage
+description: ef_fraktionsgarage ist das Fraktionsgaragen-System von EmergencyForge für FiveM mit Garagen-Editor im Spiel, Rechten pro Rang und gespeichertem Fahrzeugzustand.
+sidebar:
+  label: Überblick
+  order: 1
+---
+
+## Was ef_fraktionsgarage ist
+
+ef_fraktionsgarage ist eine Garage für Fraktionen auf FiveM-Servern, etwa Feuerwehr, Rettungsdienst oder Polizei. Fahrzeuge gehören der Garage und nicht einem Spieler. Wer sie ausparken darf, legst du nach Rang, Kategorie oder einzelnen Spielern fest. Alles Weitere stellst du im Spiel im Garagen-Editor ein, eine Liste von Koordinaten in einer Datei gibt es nicht.
+
+:::note
+Diese Seiten beschreiben die Reihe 2026.1 (Beta). In älteren Versionen fehlen Teile davon.
+:::
+
+## Was es kann
+
+| Bereich | Inhalt |
+|---|---|
+| Rechte | Rollen Mitarbeiter, Boss und Admin, Fahrzeuge nach Rang oder einzelnen Spielern |
+| Fahrzeugzustand | Schaden, Tuning, Farbe, Tank und Dellen bleiben erhalten, ein Kofferraum behält seinen Inhalt |
+| Garagenmenü | Vorschau auf dem Stellplatz, Fahrzeugbilder, Fahrzeuge im Einsatz mit Orten und Einparken |
+| Boss-Funktionen | Fahrzeuge sperren, orten, umbenennen, Verlauf ansehen |
+| Editor | Garagen, Stellplätze, Fahrzeuge, Peds, Blips und Marker direkt im Spiel, mit Export und Import |
+| Anbindung | Fahrzeugschlüssel, Inventare, Fuel-Scripts, ELS-Vorschau, Discord-Log |
+
+## Voraussetzungen
+
+- [ef_lib](/ef-lib/)
+- [oxmysql](https://github.com/overextended/oxmysql)
+- ESX, QBCore oder Qbox. Ohne Framework kommen Job und Rang aus ACE-Rechten, siehe [Installation](/ef-fraktionsgarage/installation/#ohne-framework).
+
+## Die Seiten im Überblick
+
+| Seite | Inhalt |
+|---|---|
+| [Installation und Konfiguration](/ef-fraktionsgarage/installation/) | Einrichtung, Admin-Recht, Framework, `config.lua` |
+| [Garagen-Editor](/ef-fraktionsgarage/editor/) | Garagen anlegen, Stellplätze, Ped, Target, Marker, Export und Import |
+| [Fahrzeuge](/ef-fraktionsgarage/fahrzeuge/) | Fahrzeuge anlegen, Menge, Farbe, Livery, Bilder, Blaulicht-Vorschau |
+| [Rechte](/ef-fraktionsgarage/rechte/) | Rollen, Boss-Ränge, Rechte an Fahrzeugen und Kategorien |
+| [Im Spiel](/ef-fraktionsgarage/im-spiel/) | Ausparken, Im Einsatz, Kilometer, Verhalten bei Neustarts |
+| [Anbindung](/ef-fraktionsgarage/anbindung/) | Schlüssel, Tankart, Kofferraum, Discord-Log, Abschleppen |
+
+Exports und Events für eigene Scripts stehen in der [Referenz](/referenz/ef-fraktionsgarage/).
+
+## Hilfe
+
+Bei Fragen oder Problemen erstelle ein Ticket auf unserem [Discord](https://emfor.ge/discord).

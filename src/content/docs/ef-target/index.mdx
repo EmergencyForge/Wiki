@@ -1,0 +1,56 @@
+---
+title: ef_target
+description: ef_target ist das Target von EmergencyForge für FiveM. Sichtbare Punkte an Bones und Koordinaten, Auswahl ohne Mauszeiger, kompatibel zu ox_target, qb-target und qtarget.
+sidebar:
+  label: Überblick
+  order: 1
+---
+
+## Was ef_target ist
+
+ef_target ist ein Third-Eye-Target für FiveM und ersetzt ox_target, qb-target und qtarget. Der Spieler hält Alt, zielt auf ein Fahrzeug, eine Person, ein Objekt oder eine Zone und wählt mit dem Mausrad eine Option.
+
+Zwei Dinge unterscheiden es von den bekannten Targets. Feste Stellen wie eine Fahrertür erscheinen als sichtbare Punkte in der Welt, die Marke rastet auf ihnen ein. Und es gibt keinen Mauszeiger: Kamera und Laufen bleiben frei, während das Panel offen ist.
+
+Scripts, die für ox_target, qb-target oder qtarget geschrieben sind, laufen ohne Änderung weiter. ef_target meldet sich unter diesen Namen und beantwortet ihre Exports. Was dabei anders ist, steht unter [Umstieg](/ef-target/umstieg/).
+
+Der Code liegt auf [GitHub unter EmergencyForge/ef_target](https://github.com/EmergencyForge/ef_target), Lizenz GPL-3.0. Es wurde kein Code aus ox_target übernommen, nur die Namen der Exports.
+
+## Voraussetzungen
+
+- [ef_lib](/ef-lib/), es muss vor ef_target starten
+- ESX, QBCore, Qbox oder ox_core, wenn du Optionen an Jobs oder Items binden willst. Ohne Framework gelten `groups` und `items` als erfüllt.
+
+## Was drin ist
+
+| Seite | Inhalt |
+|---|---|
+| [Installation und Konfiguration](/ef-target/installation/) | `server.cfg`, `config.lua`, Tasten |
+| [Bedienung](/ef-target/bedienung/) | Was Spieler sehen und drücken, eingebaute Fahrzeugpunkte |
+| [Punkte und Zonen](/ef-target/punkte/) | `AddPoint`, `show`, Fahrzeuge, Modelle, Entities und Zonen |
+| [Optionen](/ef-target/optionen/) | Felder einer Option, Rechte, Untermenüs, Halten, was dein Script zurückbekommt |
+| [Umstieg](/ef-target/umstieg/) | Von ox_target, qb-target und qtarget, mit allen Unterschieden und Lücken |
+| [Hilfe bei Problemen](/ef-target/fehlerbehebung/) | Meldungen in der Konsole, häufige Fehler |
+
+Jeden Export mit allen Parametern findest du in der [Referenz](/referenz/ef-target/).
+
+## So sieht ein Aufruf aus
+
+```lua title="client.lua"
+exports.ef_target:AddPoint({
+    global = 'vehicle',
+    bone = 'door_dside_f',
+    label = 'Fahrertür',
+    options = {
+        {
+            label = 'Abschließen',
+            icon = 'fa-solid fa-lock',
+            onSelect = function(data)
+                print(data.entity)
+            end,
+        },
+    },
+})
+```
+
+An der Fahrertür aller Fahrzeuge erscheint ein Punkt, solange der Spieler Alt hält. Alles, was eine Ressource hinzufügt, verschwindet von selbst, wenn sie stoppt.

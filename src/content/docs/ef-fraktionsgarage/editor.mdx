@@ -1,0 +1,74 @@
+---
+title: Garagen-Editor
+description: Garagen im Spiel anlegen und einstellen, mit Stellplätzen, Ped, Target, Einparkorten, Marker sowie Export und Import.
+sidebar:
+  order: 3
+---
+
+`/fgarage` öffnet den Editor. Du kommst auch über das Schild im Garagenmenü hinein. Dafür braucht es das [Admin-Recht](/ef-fraktionsgarage/installation/#installieren).
+
+Änderungen bleiben ein Entwurf, bis du auf Speichern klickst, dann gelten sie sofort für alle Spieler. Solange der Editor offen ist, stehen Garagenpunkt, Einparkpunkt und alle Stellplätze als Markierung in der Welt, auch ungespeicherte.
+
+## Neue Garage
+
+„Neue Garage hier“ öffnet einen Entwurf an deiner Position. Die Garage entsteht wie jede andere Änderung erst mit Speichern, Verwerfen nimmt sie wieder weg.
+
+„Position setzen“ gibt die Steuerung frei: hingehen oder hinfahren, mit E übernehmen, mit Backspace abbrechen. Die Reihenfolge von Stellplätzen und Fahrzeugen änderst du am Griff links in der Zeile.
+
+Garagen haben einen optionalen Untertitel. Das Symbol einer Garage steht im Editor und im Kopf des Garagenmenüs.
+
+## Stellplätze
+
+Jede Garage kann mehrere Stellplätze haben. Beim Ausparken nimmt der Server den ersten freien Platz in der eingestellten Reihenfolge. Ist einer belegt, geht es mit dem nächsten weiter. Ohne Stellplätze erscheint das Fahrzeug an der Position des Spielers. Ein alter fester Ausparkpunkt wird beim ersten Start automatisch zu „Stellplatz 1“.
+
+## Einparken
+
+Unter Einparken steht, wo eine Garage Fahrzeuge zurücknimmt: am Garagenpunkt, an einem eigenen Einparkpunkt, an den Stellplätzen oder in beliebiger Kombination. Dort reicht E im Fahrzeug, ein Ort muss bleiben.
+
+## Ped
+
+Im Tab Ped fügst du einer Garage eine Figur hinzu oder löschst sie, weg ist sie mit dem Speichern. Modell, Position, Blickrichtung und Animation gelten pro Garage, die Schnellwahl setzt eines der beiden Spielermodelle.
+
+„Outfit von mir übernehmen“ setzt dein Modell, deine Kleidung und deine Tattoos auf den Ped, bei Spielermodellen auch Haare, Augen, Gesichtszüge und Make-up. Die Herkunft bleibt Standard, das Spiel gibt sie nicht heraus. Kleidung und Zubehör stellst du Teil für Teil mit Modell und Farbe ein.
+
+„Vorschau“ stellt den Ped nur bei dir hin und richtet eine Kamera auf ihn. Jede Änderung ist sofort zu sehen und gilt erst mit Speichern. Solange sie läuft, ist der gespeicherte Ped ausgeblendet.
+
+Der Ped nimmt keinen Schaden, lässt sich nicht anvisieren und entsteht lokal bei jedem Spieler in der Nähe.
+
+## Target
+
+Target ist ab Werk aus, die Garage öffnet dann mit E am Garagenpunkt. Unter Einstellungen lässt es sich für alle Garagen einschalten, Startwert ist `Config.Target`. Unter Target kann jede Garage mit Standard, An oder Aus davon abweichen.
+
+Ist es an und läuft ox_target, qb-target oder qtarget, öffnet man die Garage zu Fuß am Ped, ohne Ped am Garagenpunkt. E gilt am Garagenpunkt dann nur noch zum Einparken im Fahrzeug. Ohne Target-Script bleibt es bei E. Startet das Target-Script neu, legt die Garage ihre Punkte von selbst wieder an.
+
+## Marker und Blip
+
+Form, Farbe, Größe, Höhe, Sichtweite und Bewegung des Markers stehen unter Einstellungen und gelten für alle Garagen, `Config.Marker` liefert nur die Startwerte. Jede Garage kann den Marker auf Standard, Eigener oder Aus stellen. Ein eigener Marker erscheint auch dann, wenn der Marker global aus ist. Er bleibt am Garagenpunkt, das Öffnen ändert sich dadurch nicht.
+
+Blips stellst du pro Garage ein, `Config.DefaultBlip` liefert die Vorgabe. Die Auswahl an Farben und Symbolen steht in `Config.BlipColors` und `Config.BlipSprites`.
+
+## Abweichungen pro Garage
+
+Diese Einstellungen gelten für alle Garagen, jede Garage kann im Editor mit Standard, An oder Aus abweichen:
+
+- Automatisch einsteigen
+- Nur im Dienst
+- Target
+
+Dazu kommen eigene Werte für die Reichweite beim Einparken im Tab Im Einsatz, einen eigenen [Discord-Webhook](/ef-fraktionsgarage/anbindung/#discord-log) und, unter `Reinigen`, wer geparkte Fahrzeuge waschen darf: niemand, die Leitung oder alle. Waschen entfernt nur den Schmutz, Schäden bleiben.
+
+## Statistik
+
+Der Tab Statistik zeigt die Fahrten der letzten zwölf Wochen als Verlauf und pro Fahrzeug Fahrten, Kilometer, Zerstörungen und die letzte Fahrt. Die Exemplare einer Menge zählen zusammen. Die Zahlen kommen aus den Logs und reichen so weit zurück wie „Logs aufbewahren“.
+
+## Export und Import
+
+Unter Allgemein gibt „Exportieren“ den gespeicherten Stand einer Garage als Text aus, mit Stellplätzen, Fahrzeugen, Rängen und Setup. „Importieren“ in der Seitenleiste liest ihn auf demselben oder einem anderen Server als neuen Entwurf ein. Einzelne Spieler bleiben draußen, ihre Kennungen gelten nur auf ihrem Server. Ist ein Kennzeichen schon vergeben, bekommt das Fahrzeug ein neues.
+
+„Alles exportieren“ fasst die Einstellungen und alle Garagen in einem Text zusammen, ohne Discord-Webhook, Kofferraum-Inhalte, Fahrzeugzustand und Logs. „Importieren“ erkennt, was im Text steht. Bei einem Gesamt-Export fragt es einmal nach, ersetzt dann die Einstellungen und legt die Garagen an.
+
+:::caution
+Eine Garage mit demselben Namen bleibt beim Gesamt-Import unverändert. Bricht der Import ab, bleibt stehen, was schon angelegt ist. Lösch eine unvollständige Garage vor dem nächsten Versuch, sonst wird sie übersprungen.
+:::
+
+„Exportieren“ unter Einstellungen gibt nur die gespeicherten Einstellungen als Text aus, „Importieren“ in der Seitenleiste übernimmt ihn in den Entwurf.

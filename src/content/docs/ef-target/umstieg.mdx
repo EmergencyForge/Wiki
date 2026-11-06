@@ -1,0 +1,65 @@
+---
+title: Umstieg
+description: Von ox_target, qb-target oder qtarget auf ef_target wechseln, mit allen Unterschieden und fehlenden Exports.
+sidebar:
+  order: 6
+---
+
+Scripts bleiben, wie sie sind. ef_target meldet sich unter den Namen `ox_target`, `qb-target` und `qtarget` und beantwortet deren Exports.
+
+## Von ox_target
+
+Alle 24 Exports aus `client/api.lua` von ox_target 1.18.1 gibt es.
+
+1. Stopp ox_target, nimm es aus der `server.cfg` und aus dem `resources`-Ordner.
+2. Trag `ensure ef_target` nach `ef_lib` ein, siehe [Installation](/ef-target/installation/).
+
+`bones`- und `offset`-Optionen anderer Scripts werden zu sichtbaren Rauten. Ein Bone-Array ergibt eine Raute je Bone, den das Fahrzeug hat. Liegen zwei Anker einer Option näher als 0,4 m beieinander, bleibt der erste. `offset` in diesen Optionen sind Anteile der Entity-Box von 0 bis 1, mit `absoluteOffset` Meter. Nur in `AddPoint` ist `offset` immer in Metern.
+
+Läuft eine echte ox_target neben ef_target, steht das in der Konsole. Die Namen `ox_target` und `qtarget` sind dann gesperrt, weil ox_target beide bedient. Die Exports von `qb-target` bedient ef_target weiter. Das prüft ef_target einmal beim Start, eine später gestartete echte Ressource sieht es nicht.
+
+### Unterschiede zu ox_target
+
+- Box- und Polyzonen decken die Höhe von `minZ` bis `maxZ` ab, wie bei PolyZone. ox_target verschiebt die Box um die halbe Höhe. Fehlt eine der Grenzen, ist die Höhe um die Mitte offen, 450 m nach oben und unten.
+- Die Callbacks von lib.zones (`onEnter`, `onExit`, `inside`) laufen an Zonen nicht.
+- `getTargetOptions` liefert eine einfache Tabelle (`global`, `model`, `entity`, `localEntity`, ohne Entity statt `global` dann `globalTarget`, dazu `__global`), ohne `size`, `wipe` und `set`.
+- Lokale Entities, die nicht mehr existieren, räumt niemand auf. Die Optionen bleiben bis `Remove` oder bis die Ressource stoppt. Vernetzte Entities räumt der Server alle 10 Sekunden auf.
+- `removeModel`, `removeEntity` und `removeLocalEntity` ohne Namen leeren den Schlüssel auch für andere Ressourcen, wie bei ox_target.
+
+## Von qb-target und qtarget
+
+Maßstab ist qb-target 5.5.0 (Commit a3ea78b). Diese Exports gibt es:
+
+- `AddBoxZone`, `AddPolyZone`, `AddCircleZone`, `AddEntityZone`, `RemoveZone`
+- `AddTargetBone`, `RemoveTargetBone`
+- `AddTargetEntity`, `RemoveTargetEntity`, `AddTargetModel`, `RemoveTargetModel`
+- `AddGlobalPed`, `AddGlobalVehicle`, `AddGlobalObject`, `AddGlobalPlayer` und die passenden `RemoveGlobal...`
+- die qtarget-Namen `Ped`, `Vehicle`, `Object`, `Player` und ihre `Remove...`
+
+Übersetzt werden `job`, `gang`, `jobType`, `citizenid`, die `exclude`-Felder, `item`, `required_item`, `event` mit `type` (`client`, `server`, `command`, `qbcommand`) und `action`.
+
+### Lücken
+
+Diese Exports gibt es nicht, ein Aufruf wirft den Fehler „No such export“:
+
+- `AddComboZone`, `AddGlobalType`, `RemoveGlobalType`
+- `AllowTargeting`, `DisableTarget`, `IsTargetActive`, `IsTargetSuccess`
+- `GetZoneData` und die übrigen `Get...`- und `Update...`-Helfer
+- `RaycastCamera`, `CheckEntity`, `CheckBones`, `DisableNUI`, `EnableNUI`, `LeftTarget`, `DrawOutlineEntity`
+- `SpawnPed`, `DeletePeds`, `RemoveSpawnedPed`, `GetPeds`, `UpdatePedsData`
+
+Peds, die ein Script über `SpawnPed` anlegen ließ, muss es selbst erzeugen und mit `AddTargetEntity` oder `AddTargetModel` versehen.
+
+Diese Felder werden gelesen und ignoriert: `useZ`, `num`, `targeticon`, `drawColor`, `successDrawColor`, `drawDistance`.
+
+### Unterschiede zu qb-target
+
+- `coords` in der Antwort ist der Treffpunkt des Strahls, `distance` der Abstand zum Treffer.
+- Ein `serverEvent` bekommt als `entity` die Net-ID, bei nicht vernetzten Entities `0`.
+- Bei Zonen ist `entity` `nil`.
+- `AddEntityZone` hängt die Optionen an die Entity, es gibt keine mitwandernde Zone um sie.
+- `canInteract` bekommt `(entity, distance, option)` wie in qb-target. Das gilt auch für die Exports von `qtarget`, beide Namen teilen eine Tabelle.
+- `job` allein gilt ohne Framework als erfüllt, wie `groups`. `gang`, `citizenid` und die `exclude`-Felder bleiben ohne Framework verborgen, ebenso `jobType`. ESX kennt keine Gangs, `citizenid` und `jobType`.
+- Ein `job`, `gang` oder `jobType` von `'all'` ist keine Einschränkung. `excludejob`, `excludegang` und `excludejobType` mit `'all'` verbergen die Option für alle.
+- `RemoveTargetBone` und `RemoveGlobal...` lassen die eingebauten Fahrzeugpunkte stehen, auch ohne Labels.
+- Die Reichweite einer Option ist höchstens das `distance` des Aufrufs, Standard `Config.DefaultDistance`.

@@ -1,0 +1,103 @@
+---
+title: Installation und Konfiguration
+description: ef_fraktionsgarage installieren, das Admin-Recht vergeben, Framework und Standalone einrichten und config.lua einstellen.
+sidebar:
+  order: 2
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+## Installieren
+
+<Steps>
+
+1. Lade ef_fraktionsgarage aus deinem [Cfx-Keymaster](https://portal.cfx.re/assets/granted-assets) herunter und leg den Ordner in den `resources`-Ordner deines Servers.
+
+2. Trag die Ressource in die `server.cfg` ein, nach ihren Abhängigkeiten:
+
+   ```sh title="server.cfg"
+   ensure oxmysql
+   ensure ef_lib
+   ensure ef_fraktionsgarage
+   ```
+
+   Die Tabellen legt das Script beim Start selbst an, ein SQL-Import ist nicht nötig.
+
+3. Gib Admins das Recht für den Editor:
+
+   ```sh title="server.cfg"
+   add_ace group.admin ef_fraktionsgarage.admin allow
+   ```
+
+4. Starte den Server und öffne den Editor im Spiel mit `/fgarage`. Weiter geht es unter [Garagen-Editor](/ef-fraktionsgarage/editor/).
+
+</Steps>
+
+Beim Start steht in der Serverkonsole, welches Framework erkannt wurde.
+
+## Befehle
+
+| Befehl | Wirkung | Recht |
+|---|---|---|
+| `/fgarage` | öffnet den Garagen-Editor. Der alte Name `/garageadmin` geht weiter. | Admin |
+| `garagereload` | lädt die Garagen aus der Datenbank neu | Admin oder Konsole |
+| `efrepaircar <Kennzeichen>` | setzt ein Fahrzeug zurück, das laut Datenbank ausgeparkt ist, aber nirgends steht | Admin oder Konsole |
+
+## Tasten
+
+E öffnet die Garage am Garagenpunkt und parkt im Fahrzeug ein. Die Taste steht in den FiveM-Einstellungen unter **Tastenbelegung › FiveM** als „Garage öffnen oder einparken“.
+
+## Framework
+
+`Config.Framework` steht ab Werk auf `'auto'`. ESX und QBCore werden erkannt, Qbox läuft über die QBCore-Erkennung. Fest setzen lässt es sich mit `'esx'`, `'qbcore'` oder `'standalone'`.
+
+### Qbox
+
+Jeder Job eines Spielers zählt. Zugriff hat, wer einen Job der Garage hat, und der Rang kommt aus genau diesem Job. Boss-Rechte gelten nur für Jobs der Garage und hängen an `isboss` aus den Job-Rängen von Qbox. Dazu kommen Bereiche und Listen aus den [Boss-Rängen](/ef-fraktionsgarage/rechte/#boss-ränge), eine einzelne Zahl zählt hier nicht.
+
+Mit `Config.RequireDuty = true` gilt ein Nebenjob als außer Dienst, weil Qbox den Dienst nur für den Primärjob kennt.
+
+### Ohne Framework
+
+Läuft weder ESX noch QBCore, kommen Job und Rang aus ACE-Rechten in der `server.cfg`. Der Job muss als Fraktion an einer Garage eingetragen sein, Ränge gehen von 0 bis 15:
+
+```sh title="server.cfg"
+add_ace group.police ef_fraktionsgarage.job.police.3 allow
+add_principal identifier.license:abc123 group.police
+```
+
+Ohne Rang (`ef_fraktionsgarage.job.police`) bekommt der Spieler Rang 15. Spieler werden über ihre License erkannt, als Name dient der FiveM-Name, und im Dienst ist jeder. Hat jemand mehrere Jobs, zählt der alphabetisch erste. Geänderte Rechte gelten sofort, Blips und Marker ziehen beim nächsten Reconnect nach.
+
+## Konfiguration
+
+Die meisten Werte stehen im Editor unter Einstellungen. Sie liegen in der Tabelle `faction_garage_settings` und gehen vor `config.lua`, die nur noch die Startwerte liefert. Hast du einmal im Editor gespeichert, ändert eine Zeile in der `config.lua` an diesen Werten nichts mehr.
+
+Nur in der `config.lua` stehen:
+
+| Schlüssel | Wirkung |
+|---|---|
+| `Config.Framework` | `'auto'`, `'esx'`, `'qbcore'` oder `'standalone'` |
+| `Config.AdminPermission` | ACE-Recht für den Editor, Standard `ef_fraktionsgarage.admin` |
+| `Config.ElsResources` | ELS-Skripte für die [Blaulicht-Vorschau](/ef-fraktionsgarage/fahrzeuge/#blaulicht-vorschau) |
+| `Config.BlipColors`, `Config.BlipSprites` | Auswahllisten im Editor |
+| `Locale` | die Texte der Meldungen |
+
+Das sind die wichtigsten Startwerte:
+
+| Schlüssel | Standard | Wirkung |
+|---|---|---|
+| `Config.BossGrades` | siehe Datei | Boss-Ränge je Job, siehe [Rechte](/ef-fraktionsgarage/rechte/#boss-ränge) |
+| `Config.DefaultBossGrade` | `4` | Boss-Rang für Jobs ohne Eintrag |
+| `Config.VehicleKeys` | `'auto'` | [Schlüsselsystem](/ef-fraktionsgarage/anbindung/#fahrzeugschlüssel) |
+| `Config.Target` | `false` | Garage per Target öffnen, siehe [Target](/ef-fraktionsgarage/editor/#target) |
+| `Config.SaveDeformation` | `true` | Dellen speichern und wiederherstellen |
+| `Config.SaveTrunk` | `true` | Kofferraum speichern |
+| `Config.UsePersistentVehicles` | `false` | Fahrzeuge überstehen Serverneustarts, siehe [Neustarts](/ef-fraktionsgarage/im-spiel/#neustarts) |
+| `Config.PersistentSpawnDistance` | `200.0` | Abstand, ab dem persistente Fahrzeuge in der Nähe eines Spielers erscheinen |
+| `Config.MaxVehiclesPerPlayer` | `2` | Fahrzeuge, die ein Spieler gleichzeitig draußen haben darf, `0` ist unbegrenzt |
+| `Config.RequireDuty` | `false` | nur im Dienst ausparken, Admins sind ausgenommen |
+| `Config.AutoEnterVehicle` | `true` | beim Ausparken direkt auf den Fahrersitz |
+| `Config.StoreReach` | `40` | Reichweite für „Einparken“ im Tab Im Einsatz in Metern, `0` schaltet es ab |
+| `Config.PlateFormat` | `'FG?? ###'` | Kennzeichen neuer Fahrzeuge, `#` ist eine Ziffer, `?` ein Buchstabe |
+| `Config.LogRetentionDays` | `90` | Logs werden nach dieser Zahl von Tagen gelöscht |
+| `Config.ImageRunMusic` | `true` | leise Aufzugsmusik, während „Alle Bilder neu erstellen“ läuft |

@@ -1,0 +1,136 @@
+---
+title: Punkte und Zonen
+description: Mit AddPoint feste Punkte an Bones, Offsets und Koordinaten anlegen, dazu Optionen an Fahrzeugen, Modellen, Entities und in Zonen.
+sidebar:
+  order: 4
+---
+
+Es gibt drei Arten, Optionen anzubringen: als **Punkt** an einer festen Stelle, an einer ganzen **Entity** oder Gruppe von Entities und in einer **Zone**. Jeder Aufruf gibt eine `id` zurück, die du an [Remove](/referenz/ef-target/#remove) übergibst. Stoppt deine Ressource, räumt ef_target alles von selbst weg.
+
+## Punkte
+
+Ein Punkt ist eine sichtbare Raute an einer festen Stelle. [AddPoint](/referenz/ef-target/#addpoint) braucht genau eins von `global`, `model`, `entity` oder `coords`:
+
+```lua title="client.lua"
+-- An der Fahrertür aller Fahrzeuge
+exports.ef_target:AddPoint({
+    global = 'vehicle',
+    bone = 'door_dside_f',
+    label = 'Fahrertür',
+    options = {
+        { label = 'Abschließen', icon = 'fa-solid fa-lock', onSelect = abschliessen },
+    },
+})
+
+-- An einer Stelle in der Welt
+exports.ef_target:AddPoint({
+    coords = vec3(1193.2, -1473.8, 34.9),
+    show = 'near',
+    distance = 2.0,
+    label = 'Spind',
+    options = {
+        { label = 'Spind öffnen', icon = 'fa-solid fa-box-open', event = 'fw:spindOeffnen' },
+    },
+})
+```
+
+| Feld | Bedeutung |
+|---|---|
+| `global` | `'ped'`, `'vehicle'`, `'object'` oder `'player'` |
+| `model` | Modell oder Liste von Modellen, als Name oder mit `joaat('name')` |
+| `entity` | Entity-Handle |
+| `coords` | Weltposition, dann braucht es kein `bone` und kein `offset` |
+| `bone` | Bone-Name, bei `global`, `model` und `entity` |
+| `offset` | `vec3` in Metern von der Entity aus, statt `bone` |
+| `show` | `'alt'` (Standard) oder `'near'` |
+| `distance` | Reichweite, gilt für Optionen ohne eigenes `distance` |
+| `label` | Titel des Panels |
+| `icon` | Icon neben dem Titel. Ohne Angabe das Icon der ersten Option, `false` zeigt keins. |
+| `options` | eine Option oder eine Liste, siehe [Optionen](/ef-target/optionen/) |
+
+Bei `global`, `model` und `entity` ist außerdem `bone` oder `offset` nötig, sonst wirft der Aufruf einen Fehler.
+
+## show
+
+`show` legt fest, wann ein Punkt zu sehen ist.
+
+`'alt'` ist der Standard. Der Punkt erscheint nur, solange der Spieler Alt hält.
+
+`'near'` zeigt den Punkt ohne Taste, sobald der Spieler in `distance` ist und mindestens eine Option erlaubt ist. Das passt für Stellen, die jeder sofort finden soll, etwa einen Spind. Am nächsten Punkt steht die Tastenanzeige mit `E` und dem Text der ersten erlaubten Option.
+
+Zwei Dinge sind dabei zu beachten:
+
+- Eine Option, die nur ein Untermenü öffnet, nimmt die Tastenanzeige nicht. Öffnen alle Optionen eines Punkts nur ein Untermenü, bekommt er weder Marke noch Anzeige, außer bei gehaltenem Alt.
+- Im Fahrzeug erscheinen `near`-Punkte nicht.
+
+Ohne `near`-Punkte läuft im Leerlauf nichts.
+
+## Ganze Entities
+
+Ohne Punkt gelten Optionen für die ganze Entity. Der Spieler zielt irgendwo darauf.
+
+```lua title="client.lua"
+-- Alle Personen, 'vehicle', 'object' und 'player' gehen genauso
+exports.ef_target:AddGlobal('ped', {
+    { label = 'Ausweis zeigen', icon = 'fa-solid fa-id-card', onSelect = ausweisZeigen },
+})
+
+-- Ein Modell oder eine Liste, als Hash oder Name
+exports.ef_target:AddModel({ 'prop_vend_soda_01', 'prop_vend_soda_02' }, {
+    { label = 'Getränk ziehen', icon = 'fa-solid fa-bottle-water', event = 'shop:getraenk' },
+})
+
+-- Eine einzelne Entity, lokal oder vernetzt
+exports.ef_target:AddEntity(ped, {
+    { label = 'Ansprechen', icon = 'fa-solid fa-comment', onSelect = ansprechen },
+})
+```
+
+## Zonen
+
+Zonen sind Bereiche in der Welt, die keine Entity brauchen.
+
+```lua title="client.lua"
+exports.ef_target:AddBoxZone({
+    name = 'wache_tresen',
+    coords = vec3(441.8, -981.9, 30.7),
+    size = vec3(2.0, 1.0, 2.0),
+    rotation = 70.0,
+    options = {
+        { label = 'Anmelden', icon = 'fa-solid fa-pen', event = 'wache:anmelden' },
+    },
+})
+
+exports.ef_target:AddSphereZone({
+    coords = vec3(441.8, -981.9, 30.7),
+    radius = 2.0,
+    options = {},
+})
+
+exports.ef_target:AddPolyZone({
+    points = { vec3(0.0, 0.0, 30.0), vec3(4.0, 0.0, 30.0), vec3(4.0, 4.0, 30.0) },
+    thickness = 4.0,
+    options = {},
+})
+```
+
+`size` ist die volle Ausdehnung je Achse, `rotation` dreht die Box um die Hochachse. Bei Polyzonen gilt die mittlere Höhe der Punkte, `thickness` ist die Gesamthöhe.
+
+Alle Zonen kennen diese weiteren Felder:
+
+| Feld | Bedeutung |
+|---|---|
+| `name` | für `Remove`, mehrere Zonen dürfen denselben Namen tragen. `Remove` mit dem Namen entfernt alle. |
+| `label` | Titel des Panels |
+| `icon` | ohne Angabe ein Ortssymbol, `false` zeigt keins |
+| `drawSprite` | `false` nimmt die kleine Raute am Mittelpunkt weg |
+
+## Target abschalten
+
+Während einer eigenen Szene, etwa einem Minispiel, schaltest du das Target mit [DisableTargeting](/referenz/ef-target/#disabletargeting) ab:
+
+```lua title="client.lua"
+exports.ef_target:DisableTargeting(true)
+-- ...
+exports.ef_target:DisableTargeting(false)
+```

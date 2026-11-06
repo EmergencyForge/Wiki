@@ -1,0 +1,73 @@
+---
+title: Anbindung
+description: ef_fraktionsgarage mit Fahrzeugschlüsseln, Fuel-Scripts, Inventaren, Discord und Abschleppscripts verbinden.
+sidebar:
+  order: 7
+---
+
+## Fahrzeugschlüssel
+
+```lua title="config.lua"
+Config.VehicleKeys = 'auto'
+```
+
+`'auto'` erkennt das installierte System. Fest setzen lässt sich `'none'`, `'qbx_vehiclekeys'`, `'qb-vehiclekeys'`, `'qs-vehiclekeys'`, `'wasabi_carlock'`, `'cd_garage'`, `'renewed-vehiclekeys'`, `'jaksam'`, `'okokGarage'`, `'t1ger_keys'` oder `'mk_vehiclekeys'`.
+
+Einen Schlüssel bekommt nur, wer das Fahrzeug ausgeparkt hat, auch mit `Config.UsePersistentVehicles`. Nach einem Reconnect oder Neustart bekommt der Fahrer ihn zurück. Verschwindet das Fahrzeug, ist er wieder weg, egal ob jemand einparkt, ein Admin es zurückholt oder es zerstört wird. Einen Schlüssel, den der Fahrer über das Schlüsselscript weitergibt, kennt die Garage nicht und zieht ihn auch nicht ein.
+
+Bei `qbx_vehiclekeys`, `qb-vehiclekeys`, `mk_vehiclekeys` und `wasabi_carlock` vergibt und entzieht der Server die Schlüssel, die anderen Systeme laufen über den Client.
+
+## Tankart
+
+Das Menü zeigt die Tankart statt der Fahrzeugklasse, wenn lc_fuel oder cdn-fuel läuft. Beide kennen sie nur aus ihrer eigenen `config.lua`, die Garage liest sie von dort. ox_fuel, LegacyFuel und ps-fuel kennen keine Tankarten, dort bleibt es bei der Klasse, genauso wenn sich die config nicht lesen lässt.
+
+Einstellen lässt sich die Tankart in der Garage nicht, kein Fuel-Script nimmt sie von außen an:
+
+| Script | Wo sie steht |
+|---|---|
+| lc_fuel | E-Autos in `Config.Electric.vehiclesList`, auch wenn das Spiel sie selbst als elektrisch erkennt. Diesel in `Config.DieselVehicles`. |
+| cdn-fuel | E-Autos in `Config.ElectricVehicles` |
+
+lc_fuel speichert die Tankart zusätzlich pro Kennzeichen. Passt dieser Eintrag nicht zum Modell, zum Beispiel weil das Fahrzeug einmal falsch betankt oder das Modell im Editor getauscht wurde, korrigiert die Garage ihn beim Ausparken. Super und Super Plus bleiben stehen, das ist dieselbe Tankart.
+
+## Kofferraum
+
+Was beim Einparken im Kofferraum liegt, liegt beim nächsten Ausparken wieder dort, im selben Slot und mit denselben Metadaten. Das gilt nur bei Menge 1, bei jeder anderen Menge startet jedes Exemplar leer. Auch ein zerstörtes Fahrzeug behält seinen Inhalt. Solange ein Fahrzeug unterwegs ist, sichert der Server den Inhalt jede Minute.
+
+| Inventar | Verhalten |
+|---|---|
+| `ox_inventory` | Die Garage übernimmt das Speichern, weil ox nur Kofferräume von Fahrzeugen aus der Fahrzeugtabelle des Frameworks speichert. |
+| `qb-inventory` | speichert Kofferräume selbst nach Kennzeichen, dort ist nichts zu tun |
+| `qs-inventory` | nicht angebunden |
+
+Unter Einstellungen lässt sich das Speichern abschalten, Startwert ist `Config.SaveTrunk`.
+
+Ein anderes Inventar bindet sich selbst mit [RegisterTrunkInventory](/referenz/ef-fraktionsgarage/#registertrunkinventory) an und hat dann Vorrang vor `ox_inventory`:
+
+```lua title="server.lua"
+exports.ef_fraktionsgarage:RegisterTrunkInventory(read, write, drop)
+```
+
+Passt nach einem Modellwechsel nicht mehr alles hinein, geht der Rest verloren und steht im Server-Log.
+
+## Discord-Log
+
+Ausparken, Einparken mit Zustand und Strecke und zerstörte Fahrzeuge landen auf Wunsch in einem Discord-Kanal. Trag dafür im Editor unter Einstellungen die Webhook-URL ein. Sie liegt in `faction_garage_settings`, geht an keinen Client und wird auch im Editor nicht wieder angezeigt.
+
+Eine Garage kann unter Allgemein einen eigenen Webhook bekommen. Ihre Meldungen gehen dann nur dorthin, alle anderen Garagen nutzen weiter den aus den Einstellungen. Auch diese URL bleibt auf dem Server und steht in keinem Export.
+
+Ohne Webhook bleibt es beim Log in der Datenbank. „Beschädigt eingeparkt“ erscheint, wenn Karosserie oder Motor seit dem Ausparken mindestens 10 Prozentpunkte verloren haben. Alte Schäden zählen nicht für den nächsten Fahrer.
+
+## Abschleppscripts
+
+Ein Abschleppscript gibt ein Fahrzeug mit [ReturnVehicle](/referenz/ef-fraktionsgarage/#returnvehicle) zurück:
+
+```lua title="server.lua"
+exports.ef_fraktionsgarage:ReturnVehicle(plate, 'Abgeschleppt')
+```
+
+Das Fahrzeug verschwindet von der Karte und steht wieder in seiner Garage. Der Grund ist optional, hat höchstens 100 Zeichen und steht im Verlauf.
+
+## Events für andere Scripts
+
+Der Server meldet Aus- und Einparken als lokale Events. Lausche mit `AddEventHandler`, `RegisterNetEvent` würde sie für jeden Client öffnen. Die Felder stehen in der [Referenz](/referenz/ef-fraktionsgarage/#event-vehiclespawned).

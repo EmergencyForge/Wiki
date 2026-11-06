@@ -42,6 +42,21 @@ export const referenceResources: Record<string, { categories: Record<string, str
 			util: 'Hilfsfunktionen',
 		},
 	},
+	'ef-target': {
+		categories: {
+			point: 'Punkte',
+			entity: 'Entities',
+			zone: 'Zonen',
+			control: 'Steuerung',
+		},
+	},
+	'ef-fraktionsgarage': {
+		categories: {
+			server: 'Server',
+			client: 'Client',
+			events: 'Events',
+		},
+	},
 };
 
 // Same result as Starlight's heading slugs for these labels, so links like #menü keep working.

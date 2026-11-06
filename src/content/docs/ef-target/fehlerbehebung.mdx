@@ -1,0 +1,42 @@
+---
+title: Hilfe bei Problemen
+description: Häufige Fehler mit ef_target und die Meldungen in der F8-Konsole.
+sidebar:
+  order: 7
+---
+
+## Erst prüfen
+
+- Startet ef_lib vor ef_target? `ensure ef_lib` muss in der `server.cfg` davor stehen.
+- Heißt der Ordner genau `ef_target`?
+- Läuft noch eine echte ox_target? Dann steht es in der F8-Konsole, siehe unten.
+
+## Ein Script findet ox_target nicht mehr
+
+Das Script prüft vermutlich beim eigenen Start, ob `ox_target` läuft. Trag `ensure ef_target` in der `server.cfg` vor diesem Script ein.
+
+## Ein Punkt erscheint nicht
+
+- Ein Punkt erscheint nur, wenn mindestens eine seiner Optionen erlaubt ist. Prüf `groups`, `items` und `canInteract`.
+- `show = 'alt'` zeigt ihn nur bei gehaltenem Alt.
+- `near`-Punkte erscheinen nicht im Fahrzeug.
+- Es erscheinen höchstens `Config.MaxPoints` Punkte, die nächsten gewinnen.
+- Hat das Modell den Bone nicht, gibt es dort keinen Punkt. Das betrifft vor allem Türgriffe an einzelnen Fahrzeugen.
+
+## Die Taste stimmt nicht
+
+Tasten liegen in den FiveM-Einstellungen. Ein Spieler, der die Taste schon einmal gebunden hat, behält sie, auch wenn du `Config.Key` oder `Config.UseKey` änderst.
+
+## Meldungen in der F8-Konsole
+
+| Meldung | Ursache und Lösung |
+|---|---|
+| `ox_target runs next to ef_target, its exports stay with it` | Die echte Ressource läuft noch. Stopp sie, nimm sie aus der `server.cfg` und aus dem `resources`-Ordner. |
+| `marker textures failed to load, markers are disabled` | Die Marken ließen sich nicht malen und bleiben aus. Die Fehlermeldung dahinter nennt den Grund. |
+| `option <Name> failed: ...` | Der Code hinter einer Option hat einen Fehler geworfen. Der Fehler liegt im aufrufenden Script. |
+| `attempted to remove a zone that does not exist` | Ein Script entfernt eine Zone, die es nicht mehr gibt. Harmlos. |
+| `no entity with id ... exists in <Ressource>` | Ein Script übergibt eine Net-ID, zu der es keine Entity gibt. |
+
+## Fehler melden
+
+Fehler gehören in die [Issues von ef_target](https://github.com/EmergencyForge/ef_target/issues). Schreib dazu, welches Framework und welche Version du nutzt und was in der F8-Konsole steht.

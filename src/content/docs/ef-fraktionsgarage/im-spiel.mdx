@@ -1,0 +1,58 @@
+---
+title: Im Spiel
+description: Ausparken, der Tab Im Einsatz, zerstörte Fahrzeuge, Kilometerstand und was bei Neustarts mit den Fahrzeugen passiert.
+sidebar:
+  order: 6
+---
+
+## Ausparken
+
+E an der Garage öffnet die Fahrzeugliste. Das gewählte Fahrzeug steht als Vorschau auf seinem Stellplatz und lässt sich mit der Maus drehen. Die Knöpfe darunter zeigen Front, Seite, Heck und Innenraum, im Innenraum schaut die Maus sich um. Wer schon im Fahrzeug sitzt, parkt mit E direkt ein. Parkt jemand anderes aus oder ein, zieht ein offenes Menü von selbst nach.
+
+Ist „Automatisch einsteigen“ aus, bleibt der Spieler stehen und das Fahrzeug wartet auf dem Stellplatz. Eine Garage ohne Stellplätze setzt das Fahrzeug an die Position des Spielers, dort steigt er immer ein.
+
+## Im Einsatz
+
+Der Tab Im Einsatz im Garagenmenü zeigt alle ausgeparkten Fahrzeuge der Garage mit Fahrer, Stellplatz, Dauer und Entfernung. Solange der Tab offen ist, liest die Seite die Liste alle fünf Sekunden neu. Den Stellplatz kennt nur der laufende Server, nach einem Neustart fehlt er.
+
+„Orten“ setzt einen Wegpunkt und steht allen offen, die die Garage nutzen dürfen.
+
+„Einparken“ holt ein Fahrzeug von dort aus zurück, zum Beispiel wenn der Fahrer den Server verlassen hat. Das geht bei jedem Fahrzeug der Garage, solange niemand darin sitzt und es höchstens `Reichweite im Menü` vom nächsten Einparkort entfernt steht. Die Reichweite steht unter Einstellungen (Startwert `Config.StoreReach`, 40 m), jede Garage kann abweichen, 0 schaltet den Knopf ab. Zerstörte Fahrzeuge bleiben draußen.
+
+Verlauf und Discord nennen, wer eingeparkt hat. Sieht dein Client das Fahrzeug nicht, bleibt der zuletzt gespeicherte Zustand.
+
+## Zerstört oder von der Karte genommen
+
+Ein Fahrzeug, das `/dv` oder ein Abschleppscript von der Karte nimmt, steht sofort wieder in der Garage.
+
+Ein Wrack bleibt als Fahrzeug stehen, bis jemand es wegräumt, und zählt ab dann nicht mehr für das Limit des Fahrers. Danach steht es sonst sofort wieder in der Garage. Mit `Config.UsePersistentVehicles` bleibt es als zerstört draußen und kommt erst beim nächsten Serverstart zurück, oder wenn ein Admin es im Editor zurückholt.
+
+Ist ein Fahrzeug laut Datenbank ausgeparkt, steht aber nirgends, setzt `efrepaircar <Kennzeichen>` es zurück.
+
+## Kilometerstand
+
+Den Kilometerstand misst der Client des Fahrers einmal pro Sekunde: nur am Steuer, mit allen Rädern am Boden und außerhalb des Wassers. Fahrräder, Boote, Hubschrauber und Flugzeuge zählen gar nicht, Sprünge schneller als 120 m/s auch nicht, das sind Teleports.
+
+Alle 30 Sekunden und beim Aussteigen meldet der Client die Strecke. Der Server nimmt sie nur vom Fahrer oder von jemandem direkt am Fahrzeug an, und höchstens so viel, wie ein Fahrzeug seit der letzten Meldung schaffen kann.
+
+Der Stand gilt nur bei Menge 1 und steht im Garagenmenü. Der Verlauf nennt bei jedem Einparken Zustand und gefahrene Strecke, auch bei Zerstörung und `efrepaircar`. Die laufende Fahrt speichert der Server einmal pro Minute, ein Neustart kostet also höchstens die letzten anderthalb Minuten.
+
+## Neustarts
+
+Das Türschloss speichert die Garage alle 30 Sekunden mit der Position. Ein abgeschlossenes Fahrzeug kommt nach einem Neustart abgeschlossen zurück, ausgeparkt ist es immer offen.
+
+Kündigt txAdmin einen Neustart an, schreibt die Garage Position, Schloss, Kofferraum, Kilometer und Zustand aller Fahrzeuge sofort. Das gilt nicht für einen Absturz und nicht für einen Stopp ohne txAdmin.
+
+| Fall | Was passiert |
+|---|---|
+| `restart` der Ressource | Ausgeparkte Fahrzeuge bleiben stehen, auch ohne `Config.UsePersistentVehicles`. Die Garage übernimmt sie, wie sie gerade sind, mit Setup, Kofferraum und Schlüssel. Ohne Persistenz gehen beim Start nur die Fahrzeuge zurück in die Garage, die nicht mehr auf der Karte stehen. |
+| Serverneustart mit `Config.UsePersistentVehicles = false` | Alle Fahrzeuge stehen wieder in der Garage. |
+| Serverneustart mit `Config.UsePersistentVehicles = true` | Fahrzeuge behalten ihren Status und erscheinen, sobald ein Spieler in die Nähe kommt (`Config.PersistentSpawnDistance`). |
+
+Die Option „Fahrzeuge überstehen Neustarts“ unter Einstellungen greift beim nächsten Serverstart.
+
+Mit `Config.UsePersistentVehicles` meldet der Fahrer mit jedem Streckenbericht auch Tank, Karosserie, Motor, Tankschaden und Schmutz, der Server schreibt das einmal pro Minute. Beim Aussteigen kommt nach einer Fahrt der ganze Zustand mit Reifen, Scheiben und Dellen dazu. Ein Absturz kostet so höchstens etwa eine Minute.
+
+:::caution
+Dafür braucht es MySQL ab 5.7.22 oder MariaDB ab 10.2.25. Sonst steht ein Fehler im Server-Log, und der Zustand bleibt beim letzten Einparken.
+:::

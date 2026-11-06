@@ -3,6 +3,8 @@ export const sections = [
 	{ label: 'ignis', prefix: '/ignis/' },
 	{ label: 'ef_bridge', prefix: '/ef-bridge/' },
 	{ label: 'ef_lib', prefix: '/ef-lib/' },
+	{ label: 'ef_target', prefix: '/ef-target/' },
+	{ label: 'ef_fraktionsgarage', prefix: '/ef-fraktionsgarage/' },
 	{ label: 'Referenz', prefix: '/referenz/' },
 	{ label: 'Mitmachen', prefix: '/mitmachen/' },
 ];

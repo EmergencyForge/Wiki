@@ -1,0 +1,236 @@
+# Referenzdaten für die eigenen Exports von ef_target (client/exports.lua).
+# Schema: src/content.config.ts.
+
+# --- point ---
+
+- id: addpoint
+  name: AddPoint
+  kind: export
+  realm: client
+  category: point
+  description: >-
+    Legt einen sichtbaren Punkt an. Nötig ist genau eins von `global`, `model`, `entity` oder `coords`, bei
+    den ersten drei außerdem `bone` oder `offset`, sonst wirft der Aufruf einen Fehler.
+  params:
+    - name: data
+      type: table
+      description: "Felder `global`, `model`, `entity`, `coords`, `bone`, `offset`, `show`, `distance`, `label`, `icon` und `options`. Die Bedeutung steht unter [Punkte und Zonen](/ef-target/punkte/#punkte)."
+  returns:
+    - type: any
+      name: id
+      description: "ID für [Remove](#remove)."
+  example: |
+    local id = exports.ef_target:AddPoint({
+        global = 'vehicle',
+        bone = 'door_dside_f',
+        label = 'Fahrertür',
+        options = {
+            { label = 'Abschließen', icon = 'fa-solid fa-lock', onSelect = abschliessen },
+        },
+    })
+  guide: /ef-target/punkte/
+
+# --- entity ---
+
+- id: addglobal
+  name: AddGlobal
+  kind: export
+  realm: client
+  category: entity
+  description: >-
+    Hängt Optionen an alle Entities einer Art. Der Spieler zielt irgendwo auf die Entity, einen sichtbaren
+    Punkt gibt es dabei nicht.
+  params:
+    - name: kind
+      type: string
+      description: "`'ped'`, `'vehicle'`, `'object'` oder `'player'`."
+    - name: options
+      type: table
+      description: "Eine Option oder eine Liste, siehe [Optionen](/ef-target/optionen/)."
+  returns:
+    - type: any
+      name: id
+      description: "ID für [Remove](#remove)."
+  example: |
+    exports.ef_target:AddGlobal('ped', {
+        { label = 'Ausweis zeigen', icon = 'fa-solid fa-id-card', onSelect = ausweisZeigen },
+    })
+  guide: /ef-target/punkte/#ganze-entities
+
+- id: addmodel
+  name: AddModel
+  kind: export
+  realm: client
+  category: entity
+  description: >-
+    Hängt Optionen an alle Entities eines oder mehrerer Modelle.
+  params:
+    - name: models
+      type: string | number | table
+      description: "Hash, Name oder eine Liste davon."
+    - name: options
+      type: table
+      description: "Eine Option oder eine Liste, siehe [Optionen](/ef-target/optionen/)."
+  returns:
+    - type: any
+      name: id
+      description: "ID für [Remove](#remove). Bei einer Liste entfernt sie alle Modelle zusammen."
+  example: |
+    exports.ef_target:AddModel({ 'prop_vend_soda_01', 'prop_vend_soda_02' }, {
+        { label = 'Getränk ziehen', icon = 'fa-solid fa-bottle-water', event = 'shop:getraenk' },
+    })
+  guide: /ef-target/punkte/#ganze-entities
+
+- id: addentity
+  name: AddEntity
+  kind: export
+  realm: client
+  category: entity
+  description: >-
+    Hängt Optionen an eine einzelne Entity, lokal oder vernetzt.
+  params:
+    - name: entity
+      type: number
+      description: "Entity-Handle."
+    - name: options
+      type: table
+      description: "Eine Option oder eine Liste, siehe [Optionen](/ef-target/optionen/)."
+  returns:
+    - type: any
+      name: id
+      description: "ID für [Remove](#remove)."
+  example: |
+    exports.ef_target:AddEntity(ped, {
+        { label = 'Ansprechen', icon = 'fa-solid fa-comment', onSelect = ansprechen },
+    })
+  guide: /ef-target/punkte/#ganze-entities
+
+# --- zone ---
+
+- id: addboxzone
+  name: AddBoxZone
+  kind: export
+  realm: client
+  category: zone
+  description: >-
+    Legt eine Box-Zone an. `size` ist die volle Ausdehnung je Achse, `rotation` dreht die Box um die Hochachse.
+  params:
+    - name: data
+      type: table
+      description: "Felder `coords`, `size`, `rotation`, `options`, dazu `name`, `label`, `icon` und `drawSprite`."
+  returns:
+    - type: any
+      name: id
+      description: "ID für [Remove](#remove)."
+  example: |
+    exports.ef_target:AddBoxZone({
+        name = 'wache_tresen',
+        coords = vec3(441.8, -981.9, 30.7),
+        size = vec3(2.0, 1.0, 2.0),
+        rotation = 70.0,
+        options = {
+            { label = 'Anmelden', icon = 'fa-solid fa-pen', event = 'wache:anmelden' },
+        },
+    })
+  guide: /ef-target/punkte/#zonen
+
+- id: addspherezone
+  name: AddSphereZone
+  kind: export
+  realm: client
+  category: zone
+  description: >-
+    Legt eine Kugel-Zone an.
+  params:
+    - name: data
+      type: table
+      description: "Felder `coords`, `radius`, `options`, dazu `name`, `label`, `icon` und `drawSprite`."
+  returns:
+    - type: any
+      name: id
+      description: "ID für [Remove](#remove)."
+  example: |
+    exports.ef_target:AddSphereZone({
+        coords = vec3(441.8, -981.9, 30.7),
+        radius = 2.0,
+        options = {
+            { label = 'Anmelden', event = 'wache:anmelden' },
+        },
+    })
+  guide: /ef-target/punkte/#zonen
+
+- id: addpolyzone
+  name: AddPolyZone
+  kind: export
+  realm: client
+  category: zone
+  description: >-
+    Legt eine Zone aus mindestens drei Punkten an. Es gilt die mittlere Höhe der Punkte, `thickness` ist die
+    Gesamthöhe.
+  params:
+    - name: data
+      type: table
+      description: "Felder `points`, `thickness`, `options`, dazu `name`, `label`, `icon` und `drawSprite`."
+  returns:
+    - type: any
+      name: id
+      description: "ID für [Remove](#remove)."
+  example: |
+    exports.ef_target:AddPolyZone({
+        points = { vec3(0.0, 0.0, 30.0), vec3(4.0, 0.0, 30.0), vec3(4.0, 4.0, 30.0) },
+        thickness = 4.0,
+        options = {
+            { label = 'Betreten', event = 'halle:betreten' },
+        },
+    })
+  guide: /ef-target/punkte/#zonen
+
+# --- control ---
+
+- id: remove
+  name: Remove
+  kind: export
+  realm: client
+  category: control
+  description: >-
+    Entfernt einen Punkt, ein Modell, eine Entity oder eine Zone. Stoppt deine Ressource, passiert das von
+    selbst. Mit dem Namen einer Zone entfernt der Aufruf alle Zonen dieses Namens.
+  params:
+    - name: id
+      type: any
+      description: "Rückgabewert eines Add-Aufrufs oder der Name einer Zone."
+  example: |
+    local id = exports.ef_target:AddSphereZone({ coords = coords, radius = 2.0, options = optionen })
+    exports.ef_target:Remove(id)
+  guide: /ef-target/punkte/
+
+- id: disabletargeting
+  name: DisableTargeting
+  kind: export
+  realm: client
+  category: control
+  description: >-
+    Schaltet das Target ab oder wieder ein, etwa für ein Minispiel. Ist es offen, schließt es sich.
+  params:
+    - name: state
+      type: boolean
+      description: "`true` schaltet ab, `false` wieder ein."
+  example: |
+    exports.ef_target:DisableTargeting(true)
+  guide: /ef-target/punkte/#target-abschalten
+
+- id: isactive
+  name: IsActive
+  kind: export
+  realm: client
+  category: control
+  description: >-
+    Sagt, ob das Target gerade offen ist.
+  returns:
+    - type: boolean
+      name: active
+      description: "`true`, solange der Spieler es offen hat."
+  example: |
+    if exports.ef_target:IsActive() then
+        return
+    end
