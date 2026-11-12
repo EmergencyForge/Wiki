@@ -41,7 +41,7 @@ ef_bridge liest Charaktere und Fahrzeuge aus der Datenbank des Frameworks, nicht
 | QBCore, Qbox | Tabelle `players` (Citizen-ID und `charinfo`) | Tabelle `player_vehicles`, Modellname aus dem Fahrzeugkatalog des Frameworks |
 | ESX | Tabelle `users` (Identifier, Vor- und Nachname, Geburtsdatum, Geschlecht, `phone_number`, falls die Spalte existiert) | Tabelle `owned_vehicles`, Modellname aus der Tabelle `vehicles` von esx_vehicleshop |
 
-Bei Personen gehen Name, Geburtsdatum, Geschlecht und Telefon an Lex, bei Fahrzeugen Kennzeichen, Modell, Klasse und Halter. Die Klasse leitet ef_bridge aus der Kategorie des Fahrzeugs ab. Die Farbe übernimmt ef_bridge nicht, weil die Frameworks nur eine Farbnummer speichern, sie bleibt in Lex von Hand pflegbar. Mit „Charaktere als Personen“ (`Lex.Persons`) und „Fahrzeuge mit Halter“ (`Lex.Vehicles`) schaltest du die beiden Teile einzeln ab.
+Bei Personen gehen Name, Geburtsdatum, Geschlecht und Telefon an Lex, bei Fahrzeugen Kennzeichen, Modell, Klasse und Halter. Die Klasse leitet ef_bridge aus der Kategorie des Fahrzeugs ab. Die Farbe übernimmt ef_bridge nicht, weil die Frameworks nur eine Farbnummer speichern, sie bleibt in Lex von Hand pflegbar. Mit „Charaktere als Personen“ (`Lex.Persons`) und „Fahrzeuge mit Halter“ (`Lex.Vehicles`) schaltest du die beiden Teile einzeln ab. Mit der Person gehen auch ihre [Lizenzen](#lizenzen) mit.
 
 Lex erkennt Personen an der Citizen-ID bzw. dem ESX-Identifier. Eine in Lex von Hand angelegte Person mit gleichem Vor- und Nachnamen und gleichem Geburtsdatum verknüpft Lex, statt sie doppelt anzulegen. Adresse, Foto, Notizen, Akten und Vorgänge in Lex bleiben unberührt.
 
@@ -53,6 +53,85 @@ Lex erkennt Personen an der Citizen-ID bzw. dem ESX-Identifier. Eine in Lex von 
 Mit „Verschwundene Fahrzeuge abmelden“ (`Lex.FullSync.RetireMissingVehicles`, ab Werk an) meldet Lex Spielfahrzeuge ab, die der vollständige Abgleich nicht mehr findet, etwa weil sie verkauft oder gelöscht wurden.
 
 Das Ergebnis des letzten vollständigen Abgleichs steht im Panel unter Status: wie viele Personen und Fahrzeuge neu, geändert, übersprungen oder abgemeldet sind, dazu der letzte Fehler. `efbridge status` zeigt Zeitpunkt und Fehler in der Konsole. Was Lex übersprungen hat und warum, schreibt ef_bridge nach jedem Abgleich mit `[Lex-Sync]` in die Serverkonsole, mit `efbridge set Debug on` auch pro Datensatz.
+
+## Lizenzen
+
+Ab v2026.8.4 schickt ef_bridge mit jeder Person ihre Lizenzen, Lex braucht dafür v2026.0.58 oder neuer. Lex zeigt sie an der Person im Reiter Lizenzen und ersetzt damit, was es zuletzt aus dem Spiel bekommen hat. Lizenzen, die jemand in Lex von Hand eingetragen hat, bleiben. Lex schreibt nichts ins Spiel zurück.
+
+Woher die Lizenzen kommen, legt „Lizenzen“ (`Lex.Licenses`) im Panel unter Lex fest:
+
+| Im Panel | Wert | Was passiert |
+|---|---|---|
+| Aus dem Framework | `auto` | Vorgabe. Bei ESX liest ef_bridge `user_licenses` mit den Bezeichnungen aus `licenses` (esx_license), bei QBCore und Qbox die Einträge in `metadata.licences`, die auf `true` stehen. |
+| Eigene Quelle | `custom` | ef_bridge fragt die Funktion `LexLicenses` in `server/lex-licenses-custom.lua`, siehe [Eigene Quelle](#eigene-quelle). |
+| Nicht abgleichen | `off` | ef_bridge schickt für jede Person eine leere Liste. Lex entfernt die Lizenzen aus dem Spiel und behält nur die von Hand eingetragenen. |
+
+Fehlt mit „Aus dem Framework“ bei ESX esx_license oder bei QBCore der Eintrag `licences` in den Metadaten eines Charakters, schickt ef_bridge keine Lizenzen und Lex lässt seine stehen.
+
+:::caution[QBCore mit eigenem Lizenzskript]
+In `metadata.licences` hat bei QBCore jeder Charakter ab Werk den Führerschein. Führt ein anderes Skript die Lizenzen, steht er mit „Aus dem Framework“ in Lex bei jeder Person. Stell dann auf „Eigene Quelle“ um, oder auf „Nicht abgleichen“, wenn Lex gar keine Lizenzen aus dem Spiel zeigen soll.
+:::
+
+### Eigene Quelle
+
+Führt ein anderes Skript die Lizenzen, schreibst du in die Funktion `LexLicenses` in `server/lex-licenses-custom.lua`, woher sie kommen. Die Datei ist vom Escrow ausgenommen. Ab Werk gibt die Funktion `nil` zurück.
+
+ef_bridge ruft sie einmal je Paket auf, beim Einloggen wie beim vollständigen Abgleich. `charIds` ist eine Liste mit höchstens 200 Citizen-IDs (QBCore, Qbox) oder Identifiern (ESX). Zurück gibst du eine Tabelle, die zu jeder ID eine Liste von Lizenzen enthält:
+
+```lua title="server/lex-licenses-custom.lua"
+function LexLicenses(charIds)
+    local rows = exports.oxmysql:query_async([[
+        SELECT citizenid, kind, label, state,
+               DATE_FORMAT(issued, '%Y-%m-%d') AS issued,
+               DATE_FORMAT(expires, '%Y-%m-%d') AS expires
+        FROM my_licenses WHERE citizenid IN (?)
+    ]], { charIds })
+    if not rows then return nil end
+
+    local byChar = {}
+    for _, row in ipairs(rows) do
+        byChar[row.citizenid] = byChar[row.citizenid] or {}
+        table.insert(byChar[row.citizenid], {
+            type = row.kind,
+            label = row.label,
+            status = row.state,
+            valid_from = row.issued,
+            valid_until = row.expires,
+        })
+    end
+    return byChar
+end
+```
+
+Tabelle und Spalten im Beispiel sind erfunden, setz die deines Lizenzskripts ein. Eine Lizenz hat diese Felder:
+
+| Feld | Inhalt |
+|---|---|
+| `type` | Pflicht. Kennung der Lizenz, für dieselbe Lizenz jedes Mal dieselbe, etwa `driver_b`. Buchstaben, Ziffern und `: . _ -`, höchstens 60 Zeichen. Ein Eintrag ohne `type` fällt weg. |
+| `label` | Bezeichnung, die Lex anzeigt, etwa „Führerschein Klasse B“. Fehlt sie, zeigt Lex den `type`. |
+| `status` | `valid` (gültig), `suspended` (ausgesetzt) oder `revoked` (entzogen). Fehlt er, gilt `valid`. |
+| `valid_from` | Gültig ab, als Text `YYYY-MM-DD`. Kann fehlen. |
+| `valid_until` | Gültig bis, als Text `YYYY-MM-DD`. Kann fehlen. |
+
+Je Person nimmt Lex höchstens 50 Lizenzen an. Steht derselbe `type` bei einer Person zweimal, zählt der letzte Eintrag.
+
+Was Lex aus der Antwort macht:
+
+- Fehlt eine ID in der Tabelle, hat der Charakter keine Lizenzen. Lex entfernt die aus dem Spiel, von Hand eingetragene bleiben.
+- Gibt die Funktion `nil` zurück, geht der Abgleich ohne Lizenzen raus und Lex lässt seine stehen. Gib `nil` zurück, wenn du gerade keine Auskunft geben kannst, etwa weil deine Datenbank nicht antwortet. Eine leere Tabelle hieße dagegen: Niemand hat eine Lizenz.
+- Bricht die Funktion mit einem Fehler ab, passiert dasselbe wie bei `nil`.
+
+In den beiden letzten Fällen steht in der Serverkonsole `LexLicenses in server/lex-licenses-custom.lua returned no table` oder `failed: …` mit dem Fehler, und für den Rest dieses Durchgangs fragt ef_bridge die Funktion nicht noch einmal.
+
+oxmysql gibt DATE-Spalten als Zahl zurück, nicht als Text. Lass deshalb die Abfrage das Datum formatieren, wie im Beispiel mit `DATE_FORMAT(…, '%Y-%m-%d')`. Die Kurzform `MySQL.query.await` kennt ef_bridge nicht, weil es `@oxmysql/lib/MySQL.lua` nicht lädt. Nimm die Exporte von oxmysql wie `exports.oxmysql:query_async`.
+
+Eine Änderung kommt sonst erst mit dem nächsten Einloggen oder dem nächsten vollständigen Abgleich in Lex an. Ruf nach dem Erteilen oder Entziehen einer Lizenz den Export auf, dann geht der Charakter gleich raus:
+
+```lua title="dein Lizenzskript, serverseitig"
+exports.ef_bridge:LexSyncCharacter(charId)   -- Citizen-ID oder ESX-Identifier, auch die Spieler-Source geht
+```
+
+Die Datei gehört zum Ordner der Ressource. Ein Update ersetzt sie, sichere sie vorher, siehe [Updates](/ef-bridge/installation/#updates).
 
 ## Aus anderen Skripten
 

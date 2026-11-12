@@ -132,6 +132,7 @@ Alle Einträge außer `Lex.BaseURL` und `Lex.TabletLogin` sind „nur Server“.
 | `Lex.APIKey` | API-Schlüssel | nicht gesetzt |
 | `Lex.Persons` | Charaktere als Personen | an |
 | `Lex.Vehicles` | Fahrzeuge mit Halter | an |
+| `Lex.Licenses` | Lizenzen | `auto` |
 | `Lex.SyncOnLogin` | Beim Einloggen sofort abgleichen | an |
 | `Lex.FullSync.IntervalMinutes` | Vollständiger Abgleich alle … Minuten | `360` |
 | `Lex.FullSync.OnStart` | Vollständiger Abgleich beim Start | an |
@@ -139,7 +140,11 @@ Alle Einträge außer `Lex.BaseURL` und `Lex.TabletLogin` sind „nur Server“.
 | `Lex.BatchSize` | Datensätze pro Anfrage | `100` |
 | `Lex.TabletLogin` | Tablet-Login über Discord-ID | aus |
 
-Das Intervall geht von 0 bis 10080 Minuten, 0 heißt nur beim Start und von Hand. Pro Anfrage gehen 10 bis 200 Datensätze raus. Den Schlüssel setzt du mit `efbridge key lex <Schlüssel>`. Was der Abgleich macht, steht unter [Lex-Abgleich](/ef-bridge/lex/), wofür `Lex.TabletLogin` da ist, unter [Lex-Tablet](/ef-bridge/lex-tablet/).
+Das Intervall geht von 0 bis 10080 Minuten, 0 heißt nur beim Start und von Hand. Pro Anfrage gehen 10 bis 200 Datensätze raus. Den Schlüssel setzt du mit `efbridge key lex <Schlüssel>`.
+
+`Lex.Licenses` kennt `auto` (Aus dem Framework), `custom` (Eigene Quelle) und `off` (Nicht abgleichen). Was die drei Werte tun, steht unter [Lizenzen](/ef-bridge/lex/#lizenzen). Die Einstellung gibt es ab v2026.8.4.
+
+Was der Abgleich macht, steht unter [Lex-Abgleich](/ef-bridge/lex/), wofür `Lex.TabletLogin` da ist, unter [Lex-Tablet](/ef-bridge/lex-tablet/).
 
 ## Fest eingebaut
 
