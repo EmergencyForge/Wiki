@@ -100,6 +100,6 @@ Erzeugst du in ignis einen neuen API-Schlüssel, ist der alte sofort ungültig. 
 
 Lade die neue ZIP-Datei herunter, ersetz den Ordner `resources/ef_bridge` und gib `restart ef_bridge` in der Serverkonsole ein oder starte den Server neu. Die Einstellungen liegen im KVP-Speicher des Servers, nicht im Ordner, und bleiben erhalten.
 
-Sichere vorher nur `server/billing-custom.lua`, wenn du dort eigene Abrechnungslogik hast. Das Update ersetzt die Datei.
+Sichere vorher nur `server/billing-custom.lua` und `server/lex-licenses-custom.lua`, wenn du dort eigenen Code für die Abrechnung oder die [Lizenzen im Lex-Abgleich](/ef-bridge/lex/#eigene-quelle) hast. Das Update ersetzt beide Dateien.
 
 Ob es ein neueres Release gibt, steht ab v2026.4.0 beim Start in der Serverkonsole, siehe [Version](/ef-bridge/#version).
