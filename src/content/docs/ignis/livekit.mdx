@@ -13,7 +13,7 @@ In einem Vortrag kann der Vortragende seinen Bildschirm teilen. Ohne LiveKit geh
 Bisher ging LiveKit nur über die EmergencyForge-Konsole (EF Sync). Jetzt kann deine Instanz auch einen eigenen LiveKit-Server nutzen. Diese Seite zeigt, wie du ihn aufsetzt.
 
 :::note
-Einen eigenen LiveKit-Server nutzt ignis ab vX (folgt).
+Einen eigenen LiveKit-Server nutzt ignis ab v2026.1.23-beta.
 :::
 
 ## Wann sich das lohnt
@@ -226,7 +226,7 @@ Auf dem Webspace und dem eigenen Server liegt die `.env` im Hauptverzeichnis von
 
 Sind die Werte gesetzt, nutzt ignis deinen LiveKit-Server, auch wenn die Instanz mit der EmergencyForge-Konsole verbunden ist. Die Raumschlüssel stellt ignis selbst aus. Die Rechte darin sind fest: Der Vortragende darf seinen Bildschirm mit dem Ton des geteilten Tabs senden, dazu Zeichnung und Laserpointer. Kamera und Mikrofon darf er nicht senden. Zuschauer empfangen nur. Ein Raumschlüssel gilt zehn Minuten.
 
-Lex liest dieselben drei Werte aus seiner `.env`. Beide können denselben LiveKit-Server nutzen, das geht ab Lex vX (folgt).
+Lex liest dieselben drei Werte aus seiner `.env`. Beide können denselben LiveKit-Server nutzen, das geht ab Lex v2026.0.63. Auch Gäste, die in Lex über den Zuschauer-Link zuschauen, bekommen ihre Schlüssel dann von diesem Server.
 
 ## Prüfen
 
