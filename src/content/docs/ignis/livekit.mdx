@@ -1,0 +1,262 @@
+---
+title: Eigener LiveKit-Server
+description: Einen eigenen LiveKit-Server aufsetzen, damit das Bildschirmteilen in Vorträgen über deinen Server läuft und nicht mehr an 15 Zuschauer gebunden ist.
+sidebar:
+  order: 10
+  label: LiveKit
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+In einem Vortrag kann der Vortragende seinen Bildschirm teilen. Ohne LiveKit geht das Bild direkt von Browser zu Browser, und mehr als 15 Zuschauer sind nicht möglich. Mit LiveKit läuft das Bild über einen Medienserver, eine solche Grenze gibt es dann nicht.
+
+Bisher ging LiveKit nur über die EmergencyForge-Konsole (EF Sync). Jetzt kann deine Instanz auch einen eigenen LiveKit-Server nutzen. Diese Seite zeigt, wie du ihn aufsetzt.
+
+:::note
+Einen eigenen LiveKit-Server nutzt ignis ab vX (folgt).
+:::
+
+## Wann sich das lohnt
+
+- Es schauen regelmäßig mehr als 15 Leute zu.
+- Der Vortragende hat wenig Upload. Ohne LiveKit schickt sein Browser das Bild an jeden Zuschauer einzeln, mit LiveKit nur einmal an den Server.
+
+Trifft beides nicht zu, brauchst du nichts einzurichten. Das Teilen von Browser zu Browser funktioniert ohne weitere Einstellungen.
+
+## Was du brauchst
+
+- einen Server mit öffentlicher IP-Adresse. Ein Webspace reicht nicht, weil LiveKit eigene Ports braucht. Es kann derselbe Server sein, auf dem ignis läuft.
+- eine Subdomain für LiveKit, auf dieser Seite `live.example.org`
+- Docker mit Docker Compose
+- einen Reverse Proxy mit HTTPS, zum Beispiel Caddy oder nginx
+
+Ein LiveKit-Server reicht für mehrere Instanzen. Jeder Vortrag bekommt einen zufälligen Raumnamen, zwei Instanzen landen also nie im selben Raum.
+
+## DNS
+
+Leg für die Subdomain einen A-Record an, der auf die IP-Adresse des Servers zeigt. Hat der Server eine IPv6-Adresse, kommt ein AAAA-Record dazu.
+
+Liegt deine Domain bei Cloudflare, stell den Eintrag auf **DNS only** (graue Wolke). Der Cloudflare-Proxy reicht nur HTTP weiter, die Medienports kämen nie bei LiveKit an.
+
+## Ports und Firewall
+
+| Port | Wofür | von außen offen |
+| --- | --- | --- |
+| TCP 80 | Let's Encrypt, damit der Reverse Proxy ein Zertifikat bekommt | ja |
+| TCP 443 | Verbindung der Browser als `wss://live.example.org`, über den Reverse Proxy | ja |
+| UDP 7882 | Bild und Ton, alle Verbindungen über diesen einen Port | ja |
+| TCP 7881 | Bild und Ton, wenn UDP gesperrt ist | ja |
+| UDP 3478 | TURN, für Netze, die keine direkte Verbindung zulassen | ja |
+| UDP 30000 bis 30100 | TURN-Relays, über die das Bild in solchen Netzen läuft | ja |
+| TCP 7880 | LiveKit selbst | nein, nur für den Reverse Proxy auf dem Server |
+
+TURN läuft hier nur über UDP und ohne TLS. Dafür braucht LiveKit weder eine eigene Domain noch ein Zertifikat.
+
+Mit `ufw` gibst du die Ports so frei:
+
+```sh
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 7881/tcp
+sudo ufw allow 7882/udp
+sudo ufw allow 3478/udp
+sudo ufw allow 30000:30100/udp
+```
+
+Hat dein Anbieter zusätzlich eine Firewall im Kundenmenü, müssen die Ports dort auch offen sein.
+
+## LiveKit einrichten
+
+<Steps>
+
+1. Leg einen Ordner an, zum Beispiel `/opt/livekit`, und erzeug ein Secret:
+
+   ```sh
+   mkdir -p /opt/livekit && cd /opt/livekit
+   openssl rand -base64 48
+   ```
+
+2. Leg dort eine `.env` mit einem Schlüsselnamen und dem Secret an. Der Schlüsselname ist frei wählbar, darf aber keine Leerzeichen enthalten. Das Secret braucht mindestens 32 Zeichen, ebenfalls ohne Leerzeichen.
+
+   ```sh title="/opt/livekit/.env"
+   LIVEKIT_API_KEY=ignis
+   LIVEKIT_API_SECRET=das-secret-aus-schritt-1
+   ```
+
+   Dieselben beiden Werte trägst du später in ignis ein.
+
+3. Leg die Konfiguration für LiveKit an:
+
+   ```yaml title="/opt/livekit/livekit.yaml"
+   port: 7880
+   rtc:
+     tcp_port: 7881
+     # Ein UDP-Port für alle Verbindungen statt eines ganzen Bereichs
+     udp_port: 7882
+     use_external_ip: true
+   # TURN nur über UDP, ohne TLS, also ohne Domain und Zertifikat
+   turn:
+     enabled: true
+     udp_port: 3478
+     relay_range_start: 30000
+     relay_range_end: 30100
+   logging:
+     level: info
+   ```
+
+   Schlüssel und Secret stehen nicht in dieser Datei, die bekommt LiveKit aus der `.env`.
+
+4. Leg die Compose-Datei an:
+
+   ```yaml title="/opt/livekit/docker-compose.yml"
+   services:
+     livekit:
+       image: livekit/livekit-server:v1.13.11
+       restart: unless-stopped
+       command: --config /etc/livekit.yaml
+       environment:
+         LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+       volumes:
+         - ./livekit.yaml:/etc/livekit.yaml:ro
+       ports:
+         - '127.0.0.1:7880:7880/tcp'
+         - '7881:7881/tcp'
+         - '7882:7882/udp'
+         - '3478:3478/udp'
+         - '30000-30100:30000-30100/udp'
+   ```
+
+   Port 7880 ist nur auf dem Server selbst erreichbar. Von außen geht es über den Reverse Proxy. Die übrigen Ports gehen direkt an den Container.
+
+5. Starte LiveKit:
+
+   ```sh
+   docker compose up -d
+   ```
+
+</Steps>
+
+Neuere Versionen findest du auf der [Release-Seite von LiveKit](https://github.com/livekit/livekit/releases). Zum Aktualisieren änderst du die Zeile `image` und startest mit `docker compose up -d` neu.
+
+## UDP-Puffer
+
+LiveKit warnt beim Start, wenn der UDP-Empfangspuffer des Servers zu klein ist. Setz ihn einmal und dauerhaft:
+
+```sh
+sudo sysctl -w net.core.rmem_max=5000000
+echo 'net.core.rmem_max=5000000' | sudo tee /etc/sysctl.d/90-livekit.conf
+```
+
+Die erste Zeile gilt sofort, die zweite sorgt dafür, dass der Wert nach einem Neustart des Servers noch gesetzt ist.
+
+## HTTPS davor
+
+Die Browser verbinden sich per WebSocket mit `wss://live.example.org`. Der Reverse Proxy nimmt diese Verbindung auf Port 443 an und reicht sie an Port 7880 weiter.
+
+<Tabs>
+<TabItem label="Caddy">
+
+Caddy holt das Zertifikat selbst und reicht WebSockets ohne weitere Einstellung durch:
+
+```txt title="Caddyfile"
+live.example.org {
+    reverse_proxy 127.0.0.1:7880
+}
+```
+
+Danach Caddy neu laden, zum Beispiel mit `systemctl reload caddy`.
+
+</TabItem>
+<TabItem label="nginx">
+
+nginx muss den WebSocket-Upgrade weiterreichen und lange Verbindungen erlauben. Ohne `proxy_read_timeout` trennt nginx die Verbindung nach 60 Sekunden ohne Daten.
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name live.example.org;
+
+    ssl_certificate     /etc/letsencrypt/live/live.example.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/live.example.org/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:7880;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 1h;
+    }
+}
+```
+
+Das Zertifikat holst du vorher, zum Beispiel mit certbot. Danach `nginx -t` und `systemctl reload nginx`.
+
+</TabItem>
+</Tabs>
+
+Bild und Ton laufen nicht über den Reverse Proxy, sondern über die Ports 7881, 7882, 3478 und 30000 bis 30100 direkt zu LiveKit.
+
+## In ignis eintragen
+
+Trag die drei Werte in die `.env` deiner ignis-Instanz ein. Schlüssel und Secret sind dieselben wie in `/opt/livekit/.env`.
+
+```sh title=".env"
+LIVEKIT_URL=wss://live.example.org
+LIVEKIT_API_KEY=ignis
+LIVEKIT_API_SECRET=das-secret-aus-schritt-1
+```
+
+Es gelten diese Regeln:
+
+- Entweder alle drei Werte oder keiner.
+- `LIVEKIT_URL` beginnt mit `wss://`. `ws://` ist nur mit `localhost` oder `127.0.0.1` erlaubt, für Tests auf dem eigenen Rechner.
+- `LIVEKIT_API_KEY` enthält keine Leerzeichen.
+- `LIVEKIT_API_SECRET` hat mindestens 32 Zeichen und keine Leerzeichen.
+
+Verstößt ein Wert dagegen oder fehlt einer, läuft ignis trotzdem weiter. Es schreibt einen Fehler ins [Fehlerprotokoll](/ignis/fehlerprotokoll/#fehlerprotokoll) und teilt den Bildschirm so, als gäbe es keinen eigenen Server: über die EmergencyForge-Konsole, wenn die Instanz damit verbunden ist, sonst direkt von Browser zu Browser.
+
+Mit Docker startest du ignis danach neu, damit der Container die neuen Werte bekommt:
+
+```sh
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Auf dem Webspace und dem eigenen Server liegt die `.env` im Hauptverzeichnis von ignis.
+
+Sind die Werte gesetzt, nutzt ignis deinen LiveKit-Server, auch wenn die Instanz mit der EmergencyForge-Konsole verbunden ist. Die Raumschlüssel stellt ignis selbst aus. Die Rechte darin sind fest: Der Vortragende darf seinen Bildschirm mit dem Ton des geteilten Tabs senden, dazu Zeichnung und Laserpointer. Kamera und Mikrofon darf er nicht senden. Zuschauer empfangen nur. Ein Raumschlüssel gilt zehn Minuten.
+
+Lex liest dieselben drei Werte aus seiner `.env`. Beide können denselben LiveKit-Server nutzen, das geht ab Lex vX (folgt).
+
+## Prüfen
+
+<Steps>
+
+1. Schau ins Log von LiveKit:
+
+   ```sh
+   cd /opt/livekit
+   docker compose logs livekit
+   ```
+
+   Dort muss `starting LiveKit server` stehen. Eine Warnung zum UDP-Puffer heißt, dass der [sysctl-Wert](#udp-puffer) fehlt.
+
+2. Starte in ignis einen Vortrag. Fahr mit der Maus über den Knopf **Bildschirm**: Hat ignis die Werte übernommen, steht im Tooltip „Über den eigenen Medienserver“. Teile dann deinen Bildschirm.
+
+3. Öffne den Vortrag in einem zweiten Browser oder einem privaten Fenster als Zuschauer. Das geteilte Bild muss dort erscheinen.
+
+   In den Entwicklerwerkzeugen des Zuschauer-Browsers (F12, Reiter Netzwerk, Filter WS) steht dann eine Verbindung zu `live.example.org`.
+
+</Steps>
+
+Teste am besten auch einmal aus einem anderen Netz, etwa mit einem Handy im Mobilfunk. Im selben Netz wie der Server fallen gesperrte Ports oft nicht auf.
+
+## Wenn das Bild schwarz bleibt
+
+| Was du siehst | Woran es liegt |
+| --- | --- |
+| Zuschauer verbinden sich, das Bild bleibt schwarz | UDP ist gesperrt, in der Firewall oder im Netz des Zuschauers. Prüf, ob UDP 7882, UDP 3478 und UDP 30000 bis 30100 offen sind. TCP 7881 ist der Ausweg für Netze ohne UDP, der Port muss also auch offen sein. |
+| Die Verbindung zu `wss://live.example.org` schlägt sofort fehl | Der Cloudflare-Proxy ist an (orange Wolke). Stell den DNS-Eintrag auf **DNS only**. Bei nginx fehlen außerdem oft die Zeilen für den WebSocket-Upgrade. |
+| Die Verbindung kommt zustande, LiveKit lehnt sie aber ab | Schlüssel oder Secret in ignis passen nicht zu denen in `/opt/livekit/.env`. Vergleich beide Dateien und starte nach einer Änderung LiveKit und ignis neu. |
+| Das Teilen läuft weiter direkt oder über die Konsole, im Tooltip fehlt „Über den eigenen Medienserver“ | ignis hat die Werte nicht übernommen. Such im [Fehlerprotokoll](/ignis/fehlerprotokoll/#fehlerprotokoll) nach `LIVEKIT_`. Meist fehlt einer der drei Werte, die Adresse beginnt nicht mit `wss://`, oder das Secret ist kürzer als 32 Zeichen oder enthält ein Leerzeichen. Ein neues Secret erzeugst du mit `openssl rand -base64 48` und trägst es an beiden Stellen ein. Mit Docker startest du ignis danach neu. |
+| Die Verbindung bricht nach etwa einer Minute ab | nginx trennt die WebSocket-Verbindung. Setz `proxy_read_timeout 1h;`. |
